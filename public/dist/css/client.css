@@ -1,0 +1,657 @@
+/*
+ * client.css — gaya halaman klien (guest/auth, area user Breeze, welcome)
+ *
+ * Palet & mekanisme tema sama dengan admin (layouts/admin/app.blade.php) dan
+ * public display (display/index.blade.php): pilihan tema disimpan di localStorage
+ * dengan key "theme" ('light' | 'dark', default 'light') lalu diterapkan ke
+ * <html data-bs-theme="..."> + style.colorScheme sebelum paint.
+ *
+ * light -> bg #eef2fa, panel #ffffff, teks #243356, aksen #0d6efd, emas #9a7b00
+ * dark  -> bg #0b1220, panel #131c2e, teks #d7e1f5, garis #22304a, aksen #6ea8ff, emas #ffd166
+ */
+
+/* ------------------------------------------------------------------ */
+/* 1. Palet                                                            */
+/* ------------------------------------------------------------------ */
+
+[data-bs-theme="light"] {
+    --cl-bg: #eef2fa;
+    --cl-panel: #ffffff;
+    --cl-text: #243356;
+    --cl-muted: #5f7098;
+    --cl-line: #dce4f3;
+    --cl-line-strong: #c4d0e6;
+    --cl-hover: #e7edfb;
+    --cl-accent: #0d6efd;
+    --cl-accent-strong: #0b5ed7;
+    --cl-accent-soft: rgba(13, 110, 253, .12);
+    --cl-on-accent: #ffffff;
+    --cl-gold: #9a7b00;
+    --cl-gold-soft: rgba(154, 123, 0, .14);
+    --cl-ok: #16a34a;
+    --cl-ok-soft: rgba(22, 163, 74, .12);
+    --cl-danger: #dc2626;
+    --cl-shadow: 0 8px 22px rgba(36, 51, 86, .08);
+    --cl-overlay: rgba(11, 18, 32, .45);
+}
+
+[data-bs-theme="dark"] {
+    --cl-bg: #0b1220;
+    --cl-panel: #131c2e;
+    --cl-text: #d7e1f5;
+    --cl-muted: #94a6c6;
+    --cl-line: #22304a;
+    --cl-line-strong: #33456a;
+    --cl-hover: #1c2740;
+    --cl-accent: #6ea8ff;
+    --cl-accent-strong: #8bbaff;
+    --cl-accent-soft: rgba(110, 168, 255, .16);
+    --cl-on-accent: #0b1220;
+    --cl-gold: #ffd166;
+    --cl-gold-soft: rgba(255, 209, 102, .16);
+    --cl-ok: #4ade80;
+    --cl-ok-soft: rgba(74, 222, 128, .14);
+    --cl-danger: #ff8787;
+    --cl-shadow: 0 8px 22px rgba(0, 0, 0, .35);
+    --cl-overlay: rgba(0, 0, 0, .6);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Dasar (font sistem, offline — tanpa font eksternal)              */
+/* ------------------------------------------------------------------ */
+
+:root,
+html body.font-sans {
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    font-feature-settings: normal;
+    font-variation-settings: normal;
+}
+
+html body {
+    background-color: var(--cl-bg);
+    color: var(--cl-text);
+}
+
+html * {
+    border-color: var(--cl-line);
+}
+
+::selection {
+    background: var(--cl-accent);
+    color: var(--cl-on-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Utilitas Tailwind -> palet                                       */
+/* ------------------------------------------------------------------ */
+
+html .bg-white {
+    background-color: var(--cl-panel);
+}
+
+html .bg-gray-50,
+html .bg-gray-100 {
+    background-color: var(--cl-bg);
+}
+
+html .bg-gray-200 {
+    background-color: var(--cl-line);
+}
+
+html .text-black,
+html .text-gray-900,
+html .text-gray-800,
+html .text-gray-700 {
+    color: var(--cl-text);
+}
+
+html .text-gray-600,
+html .text-gray-500,
+html .text-gray-400 {
+    color: var(--cl-muted);
+}
+
+html .hover\:text-gray-900:hover,
+html .hover\:text-gray-800:hover,
+html .hover\:text-gray-700:hover,
+html .focus\:text-gray-900:focus,
+html .focus\:text-gray-800:focus,
+html .focus\:text-gray-700:focus {
+    color: var(--cl-text);
+}
+
+html .hover\:text-gray-500:hover,
+html .hover\:text-gray-400:hover,
+html .focus\:text-gray-500:focus {
+    color: var(--cl-muted);
+}
+
+html .hover\:bg-gray-50:hover,
+html .hover\:bg-gray-100:hover,
+html .focus\:bg-gray-50:focus,
+html .focus\:bg-gray-100:focus {
+    background-color: var(--cl-hover);
+}
+
+html .hover\:bg-gray-200:hover {
+    background-color: var(--cl-line);
+}
+
+html .border-gray-100,
+html .border-gray-200,
+html .border-gray-300 {
+    border-color: var(--cl-line);
+}
+
+html .border-gray-400 {
+    border-color: var(--cl-line-strong);
+}
+
+/* indigo Breeze -> aksen aplikasi */
+html .text-indigo-600,
+html .text-indigo-700,
+html .text-indigo-800,
+html .hover\:text-indigo-600:hover,
+html .focus\:text-indigo-700:focus,
+html .focus\:text-indigo-800:focus {
+    color: var(--cl-accent);
+}
+
+html .border-indigo-400,
+html .border-indigo-500,
+html .hover\:border-indigo-300:hover,
+html .focus\:border-indigo-500:focus,
+html .focus\:border-indigo-700:focus,
+html .focus\:border-indigo-800:focus {
+    border-color: var(--cl-accent);
+}
+
+html .bg-indigo-50,
+html .hover\:bg-indigo-50:hover,
+html .focus\:bg-indigo-100:focus {
+    background-color: var(--cl-accent-soft);
+}
+
+html .focus\:ring-indigo-500:focus {
+    --tw-ring-color: var(--cl-accent);
+}
+
+html .focus\:ring-offset-2:focus,
+html .focus\:ring-offset-1:focus {
+    --tw-ring-offset-color: var(--cl-bg);
+}
+
+html .ring-black,
+html .ring-opacity-5 {
+    --tw-ring-color: var(--cl-line);
+}
+
+html .shadow-sm,
+html .shadow-md {
+    box-shadow: var(--cl-shadow);
+}
+
+/* status */
+html .text-green-600,
+html .text-green-700 {
+    color: var(--cl-ok);
+}
+
+html .bg-green-100,
+html .bg-green-50 {
+    background-color: var(--cl-ok-soft);
+}
+
+html .text-red-600,
+html .text-red-700 {
+    color: var(--cl-danger);
+}
+
+/* checkbox / radio mengikuti aksen */
+html input[type="checkbox"],
+html input[type="radio"] {
+    accent-color: var(--cl-accent);
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Kontrol input                                                    */
+/* ------------------------------------------------------------------ */
+
+html input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]),
+html textarea,
+html select {
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+    border-color: var(--cl-line-strong);
+    box-shadow: none;
+}
+
+html input::placeholder,
+html textarea::placeholder {
+    color: var(--cl-muted);
+    opacity: 1;
+}
+
+html input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):focus,
+html textarea:focus,
+html select:focus {
+    border-color: var(--cl-accent);
+    box-shadow: 0 0 0 3px var(--cl-accent-soft);
+    --tw-ring-color: var(--cl-accent);
+    --tw-ring-offset-color: var(--cl-bg);
+}
+
+html option {
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Tombol                                                           */
+/* ------------------------------------------------------------------ */
+
+/* Tombol utama Breeze (bg-gray-800) memakai aksen aplikasi */
+html .bg-gray-800 {
+    background-color: var(--cl-accent);
+    border-color: transparent;
+    color: var(--cl-on-accent);
+}
+
+html .hover\:bg-gray-700:hover,
+html .focus\:bg-gray-700:focus,
+html .active\:bg-gray-900:active {
+    background-color: var(--cl-accent-strong);
+    border-color: transparent;
+    color: var(--cl-on-accent);
+}
+
+html button.bg-gray-800:focus,
+html .bg-gray-800:focus {
+    outline-color: var(--cl-accent);
+}
+
+/* Tombol sekunder */
+html .bg-white.border-gray-300 {
+    background-color: var(--cl-panel);
+    border-color: var(--cl-line-strong);
+    color: var(--cl-text);
+}
+
+/* Tombol bahaya */
+html .bg-red-600 {
+    background-color: var(--cl-danger);
+    border-color: transparent;
+    color: #fff;
+}
+
+html .hover\:bg-red-500:hover,
+html .active\:bg-red-700:active,
+html .focus\:bg-red-700:focus {
+    background-color: var(--cl-danger);
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Shell layout                                                     */
+/* ------------------------------------------------------------------ */
+
+html .guest-shell {
+    background-color: var(--cl-bg);
+    color: var(--cl-text);
+}
+
+html .guest-shell .guest-logo {
+    color: var(--cl-accent);
+}
+
+html .guest-card {
+    position: relative;
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+    border: 1px solid var(--cl-line);
+    border-top: 3px solid var(--cl-gold);
+    box-shadow: var(--cl-shadow);
+}
+
+html .app-shell {
+    background-color: var(--cl-bg);
+    color: var(--cl-text);
+}
+
+html .app-header-bar {
+    background-color: var(--cl-panel);
+    border-bottom: 1px solid var(--cl-line);
+    box-shadow: none;
+}
+
+html .client-nav {
+    background-color: var(--cl-panel);
+    border-bottom-color: var(--cl-line);
+}
+
+html .client-nav .app-logo {
+    color: var(--cl-accent);
+}
+
+html .client-panel {
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+    border: 1px solid var(--cl-line);
+    border-top: 3px solid var(--cl-accent);
+    box-shadow: var(--cl-shadow);
+}
+
+html .client-title {
+    color: var(--cl-text);
+}
+
+html .client-muted {
+    color: var(--cl-muted);
+}
+
+html .client-gold {
+    color: var(--cl-gold);
+}
+
+/* dropdown & modal ikut panel */
+html .rounded-md.shadow-lg > .bg-white {
+    background-color: var(--cl-panel);
+}
+
+html .shadow-xl.bg-white {
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+    border: 1px solid var(--cl-line);
+    box-shadow: var(--cl-shadow);
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Tombol tema (sun/moon)                                           */
+/* ------------------------------------------------------------------ */
+
+html .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    border: 1px solid var(--cl-line);
+    border-radius: 10px;
+    background-color: var(--cl-panel);
+    color: var(--cl-text);
+    cursor: pointer;
+    transition: color .15s ease, background-color .15s ease, border-color .15s ease;
+}
+
+html .theme-toggle:hover {
+    color: var(--cl-accent);
+    border-color: var(--cl-accent);
+    background-color: var(--cl-hover);
+}
+
+html .theme-toggle:focus-visible {
+    outline: 2px solid var(--cl-accent);
+    outline-offset: 2px;
+}
+
+html .theme-toggle--corner {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 40;
+    box-shadow: var(--cl-shadow);
+}
+
+html .theme-toggle--nav {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--cl-muted);
+    box-shadow: none;
+}
+
+html .theme-toggle--nav:hover {
+    background-color: var(--cl-hover);
+    border-color: var(--cl-line);
+    color: var(--cl-accent);
+}
+
+html .theme-icon {
+    display: inline-flex;
+    line-height: 0;
+}
+
+html .theme-icon svg {
+    display: block;
+}
+
+/* ikon mengikuti tema aktif */
+[data-bs-theme="light"] .icon-moon {
+    display: none;
+}
+
+[data-bs-theme="dark"] .icon-sun {
+    display: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Halaman welcome                                                  */
+/* ------------------------------------------------------------------ */
+
+html .wl-page {
+    background-color: var(--cl-bg);
+    color: var(--cl-text);
+}
+
+html .wl-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 18px clamp(18px, 5vw, 56px);
+    background-color: var(--cl-panel);
+    border-bottom: 1px solid var(--cl-line);
+}
+
+html .wl-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: var(--cl-text);
+}
+
+html .wl-brand .wl-logo {
+    color: var(--cl-accent);
+}
+
+html .wl-brand-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+html .wl-brand-text strong {
+    font-size: 17px;
+    font-weight: 700;
+}
+
+html .wl-brand-text small {
+    font-size: 12.5px;
+    color: var(--cl-muted);
+    letter-spacing: .04em;
+    text-transform: uppercase;
+}
+
+html .wl-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+html .wl-hero {
+    position: relative;
+    overflow: hidden;
+    padding: clamp(38px, 7vw, 84px) clamp(18px, 5vw, 56px);
+    background:
+        radial-gradient(900px 420px at 12% -10%, var(--cl-accent-soft), transparent 65%),
+        radial-gradient(700px 380px at 95% 0%, var(--cl-gold-soft), transparent 60%);
+    border-bottom: 1px solid var(--cl-line);
+}
+
+html .wl-hero-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+html .wl-eyebrow {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background-color: var(--cl-gold-soft);
+    color: var(--cl-gold);
+    border: 1px solid var(--cl-gold);
+    font-size: 12.5px;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+html .wl-title {
+    margin: 18px 0 0;
+    max-width: 18ch;
+    font-size: clamp(30px, 5.4vw, 52px);
+    line-height: 1.12;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    color: var(--cl-text);
+}
+
+html .wl-title .wl-accent {
+    color: var(--cl-accent);
+}
+
+html .wl-lead {
+    margin: 16px 0 0;
+    max-width: 62ch;
+    font-size: clamp(15px, 2vw, 18px);
+    line-height: 1.65;
+    color: var(--cl-muted);
+}
+
+html .wl-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+html .wl-section {
+    padding: clamp(30px, 5vw, 56px) clamp(18px, 5vw, 56px);
+}
+
+html .wl-grid {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+}
+
+html .wl-card {
+    background-color: var(--cl-panel);
+    border: 1px solid var(--cl-line);
+    border-radius: 14px;
+    padding: 24px;
+    box-shadow: var(--cl-shadow);
+}
+
+html .wl-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
+    background-color: var(--cl-accent-soft);
+    color: var(--cl-accent);
+    margin-bottom: 14px;
+}
+
+html .wl-card-icon--gold {
+    background-color: var(--cl-gold-soft);
+    color: var(--cl-gold);
+}
+
+html .wl-card h2 {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--cl-text);
+}
+
+html .wl-card p {
+    margin: 0;
+    font-size: 14.5px;
+    line-height: 1.65;
+    color: var(--cl-muted);
+}
+
+html .wl-footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    justify-content: space-between;
+    align-items: center;
+    padding: 22px clamp(18px, 5vw, 56px);
+    border-top: 1px solid var(--cl-line);
+    background-color: var(--cl-panel);
+    color: var(--cl-muted);
+    font-size: 14px;
+}
+
+/* tombol gaya welcome */
+html .wl-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 10px;
+    border: 1px solid transparent;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+html .wl-btn--primary {
+    background-color: var(--cl-accent);
+    color: var(--cl-on-accent);
+}
+
+html .wl-btn--primary:hover {
+    background-color: var(--cl-accent-strong);
+}
+
+html .wl-btn--ghost {
+    background-color: var(--cl-panel);
+    border-color: var(--cl-line-strong);
+    color: var(--cl-text);
+}
+
+html .wl-btn--ghost:hover {
+    border-color: var(--cl-accent);
+    color: var(--cl-accent);
+    background-color: var(--cl-hover);
+}
+
+html .wl-link {
+    color: var(--cl-accent);
+    text-decoration: none;
+}
+
+html .wl-link:hover {
+    text-decoration: underline;
+}

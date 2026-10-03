@@ -1,0 +1,638 @@
+/* ==========================================================================
+   Hapkido Championship 2026 — Tema & kustomisasi UI
+   Offline, tanpa CDN. Default: light mode (disimpan di localStorage 'theme').
+   Palet: biru gelap (senada dengan halaman display).
+   ========================================================================= begin */
+
+/* --------------------------------------------------------------------------
+   1. Token warna — override variabel Bootstrap 5.3
+   -------------------------------------------------------------------------- */
+:root,
+[data-bs-theme="light"] {
+    color-scheme: light;
+
+    /* Triplet RGB — dipakai utilitas .bg-body-*, .border-*, .text-* dengan alpha */
+    --bs-body-bg-rgb: 238, 242, 250;
+    --bs-body-color-rgb: 36, 51, 86;
+    --bs-secondary-color-rgb: 95, 112, 152;
+    --bs-tertiary-color-rgb: 124, 140, 177;
+    --bs-emphasis-color-rgb: 27, 42, 74;
+    --bs-heading-color-rgb: 27, 42, 74;
+    --bs-secondary-bg-rgb: 221, 229, 245;
+    --bs-tertiary-bg-rgb: 238, 242, 250;
+    --bs-border-color-rgb: 220, 228, 243;
+    --bs-card-bg-rgb: 255, 255, 255;
+    --bs-link-color-rgb: 21, 83, 198;
+    --bs-focus-ring-color-rgb: 13, 111, 255;
+
+    --bs-body-bg: #eef2fa;
+    --bs-body-color: #243356;
+    --bs-emphasis-color: #1b2a4a;
+    --bs-heading-color: #1b2a4a;
+    --bs-secondary-color: #5f7098;
+    --bs-tertiary-color: #7c8cb1;
+    --bs-tertiary-bg: #e7edf9;
+    --bs-secondary-bg: #dde5f5;
+    --bs-border-color: #dce4f3;
+    --bs-card-bg: #ffffff;
+    --bs-card-cap-bg: #ffffff;
+    --bs-table-color: #243356;
+    --bs-table-bg: #ffffff;
+    --bs-table-border-color: #e4eaf7;
+    --bs-table-striped-color: #243356;
+    --bs-table-striped-bg: rgba(13, 111, 255, 0.045);
+    --bs-table-hover-bg: rgba(13, 111, 255, 0.08);
+    --bs-link-color: #1553c6;
+    --bs-link-hover-color: #1043a3;
+    --bs-code-color: #b02a6b;
+    --bs-focus-ring-color: rgba(13, 111, 255, 0.35);
+    --bs-form-control-bg: #ffffff;
+    --bs-form-control-color: #243356;
+
+    --app-sidebar-from: #0b1220;
+    --app-sidebar-to: #101a2e;
+    --app-header-bg: #ffffff;
+    --app-zebra: rgba(13, 111, 255, 0.045);
+    --app-zebra-hover: rgba(13, 111, 255, 0.09);
+    --app-shadow: 0 1px 3px rgba(16, 32, 72, 0.08);
+    --app-primary-soft: rgba(13, 111, 255, 0.12);
+    --app-danger-soft: rgba(220, 53, 69, 0.12);
+}
+
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+
+    --bs-body-bg-rgb: 11, 18, 32;
+    --bs-body-color-rgb: 215, 225, 245;
+    --bs-secondary-color-rgb: 148, 166, 198;
+    --bs-tertiary-color-rgb: 129, 149, 184;
+    --bs-emphasis-color-rgb: 238, 243, 252;
+    --bs-heading-color-rgb: 238, 243, 252;
+    --bs-secondary-bg-rgb: 22, 32, 58;
+    --bs-tertiary-bg-rgb: 11, 18, 32;
+    --bs-border-color-rgb: 34, 48, 74;
+    --bs-card-bg-rgb: 19, 28, 46;
+    --bs-link-color-rgb: 125, 177, 255;
+    --bs-focus-ring-color-rgb: 125, 177, 255;
+
+    --bs-body-bg: #0b1220;
+    --bs-body-color: #d7e1f5;
+    --bs-emphasis-color: #eef3fc;
+    --bs-heading-color: #eef3fc;
+    --bs-secondary-color: #94a6c6;
+    --bs-tertiary-color: #8195b8;
+    --bs-tertiary-bg: #0e1729;
+    --bs-secondary-bg: #16203a;
+    --bs-border-color: #22304a;
+    --bs-card-bg: #131c2e;
+    --bs-card-cap-bg: #131c2e;
+    --bs-table-color: #d7e1f5;
+    --bs-table-bg: #131c2e;
+    --bs-table-border-color: #22304a;
+    --bs-table-striped-color: #d7e1f5;
+    --bs-table-striped-bg: rgba(110, 168, 255, 0.07);
+    --bs-table-hover-bg: rgba(110, 168, 255, 0.12);
+    --bs-link-color: #7db1ff;
+    --bs-link-hover-color: #a3c8ff;
+    --bs-code-color: #ff92c0;
+    --bs-focus-ring-color: rgba(125, 177, 255, 0.45);
+    --bs-form-control-bg: #0f1830;
+    --bs-form-control-color: #d7e1f5;
+    --bs-form-control-border-color: #2b3b5c;
+    --bs-form-select-bg: #0f1830;
+    --bs-form-select-color: #d7e1f5;
+    --bs-form-select-border-color: #2b3b5c;
+    --bs-btn-bg: #16203a;
+    --bs-btn-border-color: #2b3b5c;
+    --bs-btn-hover-bg: #1c2a4a;
+    --bs-btn-hover-border-color: #38496e;
+    --bs-dropdown-bg: #131c2e;
+    --bs-dropdown-color: #d7e1f5;
+    --bs-dropdown-border-color: #22304a;
+    --bs-dropdown-link-color: #c3d1ec;
+    --bs-dropdown-link-hover-color: #ffffff;
+    --bs-dropdown-link-hover-bg: #1c2a4a;
+    --bs-modal-bg: #131c2e;
+    --bs-modal-header-border-color: #22304a;
+    --bs-modal-footer-border-color: #22304a;
+    --bs-nav-link-color: #c3d1ec;
+    --bs-nav-pills-link-active-bg: #1553c6;
+    --bs-badge-color: #0b1220;
+    --bs-progress-bg: #16203a;
+    --bs-list-group-bg: #131c2e;
+    --bs-list-group-color: #d7e1f5;
+    --bs-list-group-border-color: #22304a;
+    --bs-list-group-active-bg: #1553c6;
+    --bs-list-group-active-border-color: #1553c6;
+    --bs-table-color: #d7e1f5;
+
+    --app-sidebar-from: #0b1220;
+    --app-sidebar-to: #101a2e;
+    --app-header-bg: #0f1830;
+    --app-zebra: rgba(110, 168, 255, 0.07);
+    --app-zebra-hover: rgba(110, 168, 255, 0.13);
+    --app-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    --app-primary-soft: rgba(110, 168, 255, 0.18);
+    --app-danger-soft: rgba(255, 107, 122, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   2. Dasar halaman
+   -------------------------------------------------------------------------- */
+body {
+    background-color: var(--bs-body-bg);
+    color: var(--bs-body-color);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+}
+
+.app-main .app-content-header .fs-3,
+.app-main h1,
+.app-main h2,
+.app-main h3,
+.app-main h4,
+.app-main h5,
+.app-main h6,
+.app-main .card-title {
+    color: var(--bs-heading-color);
+}
+
+.app-main .text-dark {
+    color: var(--bs-heading-color) !important;
+}
+
+.app-main .text-body {
+    color: var(--bs-body-color) !important;
+}
+
+.app-main .text-muted,
+.app-main .text-body-secondary {
+    color: var(--bs-secondary-color) !important;
+}
+
+.app-main a:not(.btn) {
+    text-decoration: none;
+}
+
+.app-main a:not(.btn):hover {
+    text-decoration: underline;
+}
+
+::selection {
+    background: var(--app-primary-soft);
+    color: var(--bs-emphasis-color);
+}
+
+/* --------------------------------------------------------------------------
+   3. Header — mengikuti background konten agar sinkron (light & dark)
+   -------------------------------------------------------------------------- */
+.app-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--bs-border-color);
+    box-shadow: none;
+}
+
+.app-header .nav-link {
+    color: var(--bs-body-color);
+    border-radius: 0.45rem;
+}
+
+.app-header .nav-link:hover {
+    background-color: var(--app-primary-soft);
+    color: var(--bs-heading-color);
+    text-decoration: none;
+}
+
+.app-content-header {
+    padding: 1.15rem 0.25rem 0.6rem;
+}
+
+.app-content {
+    padding: 0 0.25rem 1.25rem;
+}
+
+.app-content .container-fluid {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+}
+
+[data-bs-theme="dark"] .app-header .nav-link {
+    color: #d7e1f5;
+}
+
+[data-bs-theme="dark"] .app-header .nav-link:hover {
+    color: #ffffff;
+    background-color: rgba(110, 168, 255, 0.16);
+}
+
+/* --------------------------------------------------------------------------
+   4. Sidebar — terang di light mode, biru gelap di dark mode (seperti display)
+   -------------------------------------------------------------------------- */
+.app-sidebar {
+    background-image: none !important;
+    background-color: #f5f8ff !important;
+    border-right: 1px solid var(--bs-border-color);
+}
+
+.app-sidebar .sidebar-brand {
+    background-color: #eef2fb;
+    border-bottom: 1px solid var(--bs-border-color);
+}
+
+.app-sidebar .brand-text {
+    color: #1b2a4a !important;
+}
+
+.app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link {
+    color: #3d4f75;
+    border-radius: 0.55rem;
+    margin: 2px 10px;
+    padding: 0.55rem 0.75rem;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link .nav-icon {
+    color: inherit;
+}
+
+.app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link:hover {
+    background-color: rgba(13, 111, 255, 0.12);
+    color: #1553c6;
+}
+
+.app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link.active {
+    background-color: rgba(13, 111, 255, 0.16);
+    color: #1043a3;
+    box-shadow: inset 3px 0 0 #0d6efd;
+}
+
+.app-sidebar .nav-treeview > .nav-link {
+    color: #55688f;
+    border-radius: 0.45rem;
+    margin: 1px 12px 1px 40px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.875rem;
+}
+
+.app-sidebar .nav-treeview > .nav-link:hover {
+    background-color: rgba(13, 111, 255, 0.1);
+    color: #1553c6;
+}
+
+.app-sidebar .nav-treeview > .nav-link.active {
+    background-color: rgba(13, 111, 255, 0.2);
+    color: #1043a3;
+    font-weight: 600;
+}
+
+.app-sidebar .nav-sidebar .nav-arrow {
+    color: #7f92b7;
+}
+
+.app-sidebar .nav-sidebar .nav-treeview .nav-icon {
+    color: inherit;
+}
+
+/* Mode gelap: biru tua seperti display */
+[data-bs-theme="dark"] .app-sidebar {
+    background-image: linear-gradient(180deg, var(--app-sidebar-from) 0%, var(--app-sidebar-to) 55%, #131c2e 100%) !important;
+    background-color: var(--app-sidebar-from) !important;
+    border-right-color: #1d2a45;
+}
+
+[data-bs-theme="dark"] .app-sidebar .sidebar-brand {
+    background-color: rgba(0, 0, 0, 0.28);
+    border-bottom-color: #1d2a45;
+}
+
+[data-bs-theme="dark"] .app-sidebar .sidebar-brand .brand-image {
+    filter: brightness(0) invert(1);
+}
+
+[data-bs-theme="dark"] .app-sidebar .brand-text {
+    color: #eaf1ff !important;
+}
+
+[data-bs-theme="dark"] .app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link {
+    color: #a9b8d6;
+}
+
+[data-bs-theme="dark"] .app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link:hover {
+    background-color: rgba(13, 111, 255, 0.18);
+    color: #ffffff;
+}
+
+[data-bs-theme="dark"] .app-sidebar .sidebar-wrapper .nav-sidebar > .nav-item > .nav-link.active {
+    background-image: linear-gradient(90deg, rgba(13, 111, 255, 0.45), rgba(13, 111, 255, 0.12));
+    background-color: transparent;
+    color: #ffffff;
+    box-shadow: inset 3px 0 0 #4d94ff;
+}
+
+[data-bs-theme="dark"] .app-sidebar .nav-treeview > .nav-link {
+    color: #90a2c4;
+}
+
+[data-bs-theme="dark"] .app-sidebar .nav-treeview > .nav-link:hover {
+    background-color: rgba(13, 111, 255, 0.15);
+    color: #dbe7ff;
+}
+
+[data-bs-theme="dark"] .app-sidebar .nav-treeview > .nav-link.active {
+    background-color: rgba(13, 111, 255, 0.28);
+    color: #ffffff;
+    font-weight: 600;
+}
+
+[data-bs-theme="dark"] .app-sidebar .nav-sidebar .nav-arrow {
+    color: #7f92b7;
+}
+
+/* --------------------------------------------------------------------------
+   5. Kartu & konten
+   -------------------------------------------------------------------------- */
+.app-content .card {
+    border-color: var(--bs-border-color);
+    border-radius: 0.75rem;
+    box-shadow: var(--app-shadow);
+}
+
+.app-content .card-header {
+    background-color: var(--bs-card-bg);
+    border-color: var(--bs-border-color);
+    border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+.app-content .card-footer {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+}
+
+.app-content .card-header h3,
+.app-content .card-header h6,
+.app-content .card-title {
+    color: var(--bs-heading-color);
+}
+
+.app-content .badge {
+    font-weight: 500;
+    letter-spacing: 0.2px;
+}
+
+.app-content .table {
+    --bs-table-bg: transparent;
+    color: var(--bs-table-color);
+    margin-bottom: 0;
+}
+
+.app-content .table > :not(caption) > * > * {
+    background-color: transparent;
+    border-bottom-color: var(--bs-table-border-color);
+}
+
+/* Zebra: baris genap sedikit lebih gelap, ganjil lebih terang */
+.app-content .table > tbody > tr:nth-child(even) > td,
+.app-content .table > tbody > tr:nth-child(even) > th {
+    background-color: var(--app-zebra);
+}
+
+.app-content .table > tbody > tr:nth-child(odd) > td,
+.app-content .table > tbody > tr:nth-child(odd) > th {
+    background-color: transparent;
+}
+
+.app-content .table > tbody > tr:hover > td,
+.app-content .table > tbody > tr:hover > th {
+    background-color: var(--app-zebra-hover);
+}
+
+.app-content .table thead th {
+    background-color: var(--bs-tertiary-bg);
+    color: var(--bs-heading-color);
+    border-bottom-width: 1px;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    white-space: nowrap;
+}
+
+.app-content .table > tbody > tr > td,
+.app-content .table > tbody > tr > th {
+    vertical-align: middle;
+    padding: 0.6rem 0.75rem;
+}
+
+/* --------------------------------------------------------------------------
+   6. Tombol aksi seragam
+   -------------------------------------------------------------------------- */
+.btn {
+    border-radius: 0.45rem;
+    font-weight: 500;
+}
+
+.btn-sm {
+    padding: 0.28rem 0.65rem;
+    font-size: 0.82rem;
+}
+
+.btn-group-sm > .btn {
+    padding: 0.3rem 0.55rem;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2rem;
+}
+
+.app-content .btn-group .btn {
+    border-color: var(--bs-border-color);
+}
+
+/* --------------------------------------------------------------------------
+   7. Form, modal, dropdown, sweetalert di mode gelap
+   -------------------------------------------------------------------------- */
+.form-control,
+.form-select {
+    border-color: var(--bs-border-color);
+    background-color: var(--bs-form-control-bg);
+    color: var(--bs-form-control-color);
+}
+
+.form-control::placeholder {
+    color: var(--bs-tertiary-color);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #4d8dff;
+    box-shadow: 0 0 0 0.2rem var(--app-primary-soft);
+}
+
+.input-group-text {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--bs-border-color);
+    color: var(--bs-secondary-color);
+}
+
+.form-check-input:checked {
+    background-color: #1553c6;
+    border-color: #1553c6;
+}
+
+.modal-content {
+    background-color: var(--bs-card-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+    border-radius: 0.8rem;
+}
+
+.dropdown-menu {
+    border-color: var(--bs-border-color);
+    box-shadow: var(--app-shadow);
+    border-radius: 0.6rem;
+}
+
+.pagination .page-item.active .page-link {
+    background-color: #1553c6;
+    border-color: #1553c6;
+}
+
+.nav-tabs .nav-link {
+    color: var(--bs-secondary-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--bs-heading-color);
+    border-color: var(--bs-border-color) var(--bs-border-color) var(--bs-card-bg);
+    background-color: var(--bs-card-bg);
+}
+
+/* SweetAlert2 ikut tema */
+[data-bs-theme="dark"] .swal2-popup {
+    background-color: #131c2e;
+    color: #d7e1f5;
+}
+
+[data-bs-theme="dark"] .swal2-title {
+    color: #eef3fc;
+}
+
+[data-bs-theme="dark"] .swal2-html-container {
+    color: #c3d1ec;
+}
+
+[data-bs-theme="dark"] .swal2-confirm {
+    background-color: #1553c6 !important;
+}
+
+/* --------------------------------------------------------------------------
+   7b. Varian tabel & teks di atas latar terang — ikut tema
+   (Bootstrap memaksa warna gelap pada .table-secondary/.table-light/.text-dark)
+   -------------------------------------------------------------------------- */
+.table > tbody > tr.table-secondary > * {
+    background-color: var(--bs-secondary-bg) !important;
+    color: var(--bs-body-color) !important;
+    font-weight: 600;
+}
+
+.table > tbody > tr.table-light > * {
+    background-color: var(--bs-tertiary-bg) !important;
+    color: var(--bs-body-color) !important;
+}
+
+.table > tbody > tr.table-active > * {
+    background-color: var(--app-primary-soft) !important;
+    color: var(--bs-emphasis-color) !important;
+}
+
+[data-bs-theme="dark"] .bg-warning.text-dark,
+[data-bs-theme="dark"] .bg-light.text-dark,
+[data-bs-theme="dark"] .bg-white.text-dark {
+    color: #212529 !important;
+}
+
+[data-bs-theme="dark"] .badge.bg-warning:not(.text-dark) {
+    color: #212529 !important;
+}
+
+/* Jaminan kontras: judul, header tabel, dan tanggal di mode gelap */
+[data-bs-theme="dark"] .app-content .card-title,
+[data-bs-theme="dark"] .app-content .card-header h3,
+[data-bs-theme="dark"] .app-content .card-header h6,
+[data-bs-theme="dark"] .app-content .table thead th,
+[data-bs-theme="dark"] .app-content-header h1,
+[data-bs-theme="dark"] .app-content .table > tbody > tr.table-secondary > * {
+    color: #eef3fc !important;
+}
+
+/* --------------------------------------------------------------------------
+   8. Catch-all agar tidak ada konten yang "nyangkut" putih di mode gelap
+   -------------------------------------------------------------------------- */
+[data-bs-theme="dark"] .bg-white {
+    background-color: var(--bs-card-bg) !important;
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .bg-light {
+    background-color: var(--bs-tertiary-bg) !important;
+}
+
+[data-bs-theme="dark"] .text-dark,
+[data-bs-theme="dark"] .text-black {
+    color: var(--bs-heading-color) !important;
+}
+
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: rgba(110, 168, 255, 0.05);
+    color: var(--bs-table-color);
+}
+
+[data-bs-theme="dark"] .alert-light,
+[data-bs-theme="dark"] .list-group-item {
+    background-color: var(--bs-card-bg);
+    color: var(--bs-body-color);
+    border-color: var(--bs-border-color);
+}
+
+[data-bs-theme="dark"] .border,
+[data-bs-theme="dark"] .border-top,
+[data-bs-theme="dark"] .border-bottom,
+[data-bs-theme="dark"] .border-start,
+[data-bs-theme="dark"] .border-end {
+    border-color: var(--bs-border-color) !important;
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary,
+[data-bs-theme="dark"] .btn-outline-primary,
+[data-bs-theme="dark"] .btn-outline-info,
+[data-bs-theme="dark"] .btn-outline-danger,
+[data-bs-theme="dark"] .btn-outline-success,
+[data-bs-theme="dark"] .btn-outline-warning {
+    color: #b9c8e6;
+}
+
+/* --------------------------------------------------------------------------
+   9. Scrollbar halus
+   -------------------------------------------------------------------------- */
+.app-wrapper ::-webkit-scrollbar {
+    width: 9px;
+    height: 9px;
+}
+
+.app-wrapper ::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-wrapper ::-webkit-scrollbar-thumb {
+    background-color: rgba(95, 112, 152, 0.45);
+    border-radius: 8px;
+}
+
+.app-wrapper ::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(95, 112, 152, 0.7);
+}
+
+/* end of file */
