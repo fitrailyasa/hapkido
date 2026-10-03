@@ -317,7 +317,6 @@
                     perfHtml += `<div class="list-group-label">${esc(item.match_no)} &middot; ${esc(item.category)}</div>`;
                 }
                 perfHtml += `
-                perfHtml += `
                     <div class="list-row">
                         <div class="list-main">
                             <div class="list-title">${esc(item.order_no)}. ${esc(item.athlete)} <span class="code">${esc(item.contingent)}</span></div>
