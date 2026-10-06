@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
     public function index()
     {
+        $this->syncConfiguredPermissions();
+
         $roles = Role::withCount('users')->orderBy('name')->get();
 
         return view('admin.role.index', [
@@ -78,6 +81,10 @@ class RoleController extends Controller
 
     public function updatePermissions(Request $request, Role $role): RedirectResponse
     {
+        // Pastikan permission baru di config sudah ada di tabel permissions
+        // sebelum validasi Rule::exists, agar tidak gagal "selected is invalid".
+        $this->syncConfiguredPermissions();
+
         $request->validate([
             'permissions' => ['nullable', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
@@ -86,5 +93,28 @@ class RoleController extends Controller
         $role->syncPermissions($request->input('permissions', []));
 
         return back()->with('success', "Permission untuk role {$role->name} berhasil diperbarui.");
+    }
+
+    /**
+     * Sinkronkan permission dari config/permissions.php ke tabel permissions
+     * (hanya menambah yang belum ada, tidak pernah menghapus).
+     */
+    protected function syncConfiguredPermissions(): void
+    {
+        $configured = collect(config('permissions', []))
+            ->flatMap(fn (array $group) => array_keys($group))
+            ->values();
+
+        $missing = $configured->diff(Permission::pluck('name'));
+
+        if ($missing->isEmpty()) {
+            return;
+        }
+
+        foreach ($missing as $name) {
+            Permission::firstOrCreate(['name' => $name, 'guard_name' => 'web']);
+        }
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 }

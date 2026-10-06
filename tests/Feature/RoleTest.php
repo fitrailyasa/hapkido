@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\Concerns\CreatesUsers;
 use Tests\TestCase;
@@ -173,6 +174,35 @@ class RoleTest extends TestCase
             ]);
 
         $response->assertSessionHasErrors('permissions.0');
+    }
+
+    public function test_configured_permissions_missing_in_db_are_synced(): void
+    {
+        $this->seedRoles();
+        $user = $this->userWithPermissions(['roles.view', 'roles.permissions']);
+        $role = Role::create(['name' => 'Juri']);
+
+        // Permission baru di config belum ada di tabel permissions.
+        Permission::where('name', 'settings.view')->delete();
+
+        $this->actingAs($user)->get('/admin/roles')->assertOk();
+        $this->assertDatabaseHas('permissions', ['name' => 'settings.view']);
+
+        // Submit tetap sukses walau permission hilang lagi dari tabel.
+        Permission::where('name', 'settings.view')->delete();
+
+        $response = $this->actingAs($user)
+            ->from('/admin/roles')
+            ->put("/admin/roles/{$role->id}/permissions", [
+                'permissions' => ['settings.view', 'matches.view'],
+            ]);
+
+        $response->assertSessionHas('success');
+        $this->assertDatabaseHas('permissions', ['name' => 'settings.view']);
+        $this->assertEqualsCanonicalizing(
+            ['settings.view', 'matches.view'],
+            $role->fresh()->permissions()->pluck('name')->all()
+        );
     }
 
     public function test_role_module_requires_permission(): void
