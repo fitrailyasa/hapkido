@@ -17,6 +17,28 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Identitas Aplikasi (bisa diubah dari menu admin tanpa edit .env)
+    |--------------------------------------------------------------------------
+    | Nilai berikut menjadi default. Halaman "Identitas & Tampilan" pada
+    | back office menimpa-nya lewat tabel `settings`.
+    */
+
+    'short_name' => env('APP_SHORT_NAME', 'Hapkido 2026'),
+
+    'tagline' => env('APP_TAGLINE', 'Kejuaraan Hapkido Indonesia'),
+
+    'description' => env('APP_DESCRIPTION', 'Portal resmi jadwal, arena, kontingen, dan hasil pertandingan.'),
+
+    'logo' => env('APP_LOGO'),
+
+    'favicon' => env('APP_FAVICON'),
+
+    'footer' => env('APP_FOOTER', 'Portal kejuaraan Hapkido: jadwal, pertandingan, dan hasil secara realtime.'),
+
+    'copyright' => env('APP_COPYRIGHT', '© 2026 Hapkido Championship Indonesia.'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

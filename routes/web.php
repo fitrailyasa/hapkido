@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ResultController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\ScheduleController;
 use App\Http\Controllers\Admin\ScoreController;
+use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\VerificationController;
 use App\Http\Controllers\DisplayController;
@@ -151,6 +152,11 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete')->name('roles.destroy');
     Route::get('roles/{role}/permissions', [RoleController::class, 'permissions'])->middleware('permission:roles.permissions')->name('roles.permissions');
     Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])->middleware('permission:roles.permissions')->name('roles.permissions.update');
+
+    /* Identitas & tampilan aplikasi (judul, deskripsi, logo, favicon) */
+    Route::get('settings', [SettingController::class, 'index'])->middleware('permission:settings.view')->name('settings.index');
+    Route::post('settings', [SettingController::class, 'update'])->middleware('permission:settings.update')->name('settings.update');
+    Route::delete('settings', [SettingController::class, 'reset'])->middleware('permission:settings.update')->name('settings.reset');
 });
 
 Route::middleware('auth')->group(function () {

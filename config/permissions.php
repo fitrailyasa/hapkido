@@ -98,4 +98,8 @@ return [
         'roles.delete' => 'Hapus role',
         'roles.permissions' => 'Atur permission role',
     ],
+    'Identitas & Tampilan' => [
+        'settings.view' => 'Lihat pengaturan identitas aplikasi',
+        'settings.update' => 'Ubah judul, deskripsi, logo, & favicon',
+    ],
 ];

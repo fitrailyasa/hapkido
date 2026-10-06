@@ -1,10 +1,12 @@
 <aside class="app-sidebar bg-body-secondary shadow">
     <!--begin::Sidebar Brand-->
     <div class="sidebar-brand">
-        <a href="{{ route('admin.dashboard') }}" class="brand-link">
-            {{-- <img src="{{ asset('dist/assets/img/AdminLTELogo.png') }}" alt="Logo"
-                class="brand-image opacity-75 shadow" /> --}}
-            <span class="brand-text fw-semibold">Hapkido 2026</span>
+        <a href="{{ route('admin.dashboard') }}" class="brand-link d-flex align-items-center gap-2">
+            @if (config('app.logo'))
+                <img src="{{ config('app.logo') }}" alt="{{ config('app.short_name') }}"
+                    class="rounded shadow-sm" style="height: 30px; width: auto;" />
+            @endif
+            <span class="brand-text fw-semibold">{{ config('app.short_name', 'Hapkido 2026') }}</span>
         </a>
     </div>
     <!--end::Sidebar Brand-->
@@ -233,9 +235,17 @@
                 @endif
 
                 {{-- Pengaturan sistem --}}
-                @if (auth()->user()->can('users.view') || auth()->user()->can('roles.view') || auth()->user()->can('equipments.view'))
+                @if (auth()->user()->can('users.view') ||
+                        auth()->user()->can('roles.view') ||
+                        auth()->user()->can('equipments.view') ||
+                        auth()->user()->can('settings.view'))
                     @php
-                        $openSystem = request()->routeIs('admin.users.*', 'admin.roles.*', 'admin.equipments.*');
+                        $openSystem = request()->routeIs(
+                            'admin.users.*',
+                            'admin.roles.*',
+                            'admin.equipments.*',
+                            'admin.settings.*',
+                        );
                     @endphp
                     <li class="nav-item has-treeview {{ $openSystem ? 'menu-open' : '' }}">
                         <a href="#" class="nav-link {{ $openSystem ? 'active' : '' }}">
@@ -246,6 +256,15 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
+                            @can('settings.view')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.settings.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                                        <i class="nav-icon bi bi-palette-fill"></i>
+                                        <p>Identitas &amp; Tampilan</p>
+                                    </a>
+                                </li>
+                            @endcan
                             @can('users.view')
                                 <li class="nav-item">
                                     <a href="{{ route('admin.users.index') }}"

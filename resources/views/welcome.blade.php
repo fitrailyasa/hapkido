@@ -6,6 +6,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Hapkido Championship 2026') }}</title>
+        <meta name="description" content="{{ config('app.description') }}" />
+        @if (config('app.favicon'))
+            <link rel="icon" href="{{ config('app.favicon') }}" />
+        @endif
 
         {{-- Terapkan tema dari localStorage sebelum paint (default: light) --}}
         <script>
@@ -46,7 +50,7 @@
                     <x-application-logo class="wl-logo h-11 w-11 fill-current" />
                     <span class="wl-brand-text">
                         <strong>{{ config('app.name', 'Hapkido Championship 2026') }}</strong>
-                        <small>Kejuaraan Hapkido Indonesia</small>
+                        <small>{{ config('app.tagline', 'Kejuaraan Hapkido Indonesia') }}</small>
                     </span>
                 </a>
 
@@ -97,7 +101,7 @@
                     </h1>
 
                     <p class="wl-lead">
-                        Portal resmi jadwal, arena, kontingen, dan hasil pertandingan.
+                        {{ config('app.description') }}
                         Informasi tampil langsung di layar venue dan dapat dibuka dari
                         perangkat apa pun, baik secara daring maupun luring.
                     </p>
@@ -170,7 +174,7 @@
 
             <!-- Footer -->
             <footer class="wl-footer">
-                <span>&copy; 2026 {{ config('app.name', 'Hapkido Championship 2026') }}</span>
+                <span>{{ config('app.copyright', '© 2026 ' . config('app.name')) }}</span>
                 <span>
                     Laravel v{{ Illuminate\Foundation\Application::VERSION }} &middot; PHP v{{ PHP_VERSION }}
                 </span>

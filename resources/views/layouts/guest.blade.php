@@ -6,6 +6,10 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Laravel') }}</title>
+        <meta name="description" content="{{ config('app.description') }}" />
+        @if (config('app.favicon'))
+            <link rel="icon" href="{{ config('app.favicon') }}" />
+        @endif
 
         {{-- Terapkan tema dari localStorage sebelum paint (default: light) --}}
         <script>

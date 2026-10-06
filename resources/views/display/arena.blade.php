@@ -5,6 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ $arena->label ?: $arena->name }} - {{ config('app.name') }}</title>
+    <meta name="description" content="{{ config('app.description') }}" />
+    @if (config('app.favicon'))
+        <link rel="icon" href="{{ config('app.favicon') }}" />
+    @endif
     <script>
         (function() {
             var theme = 'light';

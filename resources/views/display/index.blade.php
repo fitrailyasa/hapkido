@@ -5,6 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{{ config('app.name') }} - Public Display</title>
+    <meta name="description" content="{{ config('app.description') }}" />
+    @if (config('app.favicon'))
+        <link rel="icon" href="{{ config('app.favicon') }}" />
+    @endif
     <script>
         (function() {
             var theme = 'light';
@@ -26,7 +30,12 @@
 
 <body>
     <div class="topbar">
-        <div class="topbar-title"><i class="bi bi-trophy-fill me-2"></i>{{ strtoupper(config('app.name')) }}</div>
+        <div class="topbar-title">
+            @if (config('app.logo'))
+                <img src="{{ config('app.logo') }}" alt=""
+                    style="height: 1.1em; width: auto; vertical-align: -0.15em; margin-right: .4rem;" />
+            @endif<i class="bi bi-trophy-fill me-2"></i>{{ strtoupper(config('app.short_name', config('app.name'))) }}
+        </div>
         <div class="topbar-right">
             <span class="live-pill"><span class="live-dot"></span>LIVE</span>
             <span class="last-update" id="last-update">Memuat...</span>

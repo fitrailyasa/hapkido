@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{ config('app.name', 'Hapkido Championship 2026') }} | @yield('title', 'Dashboard')</title>
 
+    <meta name="description" content="{{ config('app.description') }}" />
+    @if (config('app.favicon'))
+        <link rel="icon" href="{{ config('app.favicon') }}" />
+    @endif
+
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
     {{-- Terapkan tema dari localStorage sebelum paint (default: light) --}}
@@ -67,9 +72,9 @@
             </div>
         </main>
         <footer class="app-footer">
-            <div class="float-end d-none d-sm-inline">{{ config('app.name') }}</div>
+            <div class="float-end d-none d-sm-inline">{{ config('app.footer') }}</div>
             <strong>
-                Copyright &copy; 2026 Hapkido Championship Indonesia.
+                {{ config('app.copyright') }}
             </strong>
             All rights reserved.
         </footer>
