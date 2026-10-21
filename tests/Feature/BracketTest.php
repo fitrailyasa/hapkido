@@ -227,18 +227,14 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // 5 athletes → main bracket size 4 (not inflated to 8/16 by jadwal).
+        // 5 athletes → size 8 (not inflated to 16 by oversized jadwal).
         $this->assertSame(
             0,
             BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
         );
         $this->assertSame(
-            0,
+            8,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
-        );
-        $this->assertSame(
-            4,
-            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
     }
 
@@ -413,14 +409,17 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Paper style (5 orang): 1 penyisihan + bagan 4 (1 BYE vs pemenang + 1 partai penuh).
+        // 5 athletes → size 8: penyisihan column has all names (BYE + 1 real match).
         $this->assertSame(
-            0,
+            8,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
         $this->assertSame(
-            4,
-            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
+            5,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->whereNotNull('athlete_id')
+                ->count()
         );
         $this->assertSame(
             1,

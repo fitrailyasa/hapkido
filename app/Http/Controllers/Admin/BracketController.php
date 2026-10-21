@@ -40,7 +40,6 @@ class BracketController extends Controller
         $manualPartai = collect();
         $athletes = collect();
         $usedAthleteIds = collect();
-        $prelimMatches = collect();
 
         if ($selected) {
             $athleteCount = $selected->athletes()->where('status', 'active')->count();
@@ -58,37 +57,18 @@ class BracketController extends Controller
             $jadwal = $selected->schedules()->where('type', 'daeryun')->with('match')->get();
             $jadwalCount = $jadwal->count();
 
-            $mainSize = (int) (BracketSlot::where('category_id', $selected->id)->max('round') ?: 0);
-            $entryRounds = [];
-
+            $entrySize = 2;
             if ($athleteCount >= 2) {
-                $fullSize = 2;
-                while ($fullSize < $athleteCount) {
-                    $fullSize *= 2;
+                while ($entrySize < $athleteCount) {
+                    $entrySize *= 2;
                 }
-                $hasPrelim = $athleteCount !== $fullSize;
-                $entryMain = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
-                if ($mainSize < 2) {
-                    $mainSize = $entryMain;
-                }
-                if ($hasPrelim) {
-                    $entryRounds[] = $brackets->label($fullSize);
-                }
-                $entryRounds[] = $brackets->label($entryMain);
             }
-
-            $firstRound = collect($entryRounds)
-                ->first(fn (string $round) => $jadwal->contains(fn (Schedule $s) => $s->round === $round))
-                ?? $jadwal->countBy('round')->sortDesc()->keys()->first();
+            $firstRound = $athleteCount >= 2
+                ? $brackets->label($entrySize)
+                : $jadwal->countBy('round')->sortDesc()->keys()->first();
 
             $manualPartai = $jadwal
-                ->filter(function (Schedule $schedule) use ($entryRounds) {
-                    if ($schedule->match !== null) {
-                        return false;
-                    }
-
-                    return $entryRounds === [] || in_array($schedule->round, $entryRounds, true);
-                })
+                ->filter(fn (Schedule $schedule) => $schedule->round === $firstRound && $schedule->match === null)
                 ->sortBy(['order_no', 'match_no', 'id'])
                 ->values();
 
@@ -117,17 +97,6 @@ class BracketController extends Controller
                 $byeIds = $payload['byeIds'];
                 $emptyIds = $payload['emptyIds'];
                 $champion = $payload['champion'];
-
-                if ($mainSize >= 2) {
-                    $prelimLabel = $brackets->label($mainSize * 2);
-                    $prelimMatches = Matchup::with(['athleteA', 'athleteB', 'schedule'])
-                        ->whereHas('schedule', fn ($query) => $query
-                            ->where('category_id', $selected->id)
-                            ->where('type', 'daeryun'))
-                        ->where('round', $prelimLabel)
-                        ->orderBy('position')
-                        ->get();
-                }
             }
         }
 
@@ -148,7 +117,6 @@ class BracketController extends Controller
             'manualPartai' => $manualPartai,
             'athletes' => $athletes,
             'usedAthleteIds' => $usedAthleteIds,
-            'prelimMatches' => $prelimMatches,
         ]);
     }
 

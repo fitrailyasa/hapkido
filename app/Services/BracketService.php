@@ -14,9 +14,9 @@ use Illuminate\Support\Collection;
 class BracketService
 {
     /**
-     * Build the bracket like a paper bagan (e.g. 9 athletes):
-     * 1 penyisihan + 1 BYE facing that winner + full pairings for the rest
-     * inside an 8-person tree — not seven "Nama vs BYE" boxes.
+     * Build the bracket from active athletes. Penyisihan is the first column
+     * of the bagan (joined): real matches + Nama vs BYE, then one-step advance.
+     * Empty power-of-two slots stay in the tree (shown black in the UI).
      * Jadwal stubs are created; jam/arena can be filled later.
      */
     public function generate(Category $category): void
@@ -33,96 +33,39 @@ class BracketService
         $roundCounts = $this->daeryunRoundCounts($category);
         $this->clear($category);
 
-        $n = $athletes->count();
-        $fullSize = $this->nextPowerOfTwo($n);
-        $hasPrelim = $n !== $fullSize;
-        $mainSize = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
-        $prelimCount = $hasPrelim ? ($n - $mainSize) : 0;
-        $entryLabel = $this->label($hasPrelim ? $fullSize : $mainSize);
+        $size = $this->nextPowerOfTwo($athletes->count());
+        $canonicalFirst = $this->label($size);
 
         if ($roundCounts->isNotEmpty()) {
-            $this->normalizeFirstRoundLabels($category, $roundCounts, $entryLabel);
+            $this->normalizeFirstRoundLabels($category, $roundCounts, $canonicalFirst);
         }
 
         $jadwal = $this->jadwalQueue($category);
-        $list = $athletes->values();
-        $index = 0;
+        $placement = $this->placeAthletesWithByes($athletes, $size);
+        $firstRoundSlots = $placement['slots'];
 
         $slots = [];
 
-        for ($roundSize = $mainSize; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
+        for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
             for ($position = 0; $position < $roundSize; $position++) {
+                $athleteId = $roundSize === $size ? ($firstRoundSlots[$position] ?? null) : null;
+
                 $slots[$roundSize][$position] = BracketSlot::create([
                     'category_id' => $category->id,
                     'round' => (string) $roundSize,
                     'position' => $position,
-                    'athlete_id' => null,
+                    'athlete_id' => $athleteId,
                 ]);
             }
         }
 
-        $alive = [$mainSize => array_fill(0, $mainSize, false)];
-        $pairingCount = (int) ($mainSize / 2);
+        $alive = [$size => []];
 
-        if ($hasPrelim) {
-            // Like the paper sheet: first prelimCount pairings are
-            // (BYE athlete vs pemenang penyisihan); the rest are full matches.
-            $prelimLabel = $this->label($fullSize);
-
-            for ($pairing = 0; $pairing < $prelimCount; $pairing++) {
-                $byeSlot = $pairing * 2;
-                $waitSlot = $byeSlot + 1;
-
-                $slots[$mainSize][$byeSlot]->update(['athlete_id' => $list[$index]->id]);
-                $index++;
-                $alive[$mainSize][$byeSlot] = true;
-                $alive[$mainSize][$waitSlot] = true;
-
-                $athleteA = $list[$index]->id;
-                $index++;
-                $athleteB = $list[$index]->id;
-                $index++;
-
-                $schedule = $jadwal->get($prelimLabel, collect())->shift()
-                    ?? $this->createMissingRoundSchedule(
-                        $category,
-                        $prelimLabel,
-                        $waitSlot + 1,
-                        $this->scheduleTemplate($category)
-                    );
-
-                Matchup::create([
-                    'schedule_id' => $schedule->id,
-                    'athlete_a_id' => $athleteA,
-                    'athlete_b_id' => $athleteB,
-                    'winner_athlete_id' => null,
-                    'status' => 'pending',
-                    'round' => $prelimLabel,
-                    // Feeds main-bracket slot $waitSlot.
-                    'position' => $waitSlot + 1,
-                ]);
-            }
-
-            for ($pairing = $prelimCount; $pairing < $pairingCount; $pairing++) {
-                $slotA = $pairing * 2;
-                $slotB = $slotA + 1;
-
-                $slots[$mainSize][$slotA]->update(['athlete_id' => $list[$index]->id]);
-                $index++;
-                $slots[$mainSize][$slotB]->update(['athlete_id' => $list[$index]->id]);
-                $index++;
-                $alive[$mainSize][$slotA] = true;
-                $alive[$mainSize][$slotB] = true;
-            }
-        } else {
-            for ($position = 0; $position < $mainSize; $position++) {
-                $slots[$mainSize][$position]->update(['athlete_id' => $list[$index]->id]);
-                $index++;
-                $alive[$mainSize][$position] = true;
-            }
+        for ($position = 0; $position < $size; $position++) {
+            $alive[$size][$position] = $slots[$size][$position]->athlete_id !== null;
         }
 
-        for ($roundSize = $mainSize; $roundSize >= 4; $roundSize = (int) ($roundSize / 2)) {
+        for ($roundSize = $size; $roundSize >= 4; $roundSize = (int) ($roundSize / 2)) {
             $childSize = (int) ($roundSize / 2);
 
             for ($position = 0; $position < $childSize; $position++) {
@@ -131,7 +74,7 @@ class BracketService
             }
         }
 
-        $roundSize = $mainSize;
+        $roundSize = $size;
 
         while ($roundSize >= 2) {
             $matchCount = (int) ($roundSize / 2);
@@ -146,6 +89,7 @@ class BracketService
                     continue;
                 }
 
+                // Nama vs BYE — lolos satu langkah, tanpa jadwal partai.
                 if ($aliveA !== $aliveB) {
                     $winnerId = ($aliveA ? $athleteA : $athleteB) ?? null;
 
@@ -674,9 +618,15 @@ class BracketService
 
         $sizes = $this->ensureSlots($category);
         $schedule->refresh();
-        $mainSize = (int) max($sizes);
-        $mainLabel = $this->label($mainSize);
-        $prelimLabel = $this->label($mainSize * 2);
+        $firstSize = (int) max($sizes);
+        $label = $this->label($firstSize);
+
+        if ($schedule->round !== $label) {
+            throw new BracketNeedsSchedule(
+                "Partai manual hanya bisa diisi pada ronde pertama ({$this->labelHuman($label)}). "
+                . "Ronde {$this->labelHuman($schedule->round)} diisi otomatis dari pemenang ronde sebelumnya."
+            );
+        }
 
         $siblings = Schedule::where('category_id', $category->id)
             ->where('type', 'daeryun')
@@ -688,46 +638,13 @@ class BracketService
 
         $index = (int) $siblings->search($schedule->id);
 
-        if ($schedule->round === $prelimLabel) {
-            if ($athleteB === null) {
-                throw new BracketNeedsSchedule(
-                    'Partai penyisihan harus diisi dua atlet (bukan BYE).'
-                );
-            }
-
-            Matchup::updateOrCreate(
-                ['schedule_id' => $schedule->id],
-                [
-                    'athlete_a_id' => $athleteA->id,
-                    'athlete_b_id' => $athleteB->id,
-                    'winner_athlete_id' => null,
-                    'status' => 'pending',
-                    'round' => $prelimLabel,
-                    'position' => $index + 1,
-                    'finished_at' => null,
-                ]
-            );
-
-            $this->ensureBracketMatches($category);
-
-            return;
-        }
-
-        if ($schedule->round !== $mainLabel) {
-            throw new BracketNeedsSchedule(
-                "Partai manual hanya bisa diisi pada ronde masuk bracket "
-                . "({$this->labelHuman($prelimLabel)} / {$this->labelHuman($mainLabel)}). "
-                . "Ronde {$this->labelHuman($schedule->round)} diisi otomatis dari pemenang ronde sebelumnya."
-            );
-        }
-
         BracketSlot::where('category_id', $category->id)
-            ->where('round', (string) $mainSize)
+            ->where('round', (string) $firstSize)
             ->where('position', $index * 2)
             ->update(['athlete_id' => $athleteA->id]);
 
         BracketSlot::where('category_id', $category->id)
-            ->where('round', (string) $mainSize)
+            ->where('round', (string) $firstSize)
             ->where('position', ($index * 2) + 1)
             ->update(['athlete_id' => $athleteB?->id]);
 
@@ -739,13 +656,13 @@ class BracketService
                     'athlete_b_id' => null,
                     'winner_athlete_id' => $athleteA->id,
                     'status' => 'finished',
-                    'round' => $mainLabel,
+                    'round' => $label,
                     'position' => $index + 1,
                     'finished_at' => now(),
                 ]
             );
 
-            $this->advanceByeToNextRound($category, $mainSize, $index, $athleteA->id);
+            $this->advanceByeToNextRound($category, $firstSize, $index, $athleteA->id);
 
             return;
         }
@@ -757,7 +674,7 @@ class BracketService
                 'athlete_b_id' => $athleteB->id,
                 'winner_athlete_id' => null,
                 'status' => 'pending',
-                'round' => $mainLabel,
+                'round' => $label,
                 'position' => $index + 1,
                 'finished_at' => null,
             ]
@@ -828,33 +745,18 @@ class BracketService
             return;
         }
 
-        $fullSize = $this->nextPowerOfTwo($athleteCount);
-        $hasPrelim = $athleteCount !== $fullSize;
-        $mainSize = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
-        $prelimCount = $hasPrelim ? ($athleteCount - $mainSize) : 0;
-        $mainFirstCount = (int) ($mainSize / 2);
+        $size = $this->nextPowerOfTwo($athleteCount);
+        $label = $this->label($size);
+        $needed = (int) ($size / 2);
         $template = $this->scheduleTemplate($category);
 
-        if ($prelimCount > 0) {
-            $prelimLabel = $this->label($fullSize);
-            $existingPrelim = Schedule::where('category_id', $category->id)
-                ->where('type', 'daeryun')
-                ->where('round', $prelimLabel)
-                ->count();
-
-            for ($order = $existingPrelim + 1; $order <= $prelimCount; $order++) {
-                $this->createMissingRoundSchedule($category, $prelimLabel, $order, $template);
-            }
-        }
-
-        $mainLabel = $this->label($mainSize);
-        $existingMain = Schedule::where('category_id', $category->id)
+        $existing = Schedule::where('category_id', $category->id)
             ->where('type', 'daeryun')
-            ->where('round', $mainLabel)
+            ->where('round', $label)
             ->count();
 
-        for ($order = $existingMain + 1; $order <= $mainFirstCount; $order++) {
-            $this->createMissingRoundSchedule($category, $mainLabel, $order, $template);
+        for ($order = $existing + 1; $order <= $needed; $order++) {
+            $this->createMissingRoundSchedule($category, $label, $order, $template);
         }
     }
 
@@ -873,12 +775,10 @@ class BracketService
             );
         }
 
-        $fullSize = $this->nextPowerOfTwo($athleteCount);
-        $hasPrelim = $athleteCount !== $fullSize;
-        $mainSize = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
+        $size = $this->nextPowerOfTwo($athleteCount);
 
         if (! BracketSlot::where('category_id', $category->id)->exists()) {
-            for ($roundSize = $mainSize; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
+            for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
                 for ($position = 0; $position < $roundSize; $position++) {
                     BracketSlot::create([
                         'category_id' => $category->id,

@@ -163,46 +163,12 @@
                 </div>
             </div>
 
-            @if (isset($prelimMatches) && $prelimMatches->isNotEmpty())
-                @php
-                    $prelimAthleteCount = $prelimMatches->sum(
-                        fn ($m) => (int) (bool) $m->athlete_a_id + (int) (bool) $m->athlete_b_id
-                    );
-                @endphp
-                <div class="card shadow-sm border-0 mb-3 border-warning">
-                    <div class="card-header bg-warning-subtle">
-                        <h6 class="mb-0">
-                            <i class="bi bi-lightning me-2"></i>Partai Penyisihan
-                            <small class="text-body-secondary">
-                                — {{ $prelimAthleteCount }} peserta bertanding di sini; pemenang masuk slot kosong di bagan
-                            </small>
-                        </h6>
-                    </div>
-                    <div class="list-group list-group-flush">
-                        @foreach ($prelimMatches as $prelim)
-                            <a href="{{ route('admin.matches.show', $prelim) }}"
-                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-                                <span>
-                                    <strong>{{ $prelim->schedule?->match_no }}</strong>
-                                    &middot;
-                                    {{ $prelim->athleteA?->name ?? '—' }}
-                                    vs
-                                    {{ $prelim->athleteB?->name ?? '—' }}
-                                </span>
-                                <span class="badge text-bg-{{ $prelim->status === 'finished' ? 'success' : 'secondary' }}">
-                                    {{ $prelim->status === 'finished' ? 'Selesai' : 'Belum' }}
-                                </span>
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-body py-2 small text-body-secondary">
                     Klik kotak partai untuk membuka detail &middot;
                     <strong class="text-success">Nama hijau tebal</strong> = pemenang &middot;
-                    Tulisan <em>Nama vs Nama</em> di bagan = pasangan penyisihan (belum ada pemenang).
+                    <span class="badge bg-warning text-dark">BYE</span> = lolos tanpa lawan &middot;
+                    Kotak hitam = slot kosong (template kuadrat).
                 </div>
             </div>
 

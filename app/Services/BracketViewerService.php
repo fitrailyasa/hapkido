@@ -117,21 +117,6 @@ class BracketViewerService
         $champion = null;
         $matchId = 0;
 
-        // Prelim feeders (no slots in the viewer tree): map main-bracket slot
-        // index → matchup so the empty QF/SF slot still shows both names.
-        $largest = (int) ($rounds[0]['size'] ?? 0);
-        $prelimBySlot = collect();
-
-        if ($largest >= 2) {
-            $prelimBySlot = Matchup::with(['athleteA', 'athleteB', 'schedule'])
-                ->whereHas('schedule', fn ($builder) => $builder
-                    ->where('category_id', $category->id)
-                    ->where('type', 'daeryun'))
-                ->where('round', $this->brackets->label($largest * 2))
-                ->get()
-                ->keyBy(fn (Matchup $match) => max(0, ((int) $match->position) - 1));
-        }
-
         $hasUnfinishedEarlier = [];
         $unfinishedSoFar = false;
         foreach ($rounds as $roundIndex => $round) {
@@ -141,16 +126,6 @@ class BracketViewerService
                 if ($prior && $prior->status !== 'finished') {
                     $unfinishedSoFar = true;
                     break;
-                }
-            }
-        }
-
-        // Prelim still open counts as unfinished for later-round BYE crowning.
-        if ($prelimBySlot->contains(fn (Matchup $match) => $match->status !== 'finished')) {
-            $unfinishedSoFar = true;
-            foreach ($rounds as $roundIndex => $round) {
-                if ($roundIndex > 0) {
-                    $hasUnfinishedEarlier[$roundIndex] = true;
                 }
             }
         }
@@ -181,43 +156,9 @@ class BracketViewerService
                     }
                 }
 
-                // First round of the main bagan: empty slot waiting on a prelim
-                // shows "A vs B" so all 9 athletes are visible (not just 7).
-                $prelimForUrl = null;
-
-                if ($roundIndex === 0 && $largest >= 2) {
-                    $slotAPos = ((int) $pairing['position'] - 1) * 2;
-                    $slotBPos = $slotAPos + 1;
-
-                    if ($athleteA === null && $prelimBySlot->has($slotAPos)) {
-                        $athleteA = $this->registerPrelimPlaceholder(
-                            $prelimBySlot->get($slotAPos),
-                            $category->id,
-                            $participants,
-                            $seen
-                        );
-                        $prelimForUrl = $prelimBySlot->get($slotAPos);
-                    }
-
-                    if ($athleteB === null && $prelimBySlot->has($slotBPos)) {
-                        $athleteB = $this->registerPrelimPlaceholder(
-                            $prelimBySlot->get($slotBPos),
-                            $category->id,
-                            $participants,
-                            $seen
-                        );
-                        $prelimForUrl = $prelimBySlot->get($slotBPos);
-                    }
-                }
-
                 $opponentA = ['id' => $athleteA];
                 $opponentB = ['id' => $athleteB];
                 $status = 0;
-
-                // Paper-style: athlete with BYE facing a penyisihan placeholder.
-                if ($prelimForUrl !== null) {
-                    $byeIds[] = $matchId;
-                }
 
                 $isByeMatch = ($athleteA !== null && $athleteB === null)
                     || ($athleteB !== null && $athleteA === null);
@@ -311,9 +252,6 @@ class BracketViewerService
                             'name' => $match->winner->name,
                         ];
                     }
-                } elseif ($withAdminLinks && $prelimForUrl?->schedule) {
-                    // Slot still waiting on penyisihan — open that partai instead.
-                    $matchUrls[$matchId] = route('admin.matches.show', $prelimForUrl);
                 }
             }
         }
@@ -341,37 +279,5 @@ class BracketViewerService
             'emptyIds' => $emptyIds,
             'champion' => $champion,
         ];
-    }
-
-    /**
-     * Register a synthetic participant so the bagan shows both prelim athletes
-     * in the empty main-bracket slot (e.g. "Hendra vs Atlet 1").
-     *
-     * @param  array<int, array<string, mixed>>  $participants
-     * @param  array<int, true>  $seen
-     */
-    protected function registerPrelimPlaceholder(
-        Matchup $prelim,
-        int $tournamentId,
-        array &$participants,
-        array &$seen
-    ): int {
-        $virtualId = -1 * (int) $prelim->id;
-
-        if (isset($seen[$virtualId])) {
-            return $virtualId;
-        }
-
-        $nameA = $prelim->athleteA?->name ?? '—';
-        $nameB = $prelim->athleteB?->name ?? '—';
-
-        $seen[$virtualId] = true;
-        $participants[] = [
-            'id' => $virtualId,
-            'tournament_id' => $tournamentId,
-            'name' => "{$nameA} vs {$nameB}",
-        ];
-
-        return $virtualId;
     }
 }
