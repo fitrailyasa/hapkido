@@ -48,14 +48,14 @@
                 @if ($jadwalCount === 0)
                     <div class="card-body text-center text-body-secondary">
                         Kelas ini belum memiliki jadwal partai. Buat jadwal dulu di menu
-                        <a href="{{ route('admin.schedules.create') }}">Jadwal</a>, partai manual mengisi jadwal yang
+                        <a href="{{ route('admin.schedules.index') }}">Jadwal</a>, partai manual mengisi jadwal yang
                         sudah dibuat.
                     </div>
                 @elseif ($manualPartai->isEmpty())
                     <div class="card-body text-center text-body-secondary">
                         Semua jadwal ronde {{ \App\Models\Schedule::roundText($firstRound) }} sudah terisi atlet.
                         Tambah jadwal baru di menu
-                        <a href="{{ route('admin.schedules.create') }}">Jadwal</a> bila masih ada peserta yang belum
+                        <a href="{{ route('admin.schedules.index') }}">Jadwal</a> bila masih ada peserta yang belum
                         bertanding.
                     </div>
                 @else
