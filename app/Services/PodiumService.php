@@ -24,7 +24,15 @@ class PodiumService
     /**
      * The medal entries of a category.
      *
-     * @return array<int, array{athlete: Athlete, rank: int, medal: string, score: float|null}>
+     * @return array<int, array{
+     *     athlete: Athlete,
+     *     rank: int,
+     *     medal: string,
+     *     score: float|null,
+     *     result: string|null,
+     *     score_line: string|null,
+     *     round: string|null
+     * }>
      */
     public function forCategory(Category $category): array
     {
@@ -200,15 +208,45 @@ class PodiumService
     }
 
     /**
-     * @return array{athlete: Athlete, rank: int, medal: string, score: float|null}
+     * @return array{
+     *     athlete: Athlete,
+     *     rank: int,
+     *     medal: string,
+     *     score: float|null,
+     *     result: string|null,
+     *     score_line: string|null,
+     *     round: string|null
+     * }
      */
-    protected function entry(Athlete $athlete, int $rank, string $medal, ?float $score = null): array
-    {
+    protected function entry(
+        Athlete $athlete,
+        int $rank,
+        string $medal,
+        ?float $score = null,
+        ?Matchup $match = null
+    ): array {
+        $result = null;
+        $scoreLine = null;
+
+        if ($match && $match->winner_athlete_id) {
+            $isA = (int) $match->athlete_a_id === (int) $athlete->id;
+            $result = (int) $match->winner_athlete_id === (int) $athlete->id ? 'Menang' : 'Kalah';
+
+            if ($match->hasScore()) {
+                $scoreLine = $isA
+                    ? "{$match->score_a} - {$match->score_b}"
+                    : "{$match->score_b} - {$match->score_a}";
+            }
+        }
+
         return [
             'athlete' => $athlete,
             'rank' => $rank,
             'medal' => $medal,
             'score' => $score,
+            'result' => $result,
+            'score_line' => $scoreLine,
+            'round' => $match?->round,
         ];
     }
 }
