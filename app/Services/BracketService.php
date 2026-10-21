@@ -131,15 +131,16 @@ class BracketService
                 }
 
                 // Both sides are alive: bind a jadwal partai of this round.
-                $schedule = $jadwal->get($this->label($roundSize), collect())->shift();
-
-                if (! $schedule) {
-                    throw new BracketNeedsSchedule(
-                        "Jadwal partai Daeryun pada kelas {$category->name} tidak mencukupi "
-                        . "untuk {$athletes->count()} peserta. Tambahkan jadwal partai pada ronde "
-                        . "{$this->labelHuman($this->label($roundSize))} di menu Jadwal."
+                // Later rounds (SF/Final) are created automatically when the
+                // admin only prepared the first-round jadwal.
+                $label = $this->label($roundSize);
+                $schedule = $jadwal->get($label, collect())->shift()
+                    ?? $this->createMissingRoundSchedule(
+                        $category,
+                        $label,
+                        $position + 1,
+                        $this->scheduleTemplate($category)
                     );
-                }
 
                 Matchup::create([
                     'schedule_id' => $schedule->id,
@@ -147,13 +148,58 @@ class BracketService
                     'athlete_b_id' => $athleteB,
                     'winner_athlete_id' => null,
                     'status' => 'pending',
-                    'round' => $this->label($roundSize),
+                    'round' => $label,
                     'position' => $position + 1,
                 ]);
             }
 
             $roundSize = (int) ($roundSize / 2);
         }
+    }
+
+    /**
+     * An existing jadwal row used as a template (arena, tanggal, jam) when
+     * generate has to invent Semifinal / Final partai automatically.
+     */
+    protected function scheduleTemplate(Category $category): ?Schedule
+    {
+        return Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->orderByDesc('order_no')
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /**
+     * Create a missing jadwal partai for a later bracket round so generate does
+     * not force the admin to add Semifinal/Final by hand after shrinking the
+     * first round.
+     */
+    protected function createMissingRoundSchedule(
+        Category $category,
+        string $label,
+        int $orderNo,
+        ?Schedule $template
+    ): Schedule {
+        $sequence = (int) Schedule::query()->count() + 1;
+
+        do {
+            $matchNo = sprintf('B-%s-%02d', $category->id, $sequence);
+            $sequence++;
+        } while (Schedule::where('match_no', $matchNo)->exists());
+
+        return Schedule::create([
+            'match_no' => $matchNo,
+            'category_id' => $category->id,
+            'arena_id' => $template?->arena_id,
+            'type' => 'daeryun',
+            'round' => $label,
+            'order_no' => $orderNo,
+            'match_date' => $template?->match_date?->toDateString() ?? now()->toDateString(),
+            'start_time' => $template?->start_time,
+            'end_time' => $template?->end_time,
+            'status' => 'pending',
+        ]);
     }
 
     /**

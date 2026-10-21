@@ -279,6 +279,44 @@ class BracketTest extends TestCase
         $this->assertSame(7, Matchup::count());
     }
 
+    public function test_generate_auto_creates_semifinal_and_final_jadwal(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 8) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        // Only the 4 first-round partai — the case that used to fail asking for Semifinal.
+        foreach (range(1, 4) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'penyisihan',
+                'order_no' => $order,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertSame(
+            4,
+            Schedule::where('category_id', $category->id)->where('round', 'perempat_final')->count()
+        );
+        $this->assertSame(
+            2,
+            Schedule::where('category_id', $category->id)->where('round', 'semifinal')->count()
+        );
+        $this->assertSame(
+            1,
+            Schedule::where('category_id', $category->id)->where('round', 'final')->count()
+        );
+        $this->assertSame(7, Matchup::count());
+    }
+
     public function test_generate_gives_bye_for_odd_athlete_count(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
