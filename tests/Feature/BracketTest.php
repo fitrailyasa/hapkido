@@ -279,6 +279,47 @@ class BracketTest extends TestCase
         $this->assertSame(7, Matchup::count());
     }
 
+    public function test_ensure_bracket_matches_creates_clickable_quarterfinals(): void
+    {
+        $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 8) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        // Only Penyisihan jadwal (size-16 tree). No Perempat Final rows yet.
+        foreach (range(1, 8) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'penyisihan',
+                'order_no' => $order,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertGreaterThan(
+            0,
+            Schedule::where('category_id', $category->id)->where('round', 'perempat_final')->count()
+        );
+        $this->assertGreaterThan(
+            0,
+            Matchup::where('round', 'perempat_final')->count()
+        );
+
+        $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
+        $response->assertOk();
+
+        $qf = Matchup::where('round', 'perempat_final')->first();
+        $this->assertNotNull($qf);
+        // Click target is embedded in the brackets-viewer matchUrls JSON.
+        $response->assertSee('/admin/matches/'.$qf->id, false);
+    }
+
     public function test_generate_auto_creates_semifinal_and_final_jadwal(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
@@ -354,7 +395,7 @@ class BracketTest extends TestCase
 
     public function test_finishing_a_match_only_advances_one_round(): void
     {
-        $user = $this->userWithPermissions(['brackets.generate', 'matches.finish', 'matches.view']);
+        $user = $this->userWithPermissions(['brackets.generate']);
         $category = CategoryFactory::new()->daeryun()->create();
 
         foreach (range(1, 8) as $i) {
@@ -367,21 +408,22 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        $firstRound = Matchup::where('round', 'perempat_final')->orderBy('position')->first();
+        $firstRound = Matchup::with(['athleteA', 'schedule.category'])
+            ->where('round', 'perempat_final')
+            ->orderBy('position')
+            ->first();
         $this->assertNotNull($firstRound);
 
         $winner = $firstRound->athleteA;
         $this->assertNotNull($winner);
 
-        $firstRound->update(['status' => 'running']);
+        $firstRound->update([
+            'status' => 'finished',
+            'winner_athlete_id' => $winner->id,
+            'winner_id' => $winner->id,
+        ]);
 
-        $this->actingAs($user)
-            ->post("/admin/matches/{$firstRound->id}/finish", [
-                'winner_id' => $winner->id,
-                'score_a' => 5,
-                'score_b' => 3,
-            ])
-            ->assertSessionHas('success');
+        app(BracketService::class)->advance($firstRound, $winner);
 
         // Winner must appear in the immediate next round (semifinal), not the final.
         $this->assertTrue(

@@ -73,6 +73,10 @@ class BracketController extends Controller
                 ->values();
 
             if ($hasBracket) {
+                // Backfill Perempat Final / later partai so bracket boxes are
+                // clickable even when the admin only created Penyisihan jadwal.
+                app(\App\Services\BracketService::class)->ensureBracketMatches($selected);
+
                 $rounds = $viewer->rounds($selected);
 
                 $payload = $viewer->payload($selected, withAdminLinks: true);

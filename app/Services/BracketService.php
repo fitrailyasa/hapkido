@@ -155,6 +155,151 @@ class BracketService
 
             $roundSize = (int) ($roundSize / 2);
         }
+
+        // Guarantee every competitive pairing (including Perempat Final) has a
+        // clickable jadwal + matchup, even when the admin only created Penyisihan.
+        $this->ensureBracketMatches($category);
+    }
+
+    /**
+     * Ensure every competitive pairing has a Matchup + Schedule so bracket
+     * boxes (Perempat Final, Semifinal, Final) are clickable.
+     *
+     * Safe to call on page load: existing rows are reused; only gaps are filled.
+     */
+    public function ensureBracketMatches(Category $category): void
+    {
+        $sizes = BracketSlot::where('category_id', $category->id)
+            ->distinct()
+            ->pluck('round')
+            ->map(fn ($round) => (int) $round)
+            ->sortDesc()
+            ->values();
+
+        if ($sizes->isEmpty()) {
+            return;
+        }
+
+        $largest = (int) $sizes->first();
+        $slotsByRound = BracketSlot::where('category_id', $category->id)
+            ->orderBy('position')
+            ->get(['round', 'position', 'athlete_id'])
+            ->groupBy('round');
+
+        $alive = [];
+
+        for ($position = 0; $position < $largest; $position++) {
+            $row = $slotsByRound->get((string) $largest)?->firstWhere('position', $position);
+            $alive[$largest][$position] = ($row?->athlete_id !== null);
+        }
+
+        // Also treat a finished/pending first-round matchup as keeping that
+        // branch alive even if slots were cleared oddly.
+        Matchup::whereHas('schedule', fn ($query) => $query
+            ->where('category_id', $category->id)
+            ->where('type', 'daeryun'))
+            ->where('round', $this->label($largest))
+            ->get(['position', 'athlete_a_id', 'athlete_b_id'])
+            ->each(function (Matchup $match) use (&$alive, $largest) {
+                $index = max(0, ((int) $match->position) - 1);
+                if ($match->athlete_a_id) {
+                    $alive[$largest][$index * 2] = true;
+                }
+                if ($match->athlete_b_id) {
+                    $alive[$largest][($index * 2) + 1] = true;
+                }
+            });
+
+        for ($roundSize = $largest; $roundSize >= 4; $roundSize = (int) ($roundSize / 2)) {
+            $nextSize = (int) ($roundSize / 2);
+
+            for ($position = 0; $position < $nextSize; $position++) {
+                $alive[$nextSize][$position] = ($alive[$roundSize][$position * 2] ?? false)
+                    || ($alive[$roundSize][($position * 2) + 1] ?? false);
+            }
+        }
+
+        $template = $this->scheduleTemplate($category);
+
+        foreach ($sizes as $roundSize) {
+            $roundSize = (int) $roundSize;
+            $matchCount = (int) ($roundSize / 2);
+
+            for ($position = 0; $position < $matchCount; $position++) {
+                $aliveA = $alive[$roundSize][$position * 2] ?? false;
+                $aliveB = $alive[$roundSize][($position * 2) + 1] ?? false;
+
+                // Only real meetings (both branches alive) need a clickable partai.
+                if (! $aliveA || ! $aliveB) {
+                    continue;
+                }
+
+                $slotA = $slotsByRound->get((string) $roundSize)?->firstWhere('position', $position * 2);
+                $slotB = $slotsByRound->get((string) $roundSize)?->firstWhere('position', ($position * 2) + 1);
+
+                $this->ensureMatchForPairing(
+                    $category,
+                    $sizes,
+                    $roundSize,
+                    $position,
+                    $slotA?->athlete_id,
+                    $slotB?->athlete_id,
+                    $template
+                );
+            }
+        }
+    }
+
+    /**
+     * Find or create the Matchup (+ jadwal) for one pairing of a round.
+     */
+    protected function ensureMatchForPairing(
+        Category $category,
+        Collection $sizes,
+        int $roundSize,
+        int $pairingIndex,
+        ?int $athleteAId,
+        ?int $athleteBId,
+        ?Schedule $template = null
+    ): Matchup {
+        $position = $pairingIndex + 1;
+        $label = $this->label($roundSize);
+        $existing = $this->findMatch($category, $sizes, $roundSize, $position);
+
+        if ($existing) {
+            if ($existing->status !== 'finished') {
+                $existing->update([
+                    'athlete_a_id' => $athleteAId ?? $existing->athlete_a_id,
+                    'athlete_b_id' => $athleteBId ?? $existing->athlete_b_id,
+                ]);
+            }
+
+            return $existing->fresh();
+        }
+
+        $schedule = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->where('round', $label)
+            ->whereDoesntHave('match')
+            ->orderBy('order_no')
+            ->orderBy('id')
+            ->first()
+            ?? $this->createMissingRoundSchedule(
+                $category,
+                $label,
+                $position,
+                $template ?? $this->scheduleTemplate($category)
+            );
+
+        return Matchup::create([
+            'schedule_id' => $schedule->id,
+            'athlete_a_id' => $athleteAId,
+            'athlete_b_id' => $athleteBId,
+            'winner_athlete_id' => null,
+            'status' => 'pending',
+            'round' => $label,
+            'position' => $position,
+        ]);
     }
 
     /**
@@ -290,6 +435,8 @@ class BracketService
                 'finished_at' => null,
             ]
         );
+
+        $this->ensureBracketMatches($category);
     }
 
     /**
@@ -491,11 +638,6 @@ class BracketService
             ->update(['athlete_id' => $winner->id]);
 
         $nextMatchPosition = intdiv($pairing, 2);
-        $nextMatch = $this->findMatch($category, $sizes, $nextSize, $nextMatchPosition + 1);
-
-        if ($nextMatch === null) {
-            return;
-        }
 
         $slotA = BracketSlot::where('category_id', $category->id)
             ->where('round', (string) $nextSize)
@@ -507,10 +649,16 @@ class BracketService
             ->where('position', ($nextMatchPosition * 2) + 1)
             ->first();
 
-        $nextMatch->update([
-            'athlete_a_id' => $slotA?->athlete_id,
-            'athlete_b_id' => $slotB?->athlete_id,
-        ]);
+        // Create Perempat Final / Semifinal / Final on demand when the admin
+        // only prepared Penyisihan jadwal — otherwise the box is not clickable.
+        $this->ensureMatchForPairing(
+            $category,
+            $sizes,
+            $nextSize,
+            $nextMatchPosition,
+            $slotA?->athlete_id,
+            $slotB?->athlete_id
+        );
     }
 
     /**
