@@ -497,12 +497,13 @@ class BracketTest extends TestCase
         $prelim = Matchup::with(['athleteA', 'athleteB'])->where('round', 'penyisihan')->first();
         $this->assertNotNull($prelim);
         $payload = app(\App\Services\BracketViewerService::class)->payload($category);
+        $this->assertNotNull($payload);
         $names = collect($payload['viewerData']['participants'])->pluck('name');
-        $this->assertTrue($names->contains($prelim->athleteA->name));
         $this->assertTrue(
             $names->contains("{$prelim->athleteA->name} vs {$prelim->athleteB->name}"),
-            'Empty QF slot should show both penyisihan athletes'
+            'Empty QF slot should show both penyisihan athletes. Got: '.$names->implode(', ')
         );
+        $this->assertCount(8, $names); // 7 seeded + 1 placeholder covering 2 prelim athletes
     }
 
     public function test_reconcile_clears_premature_finalist(): void
