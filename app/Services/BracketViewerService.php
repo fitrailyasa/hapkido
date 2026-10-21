@@ -117,6 +117,19 @@ class BracketViewerService
         $champion = null;
         $matchId = 0;
 
+        $hasUnfinishedEarlier = [];
+        $unfinishedSoFar = false;
+        foreach ($rounds as $roundIndex => $round) {
+            $hasUnfinishedEarlier[$roundIndex] = $unfinishedSoFar;
+            foreach ($round['pairings'] as $pairing) {
+                $prior = $pairing['match'];
+                if ($prior && $prior->status !== 'finished') {
+                    $unfinishedSoFar = true;
+                    break;
+                }
+            }
+        }
+
         foreach ($rounds as $roundIndex => $round) {
             $roundLabels[] = $round['label'];
 
@@ -194,18 +207,23 @@ class BracketViewerService
                 } elseif ($athleteA !== null && $athleteB !== null) {
                     $status = 2; // Ready (full pairing without a match: unusual)
                 } elseif ($athleteA !== null || $athleteB !== null) {
-                    // Bye from generate: entrant advances without a matchup row.
-                    $status = 4; // Completed
-
-                    if ($athleteA !== null) {
-                        $opponentA['result'] = 'win';
-                        $opponentB = null;
+                    // One name, no matchup row: structural BYE from generate —
+                    // but never crown a later-round "winner" while earlier partai
+                    // are still open (stale slot after a bad advance).
+                    if ($hasUnfinishedEarlier[$roundIndex] ?? false) {
+                        $status = 1; // Waiting
                     } else {
-                        $opponentB['result'] = 'win';
-                        $opponentA = null;
-                    }
+                        $status = 4; // Completed BYE
+                        $byeIds[] = $matchId;
 
-                    $byeIds[] = $matchId;
+                        if ($athleteA !== null) {
+                            $opponentA['result'] = 'win';
+                            $opponentB = null;
+                        } else {
+                            $opponentB['result'] = 'win';
+                            $opponentA = null;
+                        }
+                    }
                 } else {
                     // Empty slot: no entrant has ever been in this position.
                     $emptyIds[] = $matchId;

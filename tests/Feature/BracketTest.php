@@ -352,6 +352,58 @@ class BracketTest extends TestCase
         );
     }
 
+    public function test_finishing_a_match_only_advances_one_round(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate', 'matches.finish', 'matches.view']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 8) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->jadwalFor($category, 8);
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $firstRound = Matchup::where('round', 'perempat_final')->orderBy('position')->first();
+        $this->assertNotNull($firstRound);
+
+        $winner = $firstRound->athleteA;
+        $this->assertNotNull($winner);
+
+        $firstRound->update(['status' => 'running']);
+
+        $this->actingAs($user)
+            ->post("/admin/matches/{$firstRound->id}/finish", [
+                'winner_id' => $winner->id,
+                'score_a' => 5,
+                'score_b' => 3,
+            ])
+            ->assertSessionHas('success');
+
+        // Winner must appear in the immediate next round (semifinal), not the final.
+        $this->assertTrue(
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '4')
+                ->where('athlete_id', $winner->id)
+                ->exists()
+        );
+        $this->assertFalse(
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '2')
+                ->where('athlete_id', $winner->id)
+                ->exists(),
+            'Pemenang tidak boleh langsung masuk Final sebelum Semifinal selesai.'
+        );
+
+        $final = Matchup::where('round', 'final')->first();
+        $this->assertNotNull($final);
+        $this->assertNotSame('finished', $final->status);
+        $this->assertNull($final->winner_athlete_id);
+    }
+
     public function test_manual_partai_can_assign_a_bye(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);

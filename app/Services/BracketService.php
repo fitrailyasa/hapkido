@@ -456,7 +456,11 @@ class BracketService
     }
 
     /**
-     * Save the match winner, then move the athlete to the next round.
+     * Save the match winner, then move the athlete to the next round only.
+     *
+     * Structural BYEs are already applied when the bracket is generated
+     * (fillNextSlot). This method must not hop across multiple rounds —
+     * otherwise a winner appears in the Final while earlier partai are still open.
      */
     public function advance(Matchup $match, Athlete $winner): void
     {
@@ -473,52 +477,40 @@ class BracketService
 
         // Match number P (starting at 1) contests slots 2(P-1) and 2(P-1)+1 of
         // its round, so its winner takes slot (P-1) in the next round.
-        $size = $currentSize;
         $pairing = $match->position - 1;
+        $nextSize = (int) ($currentSize / 2);
 
-        while (true) {
-            $nextSize = (int) ($size / 2);
-
-            if ($nextSize < 2) {
-                // Final winner
-                return;
-            }
-
-            BracketSlot::where('category_id', $category->id)
-                ->where('round', (string) $nextSize)
-                ->where('position', $pairing)
-                ->update(['athlete_id' => $winner->id]);
-
-            // The slot pair (2Q and 2Q+1) in the next round feeds match
-            // number (Q+1) of that round, regardless of the finishing order.
-            $nextMatchPosition = intdiv($pairing, 2);
-
-            $nextMatch = $this->findMatch($category, $sizes, $nextSize, $nextMatchPosition + 1);
-
-            if ($nextMatch !== null) {
-                $slotA = BracketSlot::where('category_id', $category->id)
-                    ->where('round', (string) $nextSize)
-                    ->where('position', $nextMatchPosition * 2)
-                    ->first();
-
-                $slotB = BracketSlot::where('category_id', $category->id)
-                    ->where('round', (string) $nextSize)
-                    ->where('position', ($nextMatchPosition * 2) + 1)
-                    ->first();
-
-                $nextMatch->update([
-                    'athlete_a_id' => $slotA?->athlete_id,
-                    'athlete_b_id' => $slotB?->athlete_id,
-                ]);
-
-                return;
-            }
-
-            // The match does not exist (the opponent comes from an empty
-            // region): the winner advances straight through this round.
-            $size = $nextSize;
-            $pairing = $nextMatchPosition;
+        if ($nextSize < 2) {
+            // Final has no further round.
+            return;
         }
+
+        BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', $pairing)
+            ->update(['athlete_id' => $winner->id]);
+
+        $nextMatchPosition = intdiv($pairing, 2);
+        $nextMatch = $this->findMatch($category, $sizes, $nextSize, $nextMatchPosition + 1);
+
+        if ($nextMatch === null) {
+            return;
+        }
+
+        $slotA = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', $nextMatchPosition * 2)
+            ->first();
+
+        $slotB = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', ($nextMatchPosition * 2) + 1)
+            ->first();
+
+        $nextMatch->update([
+            'athlete_a_id' => $slotA?->athlete_id,
+            'athlete_b_id' => $slotB?->athlete_id,
+        ]);
     }
 
     /**
