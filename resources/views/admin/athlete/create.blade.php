@@ -11,7 +11,8 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                            <label for="new-athlete-name" class="form-label">Nama Lengkap <span
+                                    class="text-danger">*</span></label>
                             <input type="text" name="name" id="new-athlete-name"
                                 class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                                 placeholder="Nama lengkap atlet" required />
@@ -20,7 +21,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-participant_number" class="form-label">Nomor Peserta <span class="text-danger">*</span></label>
+                            <label for="new-athlete-participant_number" class="form-label">Nomor Peserta <span
+                                    class="text-danger">*</span></label>
                             <input type="text" name="participant_number" id="new-athlete-participant_number"
                                 class="form-control @error('participant_number') is-invalid @enderror"
                                 value="{{ old('participant_number') }}" placeholder="Contoh: ATK-001" required />
@@ -29,7 +31,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-gender" class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
+                            <label for="new-athlete-gender" class="form-label">Jenis Kelamin <span
+                                    class="text-danger">*</span></label>
                             <select id="new-athlete-gender" name="gender"
                                 class="form-select @error('gender') is-invalid @enderror" required>
                                 <option value="male" @selected(old('gender') === 'male')>Putra</option>
@@ -49,7 +52,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-id_number" class="form-label">No. Identitas (KTP/Kartu Pelajar)</label>
+                            <label for="new-athlete-id_number" class="form-label">No. Identitas (Sertifikat)</label>
                             <input type="text" name="id_number" id="new-athlete-id_number"
                                 class="form-control @error('id_number') is-invalid @enderror"
                                 value="{{ old('id_number') }}" placeholder="Opsional" />
@@ -58,7 +61,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-contingent_id" class="form-label">Kontingen <span class="text-danger">*</span></label>
+                            <label for="new-athlete-contingent_id" class="form-label">Kontingen <span
+                                    class="text-danger">*</span></label>
                             <select id="new-athlete-contingent_id" name="contingent_id"
                                 class="form-select @error('contingent_id') is-invalid @enderror" required>
                                 <option value="">— Pilih kontingen —</option>
@@ -73,7 +77,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-category_id" class="form-label">Kelas <span class="text-danger">*</span></label>
+                            <label for="new-athlete-category_id" class="form-label">Kelas <span
+                                    class="text-danger">*</span></label>
                             <select id="new-athlete-category_id" name="category_id"
                                 class="form-select @error('category_id') is-invalid @enderror" required>
                                 <option value="">— Pilih kelas —</option>
@@ -97,7 +102,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-status" class="form-label">Status <span class="text-danger">*</span></label>
+                            <label for="new-athlete-status" class="form-label">Status <span
+                                    class="text-danger">*</span></label>
                             <select id="new-athlete-status" name="status"
                                 class="form-select @error('status') is-invalid @enderror" required>
                                 <option value="active" @selected(old('status', 'active') === 'active')>Aktif</option>
