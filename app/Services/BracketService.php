@@ -44,6 +44,12 @@ class BracketService
         $firstRoundSlots = $placement['slots'];
         $byePairings = $placement['byePairings'];
 
+        // Many BYEs (e.g. 9→7): empty first-round boxes as connector lines.
+        // Few BYEs (e.g. 6→2): show "Nama vs BYE" in the first round instead.
+        $byeCount = count($byePairings);
+        $realFirstMatches = (int) ($size / 2) - $byeCount;
+        $emptyByeSlots = $byeCount > $realFirstMatches;
+
         $slots = [];
 
         for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
@@ -52,10 +58,13 @@ class BracketService
 
                 if ($roundSize === $size) {
                     $pairing = intdiv($position, 2);
-                    // BYE pairings stay empty in penyisihan (seeded into next round).
-                    $athleteId = isset($byePairings[$pairing])
-                        ? null
-                        : ($firstRoundSlots[$position] ?? null);
+
+                    if (isset($byePairings[$pairing]) && $emptyByeSlots) {
+                        // Leave BYE box empty; athlete is seeded into the next round.
+                        $athleteId = null;
+                    } else {
+                        $athleteId = $firstRoundSlots[$position] ?? null;
+                    }
                 }
 
                 $slots[$roundSize][$position] = BracketSlot::create([

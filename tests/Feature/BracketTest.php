@@ -448,6 +448,39 @@ class BracketTest extends TestCase
         );
     }
 
+    public function test_six_athletes_show_bye_badges_not_empty_lines(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 6) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        // 6 → size 8: 2 real partai + 2 BYE (few BYEs → badge, not empty lines).
+        $this->assertSame(
+            8,
+            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+        );
+        $this->assertSame(
+            6,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
+        $this->assertSame(2, Matchup::where('round', 'perempat_final')->count());
+
+        $payload = app(\App\Services\BracketViewerService::class)->payload($category);
+        $this->assertNotNull($payload);
+        $this->assertCount(2, $payload['byeIds']);
+        $this->assertEmpty($payload['emptyIds']);
+    }
+
     public function test_nine_athletes_get_one_prelim_and_byes_into_quarterfinals(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
