@@ -280,10 +280,27 @@
             font-weight: 700;
         }
 
-        /* Dead bracket regions (no entrant) — hide so the bagan does not look hollow. */
+        /* Slot kosong (template power-of-two) — kotak tetap ada, diisi hitam. */
         .brackets-viewer .match.bracket-empty {
-            visibility: hidden;
             pointer-events: none;
+        }
+
+        .brackets-viewer .match.bracket-empty .opponents {
+            background: #111 !important;
+            border-color: #111 !important;
+            box-shadow: none !important;
+            opacity: 1;
+        }
+
+        .brackets-viewer .match.bracket-empty .opponents .participant,
+        .brackets-viewer .match.bracket-empty .opponents .participant .name,
+        .brackets-viewer .match.bracket-empty .opponents .participant .result,
+        .brackets-viewer .match.bracket-empty .opponents .participant .score,
+        .brackets-viewer .match.bracket-empty .opponents .participant span {
+            color: transparent !important;
+            background: transparent !important;
+            border-color: transparent !important;
+            text-shadow: none !important;
         }
 
         /* Match in progress. */
@@ -421,7 +438,7 @@
                     if (!el) return;
 
                     el.classList.add('bracket-empty');
-                    el.title = 'Slot kosong - tidak ada peserta';
+                    el.title = 'Slot kosong (template bracket)';
                 });
 
                 Object.keys(matchUrls).forEach(function(id) {
