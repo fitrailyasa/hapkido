@@ -9,6 +9,7 @@ use App\Models\BracketSlot;
 use App\Models\Category;
 use App\Models\Matchup;
 use App\Models\Schedule;
+use App\Services\BracketService;
 use App\Services\BracketViewerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -39,21 +40,55 @@ class BracketController extends Controller
         $manualPartai = collect();
         $athletes = collect();
         $usedAthleteIds = collect();
+        $prelimMatches = collect();
 
         if ($selected) {
             $athleteCount = $selected->athletes()->where('status', 'active')->count();
+            $brackets = app(BracketService::class);
             $viewer = app(BracketViewerService::class);
+
+            // Bracket first: siapkan jadwal partai kosong dari kelas agar
+            // Partai Manual langsung bisa diisi tanpa menu Jadwal dulu.
+            if ($athleteCount >= 2 && auth()->user()?->can('brackets.generate')) {
+                $brackets->ensureEntrySchedules($selected);
+            }
+
             $hasBracket = $viewer->hasBracket($selected);
 
-            // The partai of the bracket come from the jadwal of the class, so
-            // the page also shows how many partai are still empty and which
-            // athletes can be paired by hand.
-            $jadwal = $selected->schedules()->where('type', 'daeryun')->get();
+            $jadwal = $selected->schedules()->where('type', 'daeryun')->with('match')->get();
             $jadwalCount = $jadwal->count();
-            $firstRound = $jadwal->countBy('round')->sortDesc()->keys()->first();
+
+            $mainSize = (int) (BracketSlot::where('category_id', $selected->id)->max('round') ?: 0);
+            $entryRounds = [];
+
+            if ($athleteCount >= 2) {
+                $fullSize = 2;
+                while ($fullSize < $athleteCount) {
+                    $fullSize *= 2;
+                }
+                $hasPrelim = $athleteCount !== $fullSize;
+                $entryMain = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
+                if ($mainSize < 2) {
+                    $mainSize = $entryMain;
+                }
+                if ($hasPrelim) {
+                    $entryRounds[] = $brackets->label($fullSize);
+                }
+                $entryRounds[] = $brackets->label($entryMain);
+            }
+
+            $firstRound = collect($entryRounds)
+                ->first(fn (string $round) => $jadwal->contains(fn (Schedule $s) => $s->round === $round))
+                ?? $jadwal->countBy('round')->sortDesc()->keys()->first();
 
             $manualPartai = $jadwal
-                ->filter(fn (Schedule $schedule) => $schedule->round === $firstRound && $schedule->match === null)
+                ->filter(function (Schedule $schedule) use ($entryRounds) {
+                    if ($schedule->match !== null) {
+                        return false;
+                    }
+
+                    return $entryRounds === [] || in_array($schedule->round, $entryRounds, true);
+                })
                 ->sortBy(['order_no', 'match_no', 'id'])
                 ->values();
 
@@ -62,9 +97,6 @@ class BracketController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'participant_number']);
 
-            // Athletes that already have a partai on another jadwal of this
-            // class: the manual partai shows them as "sudah bertanding" so
-            // they are not paired twice.
             $usedAthleteIds = Matchup::whereIn('schedule_id', $jadwal->pluck('id'))
                 ->get(['athlete_a_id', 'athlete_b_id'])
                 ->flatMap(fn (Matchup $match) => [$match->athlete_a_id, $match->athlete_b_id])
@@ -73,9 +105,7 @@ class BracketController extends Controller
                 ->values();
 
             if ($hasBracket) {
-                // Backfill Perempat Final / later partai so bracket boxes are
-                // clickable even when the admin only created Penyisihan jadwal.
-                app(\App\Services\BracketService::class)->ensureBracketMatches($selected);
+                $brackets->ensureBracketMatches($selected);
 
                 $rounds = $viewer->rounds($selected);
 
@@ -87,6 +117,17 @@ class BracketController extends Controller
                 $byeIds = $payload['byeIds'];
                 $emptyIds = $payload['emptyIds'];
                 $champion = $payload['champion'];
+
+                if ($mainSize >= 2) {
+                    $prelimLabel = $brackets->label($mainSize * 2);
+                    $prelimMatches = Matchup::with(['athleteA', 'athleteB', 'schedule'])
+                        ->whereHas('schedule', fn ($query) => $query
+                            ->where('category_id', $selected->id)
+                            ->where('type', 'daeryun'))
+                        ->where('round', $prelimLabel)
+                        ->orderBy('position')
+                        ->get();
+                }
             }
         }
 
@@ -107,6 +148,7 @@ class BracketController extends Controller
             'manualPartai' => $manualPartai,
             'athletes' => $athletes,
             'usedAthleteIds' => $usedAthleteIds,
+            'prelimMatches' => $prelimMatches,
         ]);
     }
 
@@ -140,7 +182,7 @@ class BracketController extends Controller
 
         try {
             DB::transaction(function () use ($category) {
-                app(\App\Services\BracketService::class)->generate($category);
+                app(BracketService::class)->generate($category);
             });
         } catch (BracketNeedsSchedule $exception) {
             return back()->with('error', $exception->getMessage());
@@ -263,7 +305,7 @@ class BracketController extends Controller
 
         try {
             DB::transaction(function () use ($category, $schedule, $athleteA, $athleteB) {
-                app(\App\Services\BracketService::class)->assignManual($category, $schedule, $athleteA, $athleteB);
+                app(BracketService::class)->assignManual($category, $schedule, $athleteA, $athleteB);
             });
         } catch (BracketNeedsSchedule $exception) {
             return back()->with('error', $exception->getMessage());

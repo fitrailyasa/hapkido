@@ -37,25 +37,22 @@
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-people me-2 text-primary"></i>Partai Manual
-                        @if ($firstRound)
-                            <small class="text-body-secondary">
-                                (pilih sendiri siapa lawan siapa pada ronde {{ \App\Models\Schedule::roundText($firstRound) }})
-                            </small>
-                        @endif
+                        <small class="text-body-secondary">
+                            (pilih pasangan dari kelas {{ $selected->name }} — tanpa wajib isi jadwal dulu)
+                        </small>
                     </h6>
                 </div>
 
-                @if (! $hasBracket)
+                @if ($athleteCount < 2)
                     <div class="card-body text-center text-body-secondary">
-                        Generate bracket dulu agar partai (jadwal) terbentuk otomatis, lalu isi pasangan
-                        atlet di sini bila perlu.
+                        Minimal 2 peserta aktif di kelas ini untuk membuat partai.
                     </div>
                 @elseif ($manualPartai->isEmpty())
                     <div class="card-body text-center text-body-secondary">
-                        Semua jadwal ronde {{ \App\Models\Schedule::roundText($firstRound) }} sudah terisi atlet.
-                        Tambah jadwal baru di menu
-                        <a href="{{ route('admin.schedules.index') }}">Jadwal</a> bila masih ada peserta yang belum
-                        bertanding.
+                        Semua partai masuk sudah terisi atlet.
+                        @if (! $hasBracket)
+                            Atau pakai <strong>Generate Bracket</strong> untuk mengundi otomatis.
+                        @endif
                     </div>
                 @else
                     <div class="card-body p-0">
@@ -135,7 +132,7 @@
                     <p class="mt-3 mb-1 fw-semibold">Belum ada bracket untuk kelas {{ $selected->name }}</p>
                     <p class="text-body-secondary small mb-3">
                         Peserta aktif: {{ $athleteCount }} orang.<br />
-                        Generate bracket dari peserta aktif — jadwal partai dibuat otomatis.
+                        Isi <strong>Partai Manual</strong> di atas, atau generate otomatis — jadwal dibuat belakangan.
                     </p>
                     @can('brackets.generate')
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -166,12 +163,39 @@
                 </div>
             </div>
 
+            @if (isset($prelimMatches) && $prelimMatches->isNotEmpty())
+                <div class="card shadow-sm border-0 mb-3">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i class="bi bi-lightning me-2 text-warning"></i>Partai Penyisihan
+                            <small class="text-body-secondary">(pemenang masuk bagan utama)</small>
+                        </h6>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        @foreach ($prelimMatches as $prelim)
+                            <a href="{{ route('admin.matches.show', $prelim) }}"
+                                class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                <span>
+                                    <strong>{{ $prelim->schedule?->match_no }}</strong>
+                                    &middot;
+                                    {{ $prelim->athleteA?->name ?? '—' }}
+                                    vs
+                                    {{ $prelim->athleteB?->name ?? '—' }}
+                                </span>
+                                <span class="badge text-bg-{{ $prelim->status === 'finished' ? 'success' : 'secondary' }}">
+                                    {{ $prelim->status === 'finished' ? 'Selesai' : 'Belum' }}
+                                </span>
+                            </a>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-body py-2 small text-body-secondary">
                     Klik kotak partai untuk membuka detail &middot;
                     <strong class="text-success">Nama hijau tebal</strong> = pemenang &middot;
-                    <span class="badge bg-warning text-dark">BYE</span> = peserta lolos tanpa lawan &middot;
-                    Kotak meredup = slot kosong (tidak ada peserta).
+                    Slot kosong menunggu pemenang penyisihan.
                 </div>
             </div>
 

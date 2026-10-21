@@ -807,18 +807,15 @@ class BracketService
     }
 
     /**
-     * Prepare an empty bracket + entry partai for manual pairing from the
-     * athletes of this class (no auto-draw, jadwal not required beforehand).
+     * Ensure empty entry jadwal rows exist so Partai Manual can be filled
+     * before generate (bracket-first). Does not create bracket slots.
      */
-    public function prepareManual(Category $category): void
+    public function ensureEntrySchedules(Category $category): void
     {
         $athleteCount = $category->athletes()->where('status', 'active')->count();
 
         if ($athleteCount < 2) {
-            throw new BracketNeedsSchedule(
-                "Partai manual gagal disiapkan: peserta aktif pada kelas {$category->name} "
-                . "baru {$athleteCount} orang (minimal 2)."
-            );
+            return;
         }
 
         $fullSize = $this->nextPowerOfTwo($athleteCount);
@@ -827,19 +824,6 @@ class BracketService
         $prelimCount = $hasPrelim ? ($athleteCount - $mainSize) : 0;
         $mainFirstCount = (int) ($mainSize / 2);
         $template = $this->scheduleTemplate($category);
-
-        if (! BracketSlot::where('category_id', $category->id)->exists()) {
-            for ($roundSize = $mainSize; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
-                for ($position = 0; $position < $roundSize; $position++) {
-                    BracketSlot::create([
-                        'category_id' => $category->id,
-                        'round' => (string) $roundSize,
-                        'position' => $position,
-                        'athlete_id' => null,
-                    ]);
-                }
-            }
-        }
 
         if ($prelimCount > 0) {
             $prelimLabel = $this->label($fullSize);
@@ -862,6 +846,41 @@ class BracketService
         for ($order = $existingMain + 1; $order <= $mainFirstCount; $order++) {
             $this->createMissingRoundSchedule($category, $mainLabel, $order, $template);
         }
+    }
+
+    /**
+     * Prepare an empty bracket + entry partai for manual pairing from the
+     * athletes of this class (no auto-draw, jadwal not required beforehand).
+     */
+    public function prepareManual(Category $category): void
+    {
+        $athleteCount = $category->athletes()->where('status', 'active')->count();
+
+        if ($athleteCount < 2) {
+            throw new BracketNeedsSchedule(
+                "Partai manual gagal disiapkan: peserta aktif pada kelas {$category->name} "
+                . "baru {$athleteCount} orang (minimal 2)."
+            );
+        }
+
+        $fullSize = $this->nextPowerOfTwo($athleteCount);
+        $hasPrelim = $athleteCount !== $fullSize;
+        $mainSize = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
+
+        if (! BracketSlot::where('category_id', $category->id)->exists()) {
+            for ($roundSize = $mainSize; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
+                for ($position = 0; $position < $roundSize; $position++) {
+                    BracketSlot::create([
+                        'category_id' => $category->id,
+                        'round' => (string) $roundSize,
+                        'position' => $position,
+                        'athlete_id' => null,
+                    ]);
+                }
+            }
+        }
+
+        $this->ensureEntrySchedules($category);
     }
 
     /**

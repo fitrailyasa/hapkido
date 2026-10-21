@@ -62,12 +62,16 @@ class BracketTest extends TestCase
     {
         $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
         $category = CategoryFactory::new()->daeryun()->create();
+        foreach (range(1, 4) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
 
         $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
 
         $response->assertOk();
         $response->assertSee('Partai Manual');
-        $response->assertSee('Generate bracket');
+        $response->assertSee('tanpa wajib isi jadwal');
+        $this->assertGreaterThan(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
     }
 
     public function test_bracket_index_reports_a_full_first_round(): void
@@ -404,28 +408,21 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
+        // Paper style: main bracket is size 4 (not 8 with BYE boxes).
         $this->assertSame(
-            8,
+            0,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
-
-        // First round shows every entrant (real match + Nama vs BYE).
         $this->assertSame(
-            5,
-            BracketSlot::where('category_id', $category->id)
-                ->where('round', '8')
-                ->whereNotNull('athlete_id')
-                ->count()
+            4,
+            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
 
-        // 5 athletes in size 8 → 3 BYEs + 1 real first-round match (not 2+1).
+        // 1 prelim (perempat) + 3 seeded into semifinal.
         $this->assertSame(
             1,
             Matchup::where('round', 'perempat_final')->count()
         );
-
-        // Three BYE recipients sit in the semifinal; the 4th waits for the
-        // first-round winner. Nobody is parked in Final yet.
         $this->assertSame(
             3,
             BracketSlot::where('category_id', $category->id)
@@ -465,18 +462,16 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Like the paper bracket: only one penyisihan match, seven BYEs into QF.
+        // Paper bracket: 1 penyisihan + bagan 8 (no stack of BYE boxes).
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
-
-        // Penyisihan holds all 9 (1 real match + 7 BYE). BYE winners also
-        // sit in the round of 8; nobody walks into the Final.
         $this->assertSame(
-            9,
-            BracketSlot::where('category_id', $category->id)
-                ->where('round', '16')
-                ->whereNotNull('athlete_id')
-                ->count()
+            0,
+            BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
+        );
+        $this->assertSame(
+            8,
+            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
         $this->assertSame(
             7,
