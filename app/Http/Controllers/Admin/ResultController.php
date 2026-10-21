@@ -7,29 +7,41 @@ use App\Models\Athlete;
 use App\Models\Category;
 use App\Models\Matchup;
 use App\Models\Performance;
+use App\Services\PodiumService;
 
 class ResultController extends Controller
 {
     public function index()
     {
         $categories = Category::orderBy('name')->get();
+        $podiumService = app(PodiumService::class);
 
         $daeryun = $categories->filter(fn (Category $category) => $category->type === 'daeryun')
-            ->map(fn (Category $category) => [
-                'category' => $category,
-                'rows' => $this->daeryunRows($category),
-                'medals' => $this->daeryunMedals($category),
-            ])
-            ->values();
-
-        $art = $categories->filter(fn (Category $category) => $category->type === 'art')
-            ->map(function (Category $category) {
-                $rows = $this->artRows($category);
+            ->map(function (Category $category) use ($podiumService) {
+                $rows = $this->daeryunRows($category);
+                $podium = $podiumService->forCategory($category);
 
                 return [
                     'category' => $category,
-                    'rows' => $rows,
-                    'medals' => $this->topThreeMedals($rows),
+                    'type' => 'daeryun',
+                    'rows' => $this->applyPodium($rows, $podium),
+                    'podium' => $this->podiumWithStats($podium, $rows),
+                    'medals' => $this->medalsFromPodium($podium),
+                ];
+            })
+            ->values();
+
+        $art = $categories->filter(fn (Category $category) => $category->type === 'art')
+            ->map(function (Category $category) use ($podiumService) {
+                $rows = $this->artRows($category);
+                $podium = $podiumService->forCategory($category);
+
+                return [
+                    'category' => $category,
+                    'type' => 'art',
+                    'rows' => $this->applyPodium($rows, $podium),
+                    'podium' => $this->podiumWithStats($podium, $rows),
+                    'medals' => $this->medalsFromPodium($podium),
                 ];
             })
             ->values();
@@ -96,20 +108,20 @@ class ResultController extends Controller
     }
 
     /**
-     * Art ranking: final score from the scores table (judges' average).
+     * Art ranking: the single final score of every performance.
      */
     protected function artRows(Category $category): array
     {
-        $performances = Performance::with(['athlete.contingent', 'scores', 'schedule'])
+        $performances = Performance::with(['athlete.contingent', 'schedule'])
             ->whereHas('schedule', fn ($builder) => $builder
                 ->where('category_id', $category->id)
                 ->where('type', 'art'))
             ->get();
 
         $rows = $performances->map(function (Performance $performance) {
-            $score = $performance->scores->isNotEmpty()
-                ? round((float) $performance->scores->avg('score'), 2)
-                : ($performance->final_score !== null ? round((float) $performance->final_score, 2) : null);
+            $score = $performance->final_score !== null
+                ? round((float) $performance->final_score, 2)
+                : null;
 
             return [
                 'athlete' => $performance->athlete,
@@ -153,84 +165,90 @@ class ResultController extends Controller
     }
 
     /**
-     * Daeryun medals are taken from the bracket results (final & semifinal).
+     * The medalists take the podium places (1, 2, 3 and 3), the other athletes
+     * follow the ranking.
      */
-    protected function daeryunMedals(Category $category): array
+    protected function applyPodium(array $rows, array $podium): array
     {
-        $matches = Matchup::query()
-            ->with(['athleteA.contingent', 'athleteB.contingent', 'winner.contingent'])
-            ->where('status', 'finished')
-            ->whereIn('round', ['final', 'semifinal'])
-            ->whereHas('schedule', fn ($builder) => $builder
-                ->where('category_id', $category->id)
-                ->where('type', 'daeryun'))
-            ->get();
+        if ($podium === []) {
+            return $rows;
+        }
 
-        $final = $matches->firstWhere('round', 'final');
-        $medals = [];
+        $podiumRanks = [];
 
-        if ($final && $final->winner_athlete_id) {
-            $medals[] = $this->medalEntry($final->winner, 'gold');
+        foreach ($podium as $entry) {
+            $podiumRanks[(int) $entry['athlete']->id] = $entry['rank'];
+        }
 
-            $loser = (int) $final->winner_athlete_id === (int) $final->athlete_a_id
-                ? $final->athleteB
-                : $final->athleteA;
+        $next = 1;
 
-            if ($loser) {
-                $medals[] = $this->medalEntry($loser, 'silver');
+        foreach ($podiumRanks as $rank) {
+            $next = max($next, $rank + 1);
+        }
+
+        foreach ($rows as &$row) {
+            $athleteId = (int) $row['athlete']->id;
+
+            if (isset($podiumRanks[$athleteId])) {
+                $row['rank'] = $podiumRanks[$athleteId];
+            } else {
+                $row['rank'] = $next++;
             }
         }
+        unset($row);
 
-        $losers = $matches->where('round', 'semifinal')
-            ->map(function (Matchup $match) {
-                if (! $match->winner_athlete_id) {
-                    return null;
-                }
+        usort($rows, fn (array $a, array $b) => $a['rank'] <=> $b['rank']);
 
-                return (int) $match->winner_athlete_id === (int) $match->athlete_a_id
-                    ? $match->athleteB
-                    : $match->athleteA;
-            })
-            ->filter()
-            ->unique('id')
-            ->take(2);
-
-        foreach ($losers as $loser) {
-            $medals[] = $this->medalEntry($loser, 'bronze');
-        }
-
-        return array_values(array_filter($medals));
+        return $rows;
     }
 
-    protected function topThreeMedals(array $rows): array
+    /**
+     * The podium entries enriched with the statistics of the ranking rows.
+     */
+    protected function podiumWithStats(array $podium, array $rows): array
     {
-        $map = [1 => 'gold', 2 => 'silver', 3 => 'bronze'];
-        $medals = [];
+        $rowsByAthlete = [];
 
         foreach ($rows as $row) {
-            if (! isset($map[$row['rank']]) || ! $row['athlete']) {
-                continue;
-            }
+            $rowsByAthlete[(int) $row['athlete']->id] = $row;
+        }
 
-            $medals[] = $this->medalEntry($row['athlete'], $map[$row['rank']]);
+        return array_map(function (array $entry) use ($rowsByAthlete) {
+            $athlete = $entry['athlete'];
+            $row = $rowsByAthlete[(int) $athlete->id] ?? [];
+
+            return [
+                'athlete' => $athlete,
+                'rank' => $entry['rank'],
+                'medal' => $entry['medal'],
+                'contingent' => $athlete->contingent,
+                'score' => $entry['score'] ?? ($row['score'] ?? null),
+                'wins' => $row['wins'] ?? 0,
+                'points_for' => $row['points_for'] ?? 0,
+            ];
+        }, $podium);
+    }
+
+    /**
+     * The medals of a class, taken from the podium.
+     */
+    protected function medalsFromPodium(array $podium): array
+    {
+        $medals = [];
+
+        foreach ($podium as $entry) {
+            $athlete = $entry['athlete'];
+
+            $medals[] = [
+                'athlete_id' => $athlete->id,
+                'athlete_name' => $athlete->name,
+                'contingent_id' => $athlete->contingent_id,
+                'contingent' => $athlete->contingent,
+                'medal' => $entry['medal'],
+            ];
         }
 
         return $medals;
-    }
-
-    protected function medalEntry(?Athlete $athlete, string $medal): ?array
-    {
-        if (! $athlete) {
-            return null;
-        }
-
-        return [
-            'athlete_id' => $athlete->id,
-            'athlete_name' => $athlete->name,
-            'contingent_id' => $athlete->contingent_id,
-            'contingent' => $athlete->contingent,
-            'medal' => $medal,
-        ];
     }
 
     /**

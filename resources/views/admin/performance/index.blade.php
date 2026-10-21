@@ -110,8 +110,8 @@
                                             <div class="btn-group btn-group-sm">
                                                 @can('scores.view')
                                                     <a href="{{ route('admin.scores.edit', $performance) }}"
-                                                        class="btn btn-outline-primary" title="Input nilai juri"
-                                                        aria-label="Input nilai juri">
+                                                        class="btn btn-outline-primary" title="Input nilai akhir"
+                                                        aria-label="Input nilai akhir">
                                                         <i class="bi bi-clipboard2-data"></i>
                                                     </a>
                                                 @endcan

@@ -12,24 +12,16 @@
             'bronze' => 'bg-danger-subtle text-danger-emphasis',
         ];
         $medalIcons = ['gold' => 'bi-trophy-fill', 'silver' => 'bi-award-fill', 'bronze' => 'bi-award'];
-        $medalByRank = [1 => 'gold', 2 => 'silver', 3 => 'bronze'];
 
         $podiumSections = $daeryun->map(fn (array $section) => [
             'category' => $section['category'],
             'type' => 'daeryun',
-            'rows' => $section['rows'],
+            'podium' => $section['podium'],
         ])->concat($art->map(fn (array $section) => [
             'category' => $section['category'],
             'type' => 'art',
-            'rows' => $section['rows'],
+            'podium' => $section['podium'],
         ]))->values();
-
-        // Podium display order: 2 - 1 - 3 (the champion in the middle, highest).
-        $podiumOrder = [
-            ['rank' => 2, 'pos' => 'order-2 order-md-1'],
-            ['rank' => 1, 'pos' => 'order-1 order-md-2'],
-            ['rank' => 3, 'pos' => 'order-3 order-md-3'],
-        ];
     @endphp
     <div class="container-fluid">
         <div class="card shadow-sm border-0 mb-3">
@@ -82,33 +74,42 @@
             <div class="card-body">
                 @forelse ($podiumSections as $section)
                     @php
+                        // Podium display order: 2 - 1 - 3 - 3 (the champion in the
+                        // middle, highest). The third place always has two athletes.
                         $slots = [];
-                        foreach (array_slice($section['rows'], 0, 3) as $row) {
-                            $rank = $row['rank'] ?? 0;
-                            if ($rank > 3 || $rank < 1 || empty($row['athlete'])) {
-                                continue;
+                        $bronzeIndex = 0;
+
+                        foreach ($section['podium'] as $entry) {
+                            $medal = $entry['medal'];
+                            $isArt = $section['type'] === 'art';
+
+                            if ($medal === 'bronze') {
+                                $bronzeIndex++;
+                                $position = 2 + $bronzeIndex;
+                            } else {
+                                $position = $medal === 'gold' ? 2 : 1;
                             }
 
-                            $medal = $medalByRank[$rank];
-                            $isArt = $section['type'] === 'art';
-                            $slots[$rank] = [
+                            $slots[] = [
+                                'position' => $position,
+                                'rank' => $entry['rank'],
                                 'medal' => $medal,
                                 'label' => $medalLabels[$medal],
                                 'badge' => $medalBadges[$medal],
                                 'soft' => $medalSoft[$medal],
                                 'icon' => $medalIcons[$medal],
-                                'name' => $row['athlete']->name,
-                                'contingent' => $row['contingent']?->name ?? '-',
-                                'code' => $row['contingent']?->code ?? '-',
+                                'name' => $entry['athlete']->name,
+                                'contingent' => $entry['contingent']?->name ?? '-',
+                                'code' => $entry['contingent']?->code ?? '-',
                                 'value' => $isArt
-                                    ? ($row['score'] !== null ? number_format((float) $row['score'], 2) : '-')
-                                    : (string) $row['wins'],
+                                    ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '-')
+                                    : (string) $entry['wins'],
                                 'valueLabel' => $isArt ? 'Nilai akhir' : 'Menang',
-                                'sub' => $isArt
-                                    ? 'Tiga juri'
-                                    : $row['points_for'] . ' poin',
+                                'sub' => $isArt ? 'Seni' : $entry['points_for'] . ' poin',
                             ];
                         }
+
+                        usort($slots, fn (array $a, array $b) => $a['position'] <=> $b['position']);
                     @endphp
                     <div class="{{ $loop->last ? '' : 'border-bottom pb-3 mb-3' }}">
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
@@ -124,38 +125,38 @@
                             <p class="text-center text-body-secondary py-3 mb-0">Belum ada penampil pada kelas ini.</p>
                         @else
                             <div class="row g-2 align-items-end podium-row">
-                                @foreach ($podiumOrder as $step)
+                                @foreach ($slots as $slot)
                                     @php
-                                        $slot = $slots[$step['rank']] ?? null;
-                                        $isFirst = $step['rank'] === 1;
+                                        $isFirst = $slot['rank'] === 1;
+                                        $orderClass = match ($slot['position']) {
+                                            1 => 'order-2 order-md-1',
+                                            2 => 'order-1 order-md-2',
+                                            default => 'order-' . $slot['position'] . ' order-md-' . $slot['position'],
+                                        };
                                     @endphp
-                                    <div class="col-12 col-sm-4 {{ $step['pos'] }}">
+                                    <div class="col-12 col-sm-6 col-lg-3 {{ $orderClass }}">
                                         <div class="card shadow-sm border-0 h-100 text-center {{ $isFirst ? 'podium-first' : '' }}">
                                             <div class="card-body {{ $isFirst ? 'py-4' : 'py-3' }}">
-                                                <span class="badge {{ $slot['badge'] ?? 'bg-body-secondary text-body' }}">
-                                                    {{ $slot['label'] ?? 'Juara ' . $step['rank'] }}
+                                                <span class="badge {{ $slot['badge'] }}">
+                                                    {{ $slot['label'] }}
                                                 </span>
-                                                <div
-                                                    class="podium-medal mx-auto my-2 {{ $slot['soft'] ?? 'bg-body-secondary text-body' }}">
-                                                    <i class="bi {{ $slot['icon'] ?? 'bi-dash-lg' }} {{ $isFirst ? 'fs-3' : 'fs-5' }}"></i>
+                                                <div class="podium-medal mx-auto my-2 {{ $slot['soft'] }}">
+                                                    <i class="bi {{ $slot['icon'] }} {{ $isFirst ? 'fs-3' : 'fs-5' }}"></i>
                                                 </div>
                                                 <div class="{{ $isFirst ? 'fs-5' : 'fs-6' }} fw-bold text-truncate"
-                                                    title="{{ $slot['name'] ?? '' }}">
-                                                    {{ $slot['name'] ?? '—' }}
+                                                    title="{{ $slot['name'] }}">
+                                                    {{ $slot['name'] }}
                                                 </div>
                                                 <div class="small text-body-secondary text-truncate"
-                                                    title="{{ $slot['contingent'] ?? '' }}">
-                                                    {{ $slot['contingent'] ?? '-' }} ({{ $slot['code'] ?? '-' }})
+                                                    title="{{ $slot['contingent'] }}">
+                                                    {{ $slot['contingent'] }} ({{ $slot['code'] }})
                                                 </div>
                                                 <div class="mt-2 pt-2 border-top">
                                                     <div class="fs-5 fw-bold">
-                                                        {{ $slot['value'] ?? '—' }}
+                                                        {{ $slot['value'] }}
                                                     </div>
                                                     <div class="small text-body-secondary">
-                                                        {{ $slot['valueLabel'] ?? '' }}
-                                                        @if ($slot)
-                                                            &middot; {{ $slot['sub'] }}
-                                                        @endif
+                                                        {{ $slot['valueLabel'] }} &middot; {{ $slot['sub'] }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -177,7 +178,7 @@
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-broadcast-pin text-success me-2"></i>Ranking Daeryun
-                            <small class="text-body-secondary">(menang &rarr; selisih poin &rarr; total poin)</small>
+                            <small class="text-body-secondary">(peringkat 1, 2, 3 dan 3 dari final &amp; semifinal)</small>
                         </h6>
                     </div>
                 </div>
@@ -252,7 +253,7 @@
                     <div class="card-header">
                         <h6 class="mb-0">
                             <i class="bi bi-star-fill text-warning me-2"></i>Ranking Seni
-                            <small class="text-body-secondary">(berdasarkan nilai akhir tiga juri)</small>
+                            <small class="text-body-secondary">(berdasarkan nilai akhir)</small>
                         </h6>
                     </div>
                 </div>

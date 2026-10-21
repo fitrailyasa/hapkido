@@ -247,7 +247,7 @@ class MatchTest extends TestCase
             ]);
 
         $response->assertRedirect(route('admin.performances.index'));
-        $response->assertSessionHas('error', 'Penilaian partai seni dilakukan melalui menu Seni (input nilai juri).');
+        $response->assertSessionHas('error', 'Penilaian partai seni dilakukan melalui menu Seni (input nilai akhir).');
     }
 
     public function test_match_module_requires_permission(): void

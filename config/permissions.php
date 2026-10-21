@@ -69,8 +69,8 @@ return [
         'performances.view' => 'Lihat urutan tampil seni',
         'performances.create' => 'Atur urutan tampil',
         'performances.update' => 'Ubah status tampil',
-        'scores.view' => 'Lihat nilai juri',
-        'scores.create' => 'Input nilai juri',
+        'scores.view' => 'Lihat nilai seni',
+        'scores.create' => 'Input nilai seni',
     ],
     'Bracket' => [
         'brackets.view' => 'Lihat bracket',

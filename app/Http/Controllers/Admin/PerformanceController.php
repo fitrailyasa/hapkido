@@ -156,14 +156,6 @@ class PerformanceController extends Controller
 
         if ($data['status'] === 'finished') {
             $payload['performed_at'] = $performance->performed_at ?? now();
-
-            if ($performance->final_score === null) {
-                $average = $performance->scores()->avg('score');
-
-                if ($average !== null) {
-                    $payload['final_score'] = round((float) $average, 2);
-                }
-            }
         }
 
         DB::transaction(function () use ($performance, $payload, $data) {

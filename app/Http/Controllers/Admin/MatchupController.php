@@ -137,7 +137,7 @@ class MatchupController extends Controller
         if ($schedule && $schedule->type === 'art') {
             return redirect()
                 ->route('admin.performances.index')
-                ->with('error', 'Penilaian partai seni dilakukan melalui menu Seni (input nilai juri).');
+                ->with('error', 'Penilaian partai seni dilakukan melalui menu Seni (input nilai akhir).');
         }
 
         if ($matchup->status === 'finished') {

@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\Verification;
 use App\Services\ArenaLiveService;
 use App\Services\BracketViewerService;
+use App\Services\PodiumService;
 use App\Services\ScheduleDayService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -464,15 +465,16 @@ class DisplayController extends Controller
     /**
      * Top 1-2-3 of each category (daeryun from the final/semifinal bracket,
      * art from the final score ranking) plus the medal totals per contingent.
+     *
+     * The third place always consists of two athletes.
      */
     protected function juaraPayload(): array
     {
         $sections = ['daeryun' => [], 'art' => []];
+        $podiumService = app(PodiumService::class);
 
         foreach (Category::orderBy('name')->get() as $category) {
-            $items = $category->isArt()
-                ? $this->artJuara($category)
-                : $this->daeryunJuara($category);
+            $items = $this->juaraItems($podiumService->forCategory($category));
 
             if ($items === []) {
                 continue;
@@ -493,116 +495,29 @@ class DisplayController extends Controller
         ];
     }
 
-    protected function daeryunJuara(Category $category): array
+    /**
+     * The podium of a class in the display format.
+     */
+    protected function juaraItems(array $podium): array
     {
-        $matches = Matchup::query()
-            ->with(['athleteA.contingent', 'athleteB.contingent', 'winner.contingent', 'schedule'])
-            ->where('status', 'finished')
-            ->whereIn('round', ['final', 'semifinal'])
-            ->whereHas('schedule', fn ($builder) => $builder
-                ->where('category_id', $category->id)
-                ->where('type', 'daeryun'))
-            ->get();
-
-        $final = $matches->firstWhere('round', 'final');
-
-        if (! $final || ! $final->winner_athlete_id) {
-            return [];
-        }
-
-        $items = [];
-        $used = [];
-
-        $gold = $this->juaraEntry($final->winner, 1, 'emas');
-        if ($gold) {
-            $items[] = $gold;
-            $used[] = (int) $final->winner->id;
-        }
-
-        $runnerUp = (int) $final->winner_athlete_id === (int) $final->athlete_a_id
-            ? $final->athleteB
-            : $final->athleteA;
-
-        $silver = $this->juaraEntry($runnerUp, 2, 'perak');
-        if ($silver) {
-            $items[] = $silver;
-            $used[] = (int) $runnerUp->id;
-        }
-
-        $matches->where('round', 'semifinal')
-            ->map(function (Matchup $match) {
-                if (! $match->winner_athlete_id) {
-                    return null;
-                }
-
-                return (int) $match->winner_athlete_id === (int) $match->athlete_a_id
-                    ? $match->athleteB
-                    : $match->athleteA;
-            })
-            ->filter()
-            ->reject(fn (Athlete $athlete) => in_array((int) $athlete->id, $used, true))
-            ->unique('id')
-            ->take(2)
-            ->each(function (Athlete $athlete) use (&$items) {
-                $entry = $this->juaraEntry($athlete, 3, 'perunggu');
-                if ($entry) {
-                    $items[] = $entry;
-                }
-            });
-
-        return $items;
-    }
-
-    protected function artJuara(Category $category): array
-    {
-        $rows = Performance::query()
-            ->with(['athlete.contingent', 'scores'])
-            ->whereHas('schedule', fn ($builder) => $builder
-                ->where('category_id', $category->id)
-                ->where('type', 'art'))
-            ->get()
-            ->map(function (Performance $performance) {
-                $score = $performance->scores->isNotEmpty()
-                    ? round((float) $performance->scores->avg('score'), 2)
-                    : ($performance->final_score !== null ? round((float) $performance->final_score, 2) : null);
-
-                return ['athlete' => $performance->athlete, 'score' => $score];
-            })
-            ->filter(fn (array $row) => $row['athlete'] !== null && $row['score'] !== null)
-            ->sortByDesc('score')
-            ->values()
-            ->take(3);
-
-        $medals = [1 => 'emas', 2 => 'perak', 3 => 'perunggu'];
+        $medals = ['gold' => 'emas', 'silver' => 'perak', 'bronze' => 'perunggu'];
         $items = [];
 
-        foreach ($rows as $index => $row) {
-            $rank = $index + 1;
-            $entry = $this->juaraEntry($row['athlete'], $rank, $medals[$rank]);
+        foreach ($podium as $entry) {
+            $athlete = $entry['athlete'];
 
-            if ($entry) {
-                $entry['score'] = $row['score'];
-                $items[] = $entry;
-            }
+            $items[] = [
+                'rank' => $entry['rank'],
+                'name' => $athlete->name,
+                'contingent_id' => $athlete->contingent_id,
+                'contingent' => $athlete->contingent?->name,
+                'contingent_code' => $athlete->contingent?->code,
+                'medal' => $medals[$entry['medal']] ?? 'emas',
+                'score' => $entry['score'],
+            ];
         }
 
         return $items;
-    }
-
-    protected function juaraEntry(?Athlete $athlete, int $rank, string $medal): ?array
-    {
-        if (! $athlete) {
-            return null;
-        }
-
-        return [
-            'rank' => $rank,
-            'name' => $athlete->name,
-            'contingent_id' => $athlete->contingent_id,
-            'contingent' => $athlete->contingent?->name,
-            'contingent_code' => $athlete->contingent?->code,
-            'medal' => $medal,
-        ];
     }
 
     protected function juaraTotals(array $sections): array
