@@ -60,5 +60,8 @@
                 {{ $slot }}
             </main>
         </div>
+
+        {{-- Show/hide toggle for every password field --}}
+        <script src="{{ asset('dist/js/password-toggle.js') }}" defer></script>
     </body>
 </html>
