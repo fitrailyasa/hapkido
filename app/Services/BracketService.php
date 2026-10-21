@@ -14,10 +14,9 @@ use Illuminate\Support\Collection;
 class BracketService
 {
     /**
-     * Build the bracket from active athletes. Penyisihan is the first column
-     * of the bagan (joined): real matches + Nama vs BYE, then one-step advance.
-     * Empty power-of-two slots stay in the tree (shown black in the UI).
-     * Jadwal stubs are created; jam/arena can be filled later.
+     * Build the bracket from active athletes. Penyisihan stays in the bagan:
+     * only real matches appear there; BYE recipients are seeded into the next
+     * round so the 7 BYE boxes stay empty (black). Jadwal stubs as needed.
      */
     public function generate(Category $category): void
     {
@@ -43,12 +42,21 @@ class BracketService
         $jadwal = $this->jadwalQueue($category);
         $placement = $this->placeAthletesWithByes($athletes, $size);
         $firstRoundSlots = $placement['slots'];
+        $byePairings = $placement['byePairings'];
 
         $slots = [];
 
         for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
             for ($position = 0; $position < $roundSize; $position++) {
-                $athleteId = $roundSize === $size ? ($firstRoundSlots[$position] ?? null) : null;
+                $athleteId = null;
+
+                if ($roundSize === $size) {
+                    $pairing = intdiv($position, 2);
+                    // BYE pairings stay empty in penyisihan (seeded into next round).
+                    $athleteId = isset($byePairings[$pairing])
+                        ? null
+                        : ($firstRoundSlots[$position] ?? null);
+                }
 
                 $slots[$roundSize][$position] = BracketSlot::create([
                     'category_id' => $category->id,
@@ -57,6 +65,18 @@ class BracketService
                     'athlete_id' => $athleteId,
                 ]);
             }
+        }
+
+        $nextSize = (int) ($size / 2);
+
+        foreach ($byePairings as $pairing => $true) {
+            $athleteId = $firstRoundSlots[$pairing * 2] ?? $firstRoundSlots[($pairing * 2) + 1] ?? null;
+
+            if ($athleteId === null || $nextSize < 2) {
+                continue;
+            }
+
+            $slots[$nextSize][$pairing]->update(['athlete_id' => $athleteId]);
         }
 
         $alive = [$size => []];
@@ -69,7 +89,8 @@ class BracketService
             $childSize = (int) ($roundSize / 2);
 
             for ($position = 0; $position < $childSize; $position++) {
-                $alive[$childSize][$position] = ($alive[$roundSize][$position * 2] ?? false)
+                $alive[$childSize][$position] = ($slots[$childSize][$position]->athlete_id !== null)
+                    || ($alive[$roundSize][$position * 2] ?? false)
                     || ($alive[$roundSize][($position * 2) + 1] ?? false);
             }
         }
@@ -89,7 +110,6 @@ class BracketService
                     continue;
                 }
 
-                // Nama vs BYE — lolos satu langkah, tanpa jadwal partai.
                 if ($aliveA !== $aliveB) {
                     $winnerId = ($aliveA ? $athleteA : $athleteB) ?? null;
 
