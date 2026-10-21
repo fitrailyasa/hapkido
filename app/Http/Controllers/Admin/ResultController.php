@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Arena;
 use App\Models\Athlete;
 use App\Models\Category;
 use App\Models\Matchup;
@@ -24,6 +25,7 @@ class ResultController extends Controller
                 return [
                     'category' => $category,
                     'type' => 'daeryun',
+                    'arena' => Arena::forCategory($category->id, 'daeryun'),
                     'rows' => $this->applyPodium($rows, $podium),
                     'podium' => $this->podiumWithStats($podium, $rows),
                     'medals' => $this->medalsFromPodium($podium),
@@ -39,6 +41,7 @@ class ResultController extends Controller
                 return [
                     'category' => $category,
                     'type' => 'art',
+                    'arena' => Arena::forCategory($category->id, 'art'),
                     'rows' => $this->applyPodium($rows, $podium),
                     'podium' => $this->podiumWithStats($podium, $rows),
                     'medals' => $this->medalsFromPodium($podium),
@@ -225,6 +228,9 @@ class ResultController extends Controller
                 'score' => $entry['score'] ?? ($row['score'] ?? null),
                 'wins' => $row['wins'] ?? 0,
                 'points_for' => $row['points_for'] ?? 0,
+                'result' => $entry['result'] ?? null,
+                'score_line' => $entry['score_line'] ?? null,
+                'round' => $entry['round'] ?? null,
             ];
         }, $podium);
     }
