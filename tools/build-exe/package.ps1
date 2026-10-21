@@ -69,7 +69,18 @@ function Ensure-Dir([string] $Path) {
 
 function Clear-Dir([string] $Path) {
     if (Test-Path $Path) {
-        Remove-Item -Recurse -Force $Path
+        # Long/nested paths (e.g. accidental dist-in-dist) need \\?\ + cmd rmdir.
+        $full = (Resolve-Path $Path).Path
+        if (-not $full.StartsWith("\\?\")) {
+            $full = "\\?\$full"
+        }
+        cmd /c "rmdir /s /q `"$full`""
+        if (Test-Path $Path) {
+            Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        if (Test-Path $Path) {
+            throw "Gagal menghapus folder: $Path"
+        }
     }
     Ensure-Dir $Path
 }
@@ -78,7 +89,8 @@ function Copy-AppFiles([string] $Source, [string] $Destination) {
     $excludeDirs = @(
         ".git", ".github", ".idea", ".vscode", ".fleet",
         "node_modules", "vendor", "tests", "docker",
-        "tools\build-exe\cache", "tools\build-exe\dist",
+        # Entire tools/ stays out of staging (avoids nesting dist/ into itself).
+        "tools",
         "storage\logs", "storage\framework\cache", "storage\framework\sessions",
         "storage\framework\views", "bootstrap\cache"
     )
