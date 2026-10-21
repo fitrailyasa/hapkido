@@ -134,7 +134,7 @@ class ScheduleTest extends TestCase
             'category_id' => $schedule->category_id,
             'arena_id' => '',
             'type' => 'art',
-            'round' => 'semi final',
+            'round' => 'penampilan',
             'order_no' => 5,
             'match_date' => '2026-11-01',
             'start_time' => '',
@@ -147,7 +147,7 @@ class ScheduleTest extends TestCase
         $this->assertDatabaseHas('schedules', [
             'id' => $schedule->id,
             'type' => 'art',
-            'round' => 'semi final',
+            'round' => 'penampilan',
             'status' => 'preparation',
         ]);
     }

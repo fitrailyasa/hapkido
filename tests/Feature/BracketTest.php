@@ -45,7 +45,7 @@ class BracketTest extends TestCase
             ->from('/admin/brackets')
             ->post('/admin/brackets/generate', ['category_id' => $category->id]);
 
-        $response->assertSessionHas('error', 'Bracket hanya bisa dibuat untuk kategori Daeryun.');
+        $response->assertSessionHas('error', 'Bracket hanya bisa dibuat untuk kelas Daeryun.');
         $this->assertSame(0, BracketSlot::count());
     }
 
@@ -62,7 +62,7 @@ class BracketTest extends TestCase
 
         $response->assertSessionHas(
             'error',
-            "Bracket gagal dibuat: peserta aktif pada kategori {$category->name} baru 1 orang (minimal 2)."
+            "Bracket gagal dibuat: peserta aktif pada kelas {$category->name} baru 1 orang (minimal 2)."
         );
         $this->assertSame(0, BracketSlot::count());
     }
@@ -75,7 +75,7 @@ class BracketTest extends TestCase
             ->from('/admin/brackets')
             ->post('/admin/brackets/generate', []);
 
-        $response->assertSessionHasErrors('category_id', 'Kategori wajib dipilih.');
+        $response->assertSessionHasErrors('category_id', 'Kelas wajib dipilih.');
     }
 
     public function test_bracket_can_be_generated(): void
@@ -93,7 +93,7 @@ class BracketTest extends TestCase
         $response->assertRedirect(route('admin.brackets.index', ['category' => $category->id]));
         $response->assertSessionHas(
             'success',
-            "Bracket kategori {$category->name} berhasil dibuat untuk 4 peserta."
+            "Bracket kelas {$category->name} berhasil dibuat untuk 4 peserta."
         );
         $this->assertGreaterThan(0, BracketSlot::where('category_id', $category->id)->count());
         $this->assertGreaterThan(0, Matchup::count());

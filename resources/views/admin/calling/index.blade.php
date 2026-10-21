@@ -8,17 +8,30 @@
             <div class="card-header">
                 <div class="row g-2 align-items-center">
                     <div class="col-12 col-md-5">
-                        <h3 class="card-title mb-0">Calling Atlet Hari Ini</h3>
+                        <h3 class="card-title mb-0">Calling Atlet</h3>
                         <small class="text-body-secondary" id="calling-updated">
                             {{ $payload['date'] }} &middot; diperbarui {{ $payload['generated_at'] }} WIB
                         </small>
+                        @unless ($payload['is_today'])
+                            <div class="mt-1">
+                                <span class="badge bg-warning text-dark">
+                                    <i class="bi bi-calendar-event me-1"></i>
+                                    Tidak ada jadwal hari ini, menampilkan {{ $payload['date'] }}
+                                </span>
+                            </div>
+                        @endunless
                     </div>
                     <div class="col-12 col-md-7">
-                        <div class="d-flex flex-wrap justify-content-md-end gap-2" id="calling-counts">
-                            <span class="badge bg-secondary fs-6">Menunggu {{ $payload['counts']['waiting'] }}</span>
-                            <span class="badge bg-danger fs-6">Terpanggil {{ $payload['counts']['called'] }}</span>
-                            <span class="badge bg-success fs-6">Siap {{ $payload['counts']['ready'] }}</span>
-                            <span class="badge bg-dark fs-6">Total {{ $payload['counts']['total'] }}</span>
+                        <div class="d-flex flex-wrap justify-content-md-end align-items-center gap-2">
+                            <label for="calling-date" class="form-label mb-0 small text-body-secondary">Tanggal</label>
+                            <input type="date" id="calling-date" class="form-control form-control-sm w-auto"
+                                value="{{ $payload['date'] }}" />
+                            <div class="d-flex flex-wrap justify-content-md-end gap-2" id="calling-counts">
+                                <span class="badge bg-secondary fs-6">Menunggu {{ $payload['counts']['waiting'] }}</span>
+                                <span class="badge bg-danger fs-6">Terpanggil {{ $payload['counts']['called'] }}</span>
+                                <span class="badge bg-success fs-6">Siap {{ $payload['counts']['ready'] }}</span>
+                                <span class="badge bg-dark fs-6">Total {{ $payload['counts']['total'] }}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -27,7 +40,7 @@
                 @if (empty($payload['arenas']))
                     <div class="text-center text-body-secondary py-5">
                         <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
-                        Tidak ada jadwal calling hari ini.
+                        Tidak ada jadwal calling pada tanggal ini.
                     </div>
                 @else
                     @foreach ($payload['arenas'] as $group)
@@ -285,7 +298,7 @@
                 if (!data.arenas.length) {
                     board.innerHTML = '<div class="text-center text-body-secondary py-5">' +
                         '<i class="bi bi-calendar-x fs-1 d-block mb-2"></i>' +
-                        'Tidak ada jadwal calling hari ini.</div>';
+                        'Tidak ada jadwal calling pada tanggal ini.</div>';
                     return;
                 }
 
@@ -337,7 +350,17 @@
 
             let lastPayload = '';
 
-            startPolling('{{ route('admin.callings.data') }}', AppConfig.pollInterval, function(data) {
+            const dateInput = document.getElementById('calling-date');
+
+            if (dateInput) {
+                dateInput.addEventListener('change', function() {
+                    const url = new URL(window.location.href);
+                    url.searchParams.set('date', dateInput.value);
+                    window.location.href = url.toString();
+                });
+            }
+
+            startPolling('{{ route('admin.callings.data', ['date' => $payload['date']]) }}', AppConfig.pollInterval, function(data) {
                 const serialized = JSON.stringify(data);
 
                 if (serialized === lastPayload) return;

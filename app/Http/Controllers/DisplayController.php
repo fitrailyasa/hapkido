@@ -12,6 +12,7 @@ use App\Models\Schedule;
 use App\Models\Verification;
 use App\Services\ArenaLiveService;
 use App\Services\BracketViewerService;
+use App\Services\ScheduleDayService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -39,7 +40,7 @@ class DisplayController extends Controller
 
     public function data()
     {
-        $today = now()->toDateString();
+        $today = app(ScheduleDayService::class)->resolve();
 
         $running = Schedule::with(['category', 'arena', 'match.athleteA.contingent', 'match.athleteB.contingent'])
             ->whereDate('match_date', $today)
@@ -173,7 +174,7 @@ class DisplayController extends Controller
 
     public function arenaData(Arena $arena)
     {
-        $today = now()->toDateString();
+        $today = app(ScheduleDayService::class)->resolve();
         $schedule = app(ArenaLiveService::class)->resolve($arena, $today);
 
         $match = $schedule?->match;

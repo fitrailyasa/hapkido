@@ -22,6 +22,22 @@ class ChampionshipSeeder extends Seeder
         $this->seedAthletes($categories, $contingents);
         $this->seedArtSchedules($categories);
         $this->seedBracket($categories);
+        $this->refreshScheduleDates();
+    }
+
+    /**
+     * Move the demo schedules to the current day.
+     *
+     * The calling board and the public display only show the schedules of the
+     * current day, so a demo database that was seeded days ago would look empty.
+     */
+    protected function refreshScheduleDates(): void
+    {
+        $today = now()->toDateString();
+
+        Schedule::whereDate('match_date', '<', $today)->update([
+            'match_date' => $today,
+        ]);
     }
 
     protected function seedCategories(): array

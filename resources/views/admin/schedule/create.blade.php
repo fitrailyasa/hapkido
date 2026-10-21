@@ -62,10 +62,12 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="new-schedule-round" class="form-label">Ronde</label>
-                            <select id="new-schedule-round" name="round"
+                            <select id="new-schedule-round" name="round" data-round-select
                                 class="form-select @error('round') is-invalid @enderror">
                                 @foreach (\App\Models\Schedule::ROUNDS as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('round', 'penyisihan') === $value)>
+                                    <option value="{{ $value }}"
+                                        data-types="{{ $value === 'penampilan' ? 'art' : 'daeryun' }}"
+                                        @selected(old('round', 'penyisihan') === $value)>
                                         {{ $label }}
                                     </option>
                                 @endforeach

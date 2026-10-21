@@ -12,6 +12,9 @@ class Schedule extends Model
     /**
      * The rounds a schedule can belong to.
      *
+     * The daeryun rounds come from the bracket, the art (seni) schedules use
+     * "penampilan" because they are performed one after the other.
+     *
      * @var array<string, string>
      */
     public const ROUNDS = [
@@ -19,7 +22,22 @@ class Schedule extends Model
         'perempat_final' => 'Perempat Final',
         'semifinal' => 'Semifinal',
         'final' => 'Final',
+        'penampilan' => 'Penampilan',
     ];
+
+    /**
+     * The rounds that belong to the given type.
+     *
+     * @return array<string, string>
+     */
+    public static function roundsFor(?string $type): array
+    {
+        if ($type === 'art') {
+            return ['penampilan' => self::ROUNDS['penampilan']];
+        }
+
+        return array_diff_key(self::ROUNDS, ['penampilan' => true]);
+    }
 
     protected $fillable = [
         'match_no', 'category_id', 'arena_id', 'type', 'round', 'order_no',

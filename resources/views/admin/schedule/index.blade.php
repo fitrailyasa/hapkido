@@ -189,6 +189,43 @@
             const editModalEl = document.getElementById('modal-edit-schedule');
             const deleteModalEl = document.getElementById('modal-delete-schedule');
 
+            // The rounds depend on the type: daeryun uses the bracket rounds,
+            // the art (seni) schedules use "penampilan".
+            const syncRoundOptions = function(select, type) {
+                if (!select) return;
+
+                Array.from(select.options).forEach(function(option) {
+                    const match = option.dataset.types === type;
+                    option.hidden = !match;
+                    option.disabled = !match;
+                });
+
+                const selected = select.selectedOptions[0];
+
+                if (!selected || selected.disabled) {
+                    const first = Array.from(select.options).find(function(option) {
+                        return !option.disabled;
+                    });
+
+                    if (first) select.value = first.value;
+                }
+            };
+
+            const bindRoundSelect = function(typeId, roundId) {
+                const typeSelect = document.getElementById(typeId);
+                const roundSelect = document.getElementById(roundId);
+
+                if (!typeSelect || !roundSelect) return;
+
+                syncRoundOptions(roundSelect, typeSelect.value);
+
+                typeSelect.addEventListener('change', function() {
+                    syncRoundOptions(roundSelect, typeSelect.value);
+                });
+            };
+
+            bindRoundSelect('new-schedule-type', 'new-schedule-round');
+
             editModalEl.addEventListener('show.bs.modal', function(event) {
                 const trigger = event.relatedTarget;
                 if (!trigger) return;
@@ -200,6 +237,7 @@
                 form.querySelector('[name="arena_id"]').value = trigger.dataset.arena || '';
                 form.querySelector('[name="type"]').value = trigger.dataset.type || 'daeryun';
                 form.querySelector('[name="round"]').value = trigger.dataset.round || 'penyisihan';
+                syncRoundOptions(form.querySelector('[name="round"]'), form.querySelector('[name="type"]').value);
                 form.querySelector('[name="order_no"]').value = trigger.dataset.order_no || '';
                 form.querySelector('[name="match_date"]').value = trigger.dataset.date || '';
                 form.querySelector('[name="start_time"]').value = trigger.dataset.start || '';

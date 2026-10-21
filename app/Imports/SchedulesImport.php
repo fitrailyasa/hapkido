@@ -155,13 +155,14 @@ class SchedulesImport implements ToModel, WithHeadingRow, WithValidation, SkipsE
         }
 
         $arena = $this->resolveArena($row['arena'] ?? null);
+        $type = ($row['jenis'] ?? '') !== '' ? $row['jenis'] : 'daeryun';
 
         return new Schedule([
             'match_no' => (string) ($row['match_no'] ?? ''),
             'category_id' => $category->id,
             'arena_id' => $arena?->id,
-            'type' => ($row['jenis'] ?? '') !== '' ? $row['jenis'] : 'daeryun',
-            'round' => $this->normalizeRound($row['ronde'] ?? null),
+            'type' => $type,
+            'round' => $this->normalizeRound($row['ronde'] ?? null, $type),
             'order_no' => (int) (($row['urutan'] ?? '') !== '' ? $row['urutan'] : 1),
             'match_date' => $this->normalizeDate($row['tanggal'] ?? null),
             'start_time' => $this->normalizeTime($row['mulai'] ?? null),
@@ -172,8 +173,11 @@ class SchedulesImport implements ToModel, WithHeadingRow, WithValidation, SkipsE
 
     /**
      * Map the "ronde" column of the spreadsheet to one of the known rounds.
+     *
+     * The art (seni) schedules use "penampilan", the daeryun schedules use the
+     * rounds of the bracket.
      */
-    protected function normalizeRound(mixed $value): string
+    protected function normalizeRound(mixed $value, string $type = 'daeryun'): string
     {
         $value = strtolower(trim((string) $value));
 
@@ -184,9 +188,25 @@ class SchedulesImport implements ToModel, WithHeadingRow, WithValidation, SkipsE
             'perempat_final' => 'perempat_final',
             'semifinal' => 'semifinal',
             'final' => 'final',
+            'penampilan' => 'penampilan',
+            'penampil' => 'penampilan',
         ];
 
-        return $aliases[$value] ?? 'penyisihan';
+        $round = $aliases[$value] ?? null;
+
+        if ($round === null) {
+            return $type === 'art' ? 'penampilan' : 'penyisihan';
+        }
+
+        if ($type === 'art' && $round !== 'penampilan') {
+            return 'penampilan';
+        }
+
+        if ($type !== 'art' && $round === 'penampilan') {
+            return 'penyisihan';
+        }
+
+        return $round;
     }
 
     protected function scheduleValues(array $row): array

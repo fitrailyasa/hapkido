@@ -191,7 +191,16 @@ class ScheduleController extends Controller
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'arena_id' => ['nullable', Rule::exists('arenas', 'id')],
             'type' => ['required', 'in:daeryun,art'],
-            'round' => ['nullable', Rule::in(array_keys(Schedule::ROUNDS))],
+            'round' => [
+                'nullable',
+                function (string $attribute, mixed $value, \Closure $fail) use ($request): void {
+                    $rounds = Schedule::roundsFor($request->input('type'));
+
+                    if (! array_key_exists((string) $value, $rounds)) {
+                        $fail('Ronde tidak sesuai dengan jenis pertandingan.');
+                    }
+                },
+            ],
             'order_no' => ['nullable', 'integer', 'min:1'],
             'match_date' => ['required', 'date'],
             'start_time' => ['nullable', 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/'],
@@ -203,7 +212,7 @@ class ScheduleController extends Controller
             'end_time.regex' => 'Format jam selesai tidak valid (HH:MM).',
         ]);
 
-        $data['round'] = $data['round'] ?? 'penyisihan';
+        $data['round'] = $data['round'] ?? ($data['type'] === 'art' ? 'penampilan' : 'penyisihan');
         $data['order_no'] = (int) ($data['order_no'] ?? 1);
         $data['arena_id'] = $data['arena_id'] ?? null;
         $data['start_time'] = $this->normalizeTime($data['start_time'] ?? null);

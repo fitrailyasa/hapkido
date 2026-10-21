@@ -6,22 +6,31 @@ use App\Http\Controllers\Controller;
 use App\Models\Athlete;
 use App\Models\Calling;
 use App\Models\Schedule;
+use App\Services\ScheduleDayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Validation\Rule;
 
 class CallingController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         return view('admin.calling.index', [
-            'payload' => $this->payload(),
+            'payload' => $this->payload($this->resolveDay($request)),
         ]);
     }
 
-    public function data()
+    public function data(Request $request)
     {
-        return response()->json($this->payload());
+        return response()->json($this->payload($this->resolveDay($request)));
+    }
+
+    /**
+     * The day that is shown: the requested one, today, or the latest day with schedules.
+     */
+    protected function resolveDay(Request $request): string
+    {
+        return app(ScheduleDayService::class)->resolve($request->query('date'));
     }
 
     public function send(Request $request, Calling $calling)
@@ -72,9 +81,10 @@ class CallingController extends Controller
     }
 
     /**
-     * Polling data: today's schedules grouped per arena along with the calling list.
+     * Polling data: the schedules of the given day grouped per arena along with
+     * the calling list.
      */
-    protected function payload(): array
+    protected function payload(string $day): array
     {
         $today = now()->toDateString();
 
@@ -85,7 +95,7 @@ class CallingController extends Controller
             'match.athleteA.contingent',
             'match.athleteB.contingent',
         ])
-            ->whereDate('match_date', $today)
+            ->whereDate('match_date', $day)
             ->orderBy('order_no')
             ->orderBy('id')
             ->get();
@@ -168,7 +178,8 @@ class CallingController extends Controller
         }
 
         return [
-            'date' => $today,
+            'date' => $day,
+            'is_today' => $day === $today,
             'generated_at' => now()->format('H:i'),
             'counts' => $totals,
             'arenas' => array_values($groups),
