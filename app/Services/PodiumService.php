@@ -56,17 +56,17 @@ class PodiumService
         $entries = [];
 
         if ($final->winner) {
-            $entries[] = $this->entry($final->winner, 1, 'gold');
+            $entries[] = $this->entry($final->winner, 1, 'gold', null, $final);
         }
 
         $silver = $this->loser($final);
 
         if ($silver) {
-            $entries[] = $this->entry($silver, 2, 'silver');
+            $entries[] = $this->entry($silver, 2, 'silver', null, $final);
         }
 
-        foreach ($this->bronzeAthletes($matches, $final) as $athlete) {
-            $entries[] = $this->entry($athlete, 3, 'bronze');
+        foreach ($this->bronzeAthletes($matches, $final) as $bronze) {
+            $entries[] = $this->entry($bronze['athlete'], 3, 'bronze', null, $bronze['match']);
         }
 
         return $entries;
@@ -123,6 +123,8 @@ class PodiumService
      *
      * When a semifinal is not finished (yet), the best losers of the earlier
      * rounds step in, so the third place always consists of two athletes.
+     *
+     * @return array<int, array{athlete: Athlete, match: Matchup|null}>
      */
     protected function bronzeAthletes(Collection $matches, Matchup $final): array
     {
@@ -148,17 +150,18 @@ class PodiumService
         }
 
         return collect($losers)
-            ->reject(fn (Athlete $athlete) => in_array((int) $athlete->id, $excluded, true))
-            ->unique('id')
+            ->reject(fn (array $loser) => in_array((int) $loser['athlete']->id, $excluded, true))
+            ->unique(fn (array $loser) => $loser['athlete']->id)
             ->take(2)
             ->values()
             ->all();
     }
 
     /**
-     * The losers of the given matches, the best one (most points) first.
+     * The losers of the given matches with the match they lost, the best one
+     * (most points) first.
      *
-     * @return array<int, Athlete>
+     * @return array<int, array{athlete: Athlete, match: Matchup|null, points: int}>
      */
     protected function sortedLosers(Collection $matches): array
     {
@@ -174,11 +177,11 @@ class PodiumService
                     ? (int) $match->score_b
                     : (int) $match->score_a;
 
-                return ['athlete' => $loser, 'points' => $points];
+                return ['athlete' => $loser, 'match' => $match, 'points' => $points];
             })
             ->filter()
             ->sortByDesc('points')
-            ->pluck('athlete')
+            ->values()
             ->all();
     }
 
