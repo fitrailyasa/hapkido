@@ -1,0 +1,8 @@
+; Server setting read by Hapkido.exe on every start.
+;
+; host=127.0.0.1  -> only this computer (default)
+; host=0.0.0.0    -> also reachable from other computers on the network
+;                     (display / second monitor of another PC). Open the port
+;                     in Windows Firewall for that.
+host=127.0.0.1
+port=8000

@@ -18,3 +18,9 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Windows EXE packaging (tools/build-exe)
+/tools/build-exe/cache/
+/tools/build-exe/dist/
+/tools/build-exe/launcher/bin/
+/tools/build-exe/launcher/obj/

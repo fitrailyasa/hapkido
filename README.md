@@ -246,6 +246,25 @@ Aplikasi: `http://localhost:8080`
 - `APP_KEY` pada `.env.docker` dikosongkan, container mengisinya otomatis saat pertama kali start.
 - `.env.docker` sudah masuk `.gitignore`; file contoh `.env.docker.example` ikut di-commit.
 
+### Windows EXE / Installer (SQLite, tanpa setup Laravel di PC lain)
+
+Untuk membagikan aplikasi ke komputer Windows lain sebagai **installer EXE** (PHP + Laravel + SQLite ikut terbundel):
+
+```powershell
+# Prasyarat build: PHP, Composer, Node/npm, Inno Setup 6
+.\tools\build-exe\package.ps1
+```
+
+| Hasil | Path |
+|---|---|
+| Portable | `tools/build-exe/dist/app/Hapkido.exe` |
+| Installer | `tools/build-exe/dist/Setup-Hapkido.exe` |
+
+Di PC tujuan cukup jalankan `Setup-Hapkido.exe` — tidak perlu XAMPP/Laragon/Composer/Node.  
+Login first run: `admin@hapkido.local` / `password`.
+
+Panduan lengkap (prasyarat, opsi `-SkipInstaller`, `server.txt`, troubleshooting): [`tools/build-exe/README.md`](tools/build-exe/README.md).
+
 ## Struktur Modul (file)
 
 ```
