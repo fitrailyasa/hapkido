@@ -413,7 +413,7 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Paper style: main bracket is size 4 (not 8 with BYE boxes).
+        // Paper style (5 orang): 1 penyisihan + bagan 4 (1 BYE vs pemenang + 1 partai penuh).
         $this->assertSame(
             0,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
@@ -422,8 +422,6 @@ class BracketTest extends TestCase
             4,
             BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
-
-        // 1 prelim (perempat) + 3 seeded into semifinal.
         $this->assertSame(
             1,
             Matchup::where('round', 'perempat_final')->count()
@@ -467,7 +465,7 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Paper bracket: 1 penyisihan + bagan 8 (no stack of BYE boxes).
+        // Like the paper sheet: 1 penyisihan + 1 BYE + 3 partai penuh di bagan 8.
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
         $this->assertSame(
@@ -478,12 +476,25 @@ class BracketTest extends TestCase
             8,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
+        // 1 BYE seed + 6 in full QF pairs = 7 names in slots; slot 1 waits for prelim.
         $this->assertSame(
             7,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '8')
                 ->whereNotNull('athlete_id')
                 ->count()
+        );
+        $this->assertNull(
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->where('position', 1)
+                ->value('athlete_id')
+        );
+        $this->assertNotNull(
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->where('position', 0)
+                ->value('athlete_id')
         );
         $this->assertSame(
             0,
@@ -493,7 +504,6 @@ class BracketTest extends TestCase
                 ->count()
         );
 
-        // Viewer must surface all 9 athletes: 7 seeded + "A vs B" placeholder.
         $prelim = Matchup::with(['athleteA', 'athleteB'])->where('round', 'penyisihan')->first();
         $this->assertNotNull($prelim);
         $payload = app(\App\Services\BracketViewerService::class)->payload($category);
@@ -501,9 +511,10 @@ class BracketTest extends TestCase
         $names = collect($payload['viewerData']['participants'])->pluck('name');
         $this->assertTrue(
             $names->contains("{$prelim->athleteA->name} vs {$prelim->athleteB->name}"),
-            'Empty QF slot should show both penyisihan athletes. Got: '.$names->implode(', ')
+            'BYE slot opponent shows both penyisihan athletes. Got: '.$names->implode(', ')
         );
-        $this->assertCount(8, $names); // 7 seeded + 1 placeholder covering 2 prelim athletes
+        $this->assertCount(8, $names);
+        $this->assertNotEmpty($payload['byeIds']);
     }
 
     public function test_reconcile_clears_premature_finalist(): void

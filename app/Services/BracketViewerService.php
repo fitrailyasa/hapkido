@@ -214,6 +214,11 @@ class BracketViewerService
                 $opponentB = ['id' => $athleteB];
                 $status = 0;
 
+                // Paper-style: athlete with BYE facing a penyisihan placeholder.
+                if ($prelimForUrl !== null) {
+                    $byeIds[] = $matchId;
+                }
+
                 $isByeMatch = ($athleteA !== null && $athleteB === null)
                     || ($athleteB !== null && $athleteA === null);
 

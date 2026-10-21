@@ -14,11 +14,10 @@ use Illuminate\Support\Collection;
 class BracketService
 {
     /**
-     * Build the bracket automatically from active athletes of the class.
-     *
-     * Paper-style when the count is not a power of two (e.g. 9 → 1 penyisihan
-     * + bagan 8 besar). Bye recipients are seeded into the main bracket — no
-     * stack of "Nama vs BYE" boxes. Jadwal stubs are created as needed.
+     * Build the bracket like a paper bagan (e.g. 9 athletes):
+     * 1 penyisihan + 1 BYE facing that winner + full pairings for the rest
+     * inside an 8-person tree — not seven "Nama vs BYE" boxes.
+     * Jadwal stubs are created; jam/arena can be filled later.
      */
     public function generate(Category $category): void
     {
@@ -32,16 +31,13 @@ class BracketService
         }
 
         $roundCounts = $this->daeryunRoundCounts($category);
-
-        // Drop the previous bracket first so a regenerate always follows the
-        // latest athlete count (not leftover slots from a larger tree).
         $this->clear($category);
 
         $n = $athletes->count();
         $fullSize = $this->nextPowerOfTwo($n);
         $hasPrelim = $n !== $fullSize;
         $mainSize = $hasPrelim ? (int) ($fullSize / 2) : $fullSize;
-        $byeCount = $fullSize - $n;
+        $prelimCount = $hasPrelim ? ($n - $mainSize) : 0;
         $entryLabel = $this->label($hasPrelim ? $fullSize : $mainSize);
 
         if ($roundCounts->isNotEmpty()) {
@@ -65,44 +61,58 @@ class BracketService
             }
         }
 
-        $alive = [$mainSize => []];
+        $alive = [$mainSize => array_fill(0, $mainSize, false)];
+        $pairingCount = (int) ($mainSize / 2);
 
         if ($hasPrelim) {
-            // Which main-bracket slots are seeded (bye) vs waiting for a prelim.
-            $byeSlots = $this->distributedByePairings($mainSize, $byeCount);
+            // Like the paper sheet: first prelimCount pairings are
+            // (BYE athlete vs pemenang penyisihan); the rest are full matches.
             $prelimLabel = $this->label($fullSize);
 
-            for ($slot = 0; $slot < $mainSize; $slot++) {
-                if (isset($byeSlots[$slot])) {
-                    $slots[$mainSize][$slot]->update(['athlete_id' => $list[$index]->id]);
-                    $index++;
-                    $alive[$mainSize][$slot] = true;
-                } else {
-                    // Prelim match feeds this slot; keep it empty until finished.
-                    $alive[$mainSize][$slot] = true;
-                    $athleteA = $list[$index]->id;
-                    $index++;
-                    $athleteB = $list[$index]->id;
-                    $index++;
+            for ($pairing = 0; $pairing < $prelimCount; $pairing++) {
+                $byeSlot = $pairing * 2;
+                $waitSlot = $byeSlot + 1;
 
-                    $schedule = $jadwal->get($prelimLabel, collect())->shift()
-                        ?? $this->createMissingRoundSchedule(
-                            $category,
-                            $prelimLabel,
-                            $slot + 1,
-                            $this->scheduleTemplate($category)
-                        );
+                $slots[$mainSize][$byeSlot]->update(['athlete_id' => $list[$index]->id]);
+                $index++;
+                $alive[$mainSize][$byeSlot] = true;
+                $alive[$mainSize][$waitSlot] = true;
 
-                    Matchup::create([
-                        'schedule_id' => $schedule->id,
-                        'athlete_a_id' => $athleteA,
-                        'athlete_b_id' => $athleteB,
-                        'winner_athlete_id' => null,
-                        'status' => 'pending',
-                        'round' => $prelimLabel,
-                        'position' => $slot + 1,
-                    ]);
-                }
+                $athleteA = $list[$index]->id;
+                $index++;
+                $athleteB = $list[$index]->id;
+                $index++;
+
+                $schedule = $jadwal->get($prelimLabel, collect())->shift()
+                    ?? $this->createMissingRoundSchedule(
+                        $category,
+                        $prelimLabel,
+                        $waitSlot + 1,
+                        $this->scheduleTemplate($category)
+                    );
+
+                Matchup::create([
+                    'schedule_id' => $schedule->id,
+                    'athlete_a_id' => $athleteA,
+                    'athlete_b_id' => $athleteB,
+                    'winner_athlete_id' => null,
+                    'status' => 'pending',
+                    'round' => $prelimLabel,
+                    // Feeds main-bracket slot $waitSlot.
+                    'position' => $waitSlot + 1,
+                ]);
+            }
+
+            for ($pairing = $prelimCount; $pairing < $pairingCount; $pairing++) {
+                $slotA = $pairing * 2;
+                $slotB = $slotA + 1;
+
+                $slots[$mainSize][$slotA]->update(['athlete_id' => $list[$index]->id]);
+                $index++;
+                $slots[$mainSize][$slotB]->update(['athlete_id' => $list[$index]->id]);
+                $index++;
+                $alive[$mainSize][$slotA] = true;
+                $alive[$mainSize][$slotB] = true;
             }
         } else {
             for ($position = 0; $position < $mainSize; $position++) {
