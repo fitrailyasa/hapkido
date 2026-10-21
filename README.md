@@ -51,7 +51,10 @@ DATA ATLET → JADWAL → CALLING → SCAN → PEMERIKSAAN → PERLENGKAPAN → 
 
 ## 3. Jadwal & Match (Wajib)
 
-- Pembuatan jadwal/partai: **nomor match**, kelas, arena, urutan pertandingan, jam mulai/akhir, ronde (Penyisihan → Perempat Final → Semifinal → Final).
+- Pembuatan jadwal/partai: **nomor match**, kelas, urutan pertandingan, jam mulai/akhir, ronde (Penyisihan → Perempat Final → Semifinal → Final).
+- **Arena tidak diinput di form jadwal**: arena mengikuti kelas. Field arena di form hanya
+  menampilkan info arena yang menangani kelas terpilih (read-only). Kalau kelasnya belum punya
+  arena, jadwal ditolak dengan pesan: `Kelas ... belum memiliki arena. Tetapkan kelas ini ke arena pada menu Arena terlebih dahulu.`
 - **Ronde memakai dropdown** (`Penyisihan`, `Perempat Final`, `Semifinal`, `Final`) pada form tambah & ubah jadwal. Jadwal Seni memakai ronde `Penampilan`, jadi pilihan ronde mengikuti jenis pertandingan. Nilai yang diimpor dari Excel dinormalisasi ke daftar yang sama.
 - Tipe jadwal: **Daeryun** (VS) atau **Seni** (urutan tampil).
 - **Export & import Excel** (`maatwebsite/excel`) + download template `.xlsx`.
@@ -59,7 +62,10 @@ DATA ATLET → JADWAL → CALLING → SCAN → PEMERIKSAAN → PERLENGKAPAN → 
 ## 4. Pengaturan Arena (Wajib)
 
 - Arena A / B / C.
-- Kategori pertandingan tiap arena (Daeryun / Seni).
+- **Setiap arena menangani satu kelas** dan **satu kelas hanya boleh ada di satu arena**. Kelas yang
+  sudah dipakai arena lain ditandai di form (`— dipakai Arena B`) dan ditolak saat disimpan:
+  `Kelas ini sudah dipakai arena lain.`
+- Kategori pertandingan tiap arena mengikuti kelas yang ditangani (Daeryun / Seni).
 - **Perubahan fungsi arena** (ganti kategori/fungsi yang sedang berjalan).
 - Status arena: Persiapan / Tampil / Menunggu (untuk dashboard).
 

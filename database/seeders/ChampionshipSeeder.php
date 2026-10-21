@@ -90,15 +90,20 @@ class ChampionshipSeeder extends Seeder
             ['name' => 'A', 'label' => 'Arena A', 'type' => 'Daeryun Putra'],
             ['name' => 'B', 'label' => 'Arena B', 'type' => 'Hyung Putri'],
             ['name' => 'C', 'label' => 'Arena C', 'type' => 'Hosinsul'],
+            ['name' => 'D', 'label' => 'Arena D', 'type' => 'Daeryun Putri'],
+            ['name' => 'E', 'label' => 'Arena E', 'type' => 'Nakbop'],
         ];
 
         foreach ($rows as $row) {
+            $category = $categories[$row['type']] ?? null;
+
             Arena::firstOrCreate(
                 ['name' => $row['name']],
                 [
                     'label' => $row['label'],
-                    'category_id' => $categories[$row['type']]?->id,
-                    'match_type' => 'daeryun',
+                    'category_id' => $category?->id,
+                    // The arena follows the class, so the type follows too.
+                    'match_type' => $category?->type ?? 'daeryun',
                     'status' => 'preparation',
                 ]
             );
@@ -205,14 +210,16 @@ class ChampionshipSeeder extends Seeder
     protected function seedArtSchedules(array $categories): void
     {
         $plans = [
-            ['category' => 'Hyung Putri', 'arena' => 'B', 'match_no' => '008', 'order' => 8],
-            ['category' => 'Hosinsul', 'arena' => 'C', 'match_no' => '005', 'order' => 5],
-            ['category' => 'Nakbop', 'arena' => 'B', 'match_no' => '012', 'order' => 12],
+            ['category' => 'Hyung Putri', 'match_no' => '008', 'order' => 8],
+            ['category' => 'Hosinsul', 'match_no' => '005', 'order' => 5],
+            ['category' => 'Nakbop', 'match_no' => '012', 'order' => 12],
         ];
 
         foreach ($plans as $plan) {
             $category = $categories[$plan['category']];
-            $arena = Arena::where('name', $plan['arena'])->first();
+
+            // The arena follows the class.
+            $arena = Arena::forCategory($category->id, 'art');
 
             $schedule = Schedule::firstOrCreate(
                 ['match_no' => $plan['match_no']],
@@ -225,7 +232,7 @@ class ChampionshipSeeder extends Seeder
                     'match_date' => now()->toDateString(),
                     'start_time' => sprintf('%02d:00:00', 9 + $plan['order'] % 6),
                     'end_time' => sprintf('%02d:00:00', 10 + $plan['order'] % 6),
-                    'status' => $plan['order'] <= 8 ? 'pending' : 'pending',
+                    'status' => 'pending',
                 ]
             );
 
@@ -248,20 +255,22 @@ class ChampionshipSeeder extends Seeder
             $service->generate($categories[$name]);
         }
 
-        // Initial schedule (arena & time) for the first daeryun match
-        $arena = Arena::where('name', 'A')->first();
+        // Initial schedule (arena & time) for the first daeryun matches
+        foreach (['Daeryun Putra', 'Daeryun Putri'] as $name) {
+            $arena = Arena::where('category_id', $categories[$name]->id)->first();
 
-        Schedule::where('type', 'daeryun')
-            ->where('category_id', $categories['Daeryun Putra']->id)
-            ->orderBy('id')
-            ->take(4)
-            ->get()
-            ->each(function ($schedule, $index) use ($arena) {
-                $schedule->update([
-                    'arena_id' => $arena?->id,
-                    'start_time' => sprintf('%02d:00:00', 9 + $index),
-                    'end_time' => sprintf('%02d:00:00', 10 + $index),
-                ]);
-            });
+            Schedule::where('type', 'daeryun')
+                ->where('category_id', $categories[$name]->id)
+                ->orderBy('id')
+                ->take(4)
+                ->get()
+                ->each(function ($schedule, $index) use ($arena) {
+                    $schedule->update([
+                        'arena_id' => $arena?->id,
+                        'start_time' => sprintf('%02d:00:00', 9 + $index),
+                        'end_time' => sprintf('%02d:00:00', 10 + $index),
+                    ]);
+                });
+        }
     }
 }

@@ -43,6 +43,21 @@ class ScheduleTest extends TestCase
         $response->assertDontSee('PENDING-1');
     }
 
+    public function test_schedule_index_shows_the_arena_of_the_class(): void
+    {
+        $user = $this->userWithPermissions(['schedules.view']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        ArenaFactory::new()->create([
+            'name' => 'Arena Kelas',
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->actingAs($user)->get('/admin/schedules');
+
+        $response->assertOk();
+        $response->assertSee('Arena Kelas');
+    }
+
     public function test_schedule_can_be_created(): void
     {
         $user = $this->userWithPermissions(['schedules.create']);
