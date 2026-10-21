@@ -386,9 +386,10 @@ class BracketTest extends TestCase
             Matchup::where('round', 'perempat_final')->count()
         );
 
-        // After BYEs, four athletes sit in the semifinal — nobody is parked in Final yet.
+        // Three BYE recipients sit in the semifinal; the 4th waits for the
+        // first-round winner. Nobody is parked in Final yet.
         $this->assertSame(
-            4,
+            3,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '4')
                 ->whereNotNull('athlete_id')

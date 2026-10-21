@@ -45,11 +45,10 @@
                     </h6>
                 </div>
 
-                @if ($jadwalCount === 0)
+                @if (! $hasBracket)
                     <div class="card-body text-center text-body-secondary">
-                        Kelas ini belum memiliki jadwal partai. Buat jadwal dulu di menu
-                        <a href="{{ route('admin.schedules.index') }}">Jadwal</a>, partai manual mengisi jadwal yang
-                        sudah dibuat.
+                        Generate bracket dulu agar partai (jadwal) terbentuk otomatis, lalu isi pasangan
+                        atlet di sini bila perlu.
                     </div>
                 @elseif ($manualPartai->isEmpty())
                     <div class="card-body text-center text-body-secondary">
@@ -135,8 +134,8 @@
                     <i class="bi bi-diagram-3 fs-1 text-body-secondary"></i>
                     <p class="mt-3 mb-1 fw-semibold">Belum ada bracket untuk kelas {{ $selected->name }}</p>
                     <p class="text-body-secondary small mb-3">
-                        Peserta aktif: {{ $athleteCount }} orang &middot; Jadwal partai: {{ $jadwalCount }}.<br />
-                        Bracket dibuat dari jadwal, jadi buat jadwal partai Daeryun terlebih dahulu di menu Jadwal.
+                        Peserta aktif: {{ $athleteCount }} orang.<br />
+                        Generate bracket dari peserta aktif — jadwal partai dibuat otomatis.
                     </p>
                     @can('brackets.generate')
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -202,14 +201,14 @@
                         <p class="mb-2">
                             Bracket akan dibuat otomatis untuk kelas
                             <strong>{{ $selected?->name ?? '-' }}</strong>
-                            berdasarkan {{ $athleteCount }} peserta aktif dan
-                            {{ $jadwalCount }} jadwal partai yang sudah dibuat.
+                            berdasarkan {{ $athleteCount }} peserta aktif.
+                            Jadwal partai yang belum ada akan dibuat otomatis.
                         </p>
                         <div class="alert alert-warning small mb-0">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Partai lama pada kelas ini akan dihapus lalu dibuat ulang dari jadwal yang sudah ada
-                            (jam, arena dan tanggal pada jadwal tetap dipakai). Hasil pertandingan pada partai
-                            tersebut akan hilang.
+                            Bracket lama pada kelas ini akan dihapus lalu dibuat ulang.
+                            Hasil pertandingan pada partai tersebut akan hilang. Jadwal yang sudah ada
+                            (jam, arena, tanggal) tetap dipakai bila masih cocok.
                         </div>
                     </div>
                     <div class="modal-footer">

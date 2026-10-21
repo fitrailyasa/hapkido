@@ -62,21 +62,21 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            @can('schedules.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.schedules.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-calendar3"></i>
-                                        <p>Jadwal</p>
-                                    </a>
-                                </li>
-                            @endcan
                             @can('brackets.view')
                                 <li class="nav-item">
                                     <a href="{{ route('admin.brackets.index') }}"
                                         class="nav-link {{ request()->routeIs('admin.brackets.*') ? 'active' : '' }}">
                                         <i class="nav-icon bi bi-diagram-3-fill"></i>
                                         <p>Bracket</p>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('schedules.view')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.schedules.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}">
+                                        <i class="nav-icon bi bi-calendar3"></i>
+                                        <p>Jadwal</p>
                                     </a>
                                 </li>
                             @endcan
