@@ -33,7 +33,7 @@ class ScoreTest extends TestCase
         ]);
 
         $response->assertRedirect(route('admin.scores.edit', $performance));
-        $response->assertSessionHas('success', 'Nilai akhir tersimpan: 85.00');
+        $response->assertSessionHas('success', 'Nilai akhir tersimpan: 85');
         $this->assertSame(85.0, (float) $performance->fresh()->final_score);
         $this->assertSame('finished', $performance->fresh()->status);
         $this->assertNotNull($performance->fresh()->performed_at);

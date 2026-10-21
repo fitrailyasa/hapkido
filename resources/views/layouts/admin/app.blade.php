@@ -239,13 +239,17 @@
                 form.appendChild(hidden);
             });
 
-            window.swalConfirm({
-                icon: 'warning',
-                title: 'Hapus ' + picked.length + ' data?',
-                text: 'Data yang dipilih akan dihapus dari sistem.',
-                confirmButtonColor: '#dc3545',
-                confirmButtonText: 'Ya, hapus'
-            }).then(function(result) {
+            // The wording of the confirmation follows the action of the form.
+            const count = String(picked.length);
+            const dialog = {
+                icon: form.dataset.bulkIcon || 'warning',
+                title: (form.dataset.bulkTitle || 'Hapus {n} data?').replace('{n}', count),
+                text: form.dataset.bulkText || 'Data yang dipilih akan dihapus dari sistem.',
+                confirmButtonColor: form.dataset.bulkColor || '#dc3545',
+                confirmButtonText: form.dataset.bulkConfirm || 'Ya, hapus'
+            };
+
+            window.swalConfirm(dialog).then(function(result) {
                 if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
             });
         });

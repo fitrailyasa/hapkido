@@ -3,6 +3,12 @@
 @section('title', 'Data Atlet')
 
 @section('content')
+    @php
+        // The checkbox column and the bulk delete toolbar are only shown with
+        // the delete permission.
+        $bulkDelete = auth()->user()?->can('athletes.delete') ?? false;
+        $colspan = $bulkDelete ? 9 : 8;
+    @endphp
     <div class="container-fluid">
         <div class="card mb-4">
             <div class="card-header">
@@ -55,11 +61,23 @@
                     </div>
                 </div>
             </div>
+            <div class="card-body pb-0">
+                @include('admin.partials.bulk-toolbar', [
+                    'route' => 'admin.athletes.bulk-destroy',
+                    'permission' => 'athletes.delete',
+                ])
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
+                                @if ($bulkDelete)
+                                    <th style="width: 40px">
+                                        <input type="checkbox" class="form-check-input" data-bulk-all
+                                            aria-label="Pilih semua atlet" />
+                                    </th>
+                                @endif
                                 <th style="width: 60px">#</th>
                                 <th>Nama</th>
                                 <th>No. Peserta</th>
@@ -73,6 +91,13 @@
                         <tbody>
                             @forelse ($athletes as $athlete)
                                 <tr>
+                                    @if ($bulkDelete)
+                                        <td>
+                                            <input type="checkbox" class="form-check-input" data-bulk-row
+                                                value="{{ $athlete->id }}"
+                                                aria-label="Pilih atlet {{ $athlete->name }}" />
+                                        </td>
+                                    @endif
                                     <td>{{ $athlete->id }}</td>
                                     <td class="fw-medium">{{ $athlete->name }}</td>
                                     <td><span class="badge bg-body-secondary text-body border">{{ $athlete->participant_number }}</span></td>
@@ -127,7 +152,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-body-secondary py-4">
+                                    <td colspan="{{ $colspan }}" class="text-center text-body-secondary py-4">
                                         Tidak ada atlet ditemukan.
                                     </td>
                                 </tr>
