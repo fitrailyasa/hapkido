@@ -3,6 +3,12 @@
 @section('title', 'Jadwal Pertandingan')
 
 @section('content')
+    @php
+        // The checkbox column and the bulk delete toolbar are only shown with
+        // the delete permission.
+        $bulkDelete = auth()->user()?->can('schedules.delete') ?? false;
+        $colspan = $bulkDelete ? 10 : 9;
+    @endphp
     <div class="container-fluid">
         <div class="card mb-4">
             <div class="card-header">
@@ -73,11 +79,23 @@
                     </div>
                 </div>
             </div>
+            <div class="card-body pb-0">
+                @include('admin.partials.bulk-toolbar', [
+                    'route' => 'admin.schedules.bulk-destroy',
+                    'permission' => 'schedules.delete',
+                ])
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
+                                @if ($bulkDelete)
+                                    <th style="width: 40px">
+                                        <input type="checkbox" class="form-check-input" data-bulk-all
+                                            aria-label="Pilih semua jadwal" />
+                                    </th>
+                                @endif
                                 <th style="width: 110px">Kode Laga</th>
                                 <th style="width: 130px">Jam</th>
                                 <th>Kelas</th>
@@ -92,12 +110,19 @@
                         <tbody>
                             @forelse ($schedules->groupBy(fn ($schedule) => optional($schedule->match_date)->format('d M Y')) as $dateLabel => $group)
                                 <tr class="table-secondary">
-                                    <td colspan="9" class="text-body-secondary fw-semibold">
+                                    <td colspan="{{ $colspan }}" class="text-body-secondary fw-semibold">
                                         <i class="bi bi-calendar-event me-1"></i>{{ $dateLabel }}
                                     </td>
                                 </tr>
                                 @foreach ($group as $schedule)
                                     <tr>
+                                        @if ($bulkDelete)
+                                            <td>
+                                                <input type="checkbox" class="form-check-input" data-bulk-row
+                                                    value="{{ $schedule->id }}"
+                                                    aria-label="Pilih jadwal {{ $schedule->match_no }}" />
+                                            </td>
+                                        @endif
                                         <td class="fw-medium">{{ $schedule->match_no }}</td>
                                         <td>
                                             {{ $schedule->start_time ? substr($schedule->start_time, 0, 5) : '—' }}
@@ -160,7 +185,7 @@
                                 @endforeach
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center text-body-secondary py-4">
+                                    <td colspan="{{ $colspan }}" class="text-center text-body-secondary py-4">
                                         Tidak ada jadwal ditemukan.
                                     </td>
                                 </tr>
