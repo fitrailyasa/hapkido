@@ -228,9 +228,6 @@ class ResultController extends Controller
                 'score' => $entry['score'] ?? ($row['score'] ?? null),
                 'wins' => $row['wins'] ?? 0,
                 'points_for' => $row['points_for'] ?? 0,
-                'result' => $entry['result'] ?? null,
-                'score_line' => $entry['score_line'] ?? null,
-                'round' => $entry['round'] ?? null,
             ];
         }, $podium);
     }

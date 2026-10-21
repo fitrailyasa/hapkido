@@ -10,14 +10,6 @@
         // The same medal emoji as the public display.
         $juaraEmojis = ['gold' => "\u{1F947}", 'silver' => "\u{1F948}", 'bronze' => "\u{1F949}"];
 
-        // Indonesian label of the deciding match of a daeryun podium entry.
-        $roundLabels = [
-            'penyisihan' => 'Penyisihan',
-            'perempat_final' => 'Perempat Final',
-            'semifinal' => 'Semifinal',
-            'final' => 'Final',
-        ];
-
         $podiumSections = $daeryun->map(fn (array $section) => [
             'category' => $section['category'],
             'type' => 'daeryun',
@@ -90,22 +82,19 @@
                             $medal = $entry['medal'];
                             $isArt = $section['type'] === 'art';
 
+                            // Only the seni podium shows a score (nilai akhir);
+                            // the daeryun score is shown in the bracket.
+                            $value = $isArt
+                                ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '')
+                                : '';
+
+                            // The cards are shown in rank order: 1, 2, 3 and 3.
                             if ($medal === 'bronze') {
                                 $bronzeIndex++;
                                 $position = 2 + $bronzeIndex;
                             } else {
-                                $position = $medal === 'gold' ? 2 : 1;
+                                $position = $entry['rank'];
                             }
-
-                            // The value of a daeryun podium is the score of the
-                            // deciding match (nilai akhir), never the total points.
-                            $value = $isArt
-                                ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '')
-                                : ($entry['score_line'] ?? '');
-
-                            $sub = $isArt
-                                ? 'Nilai akhir seni'
-                                : trim(($entry['result'] ?? '').' · '.($roundLabels[$entry['round'] ?? ''] ?? ''));
 
                             $slots[] = [
                                 'position' => $position,
@@ -116,7 +105,6 @@
                                 'contingent' => $entry['contingent']?->name ?? '-',
                                 'code' => $entry['contingent']?->code ?? '',
                                 'value' => $value,
-                                'sub' => $sub,
                             ];
                         }
 
@@ -162,9 +150,6 @@
                                             </div>
                                             @if ($slot['value'] !== '')
                                                 <div class="juara-admin-score">{{ $slot['value'] }}</div>
-                                            @endif
-                                            @if ($slot['sub'] !== '')
-                                                <div class="juara-admin-sub">{{ $slot['sub'] }}</div>
                                             @endif
                                         </div>
                                     </div>
@@ -404,12 +389,6 @@
             margin-top: 0.5rem;
             font-size: 1.0625rem;
             font-weight: 800;
-        }
-
-        .juara-admin-sub {
-            margin-top: 0.25rem;
-            font-size: 0.8125rem;
-            color: var(--bs-secondary-color);
         }
 
         /* Bronze medal badge: bronze, not the red danger state. */

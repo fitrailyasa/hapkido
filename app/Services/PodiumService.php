@@ -24,15 +24,7 @@ class PodiumService
     /**
      * The medal entries of a category.
      *
-     * @return array<int, array{
-     *     athlete: Athlete,
-     *     rank: int,
-     *     medal: string,
-     *     score: float|null,
-     *     result: string|null,
-     *     score_line: string|null,
-     *     round: string|null
-     * }>
+     * @return array<int, array{athlete: Athlete, rank: int, medal: string, score: float|null}>
      */
     public function forCategory(Category $category): array
     {
@@ -64,17 +56,17 @@ class PodiumService
         $entries = [];
 
         if ($final->winner) {
-            $entries[] = $this->entry($final->winner, 1, 'gold', null, $final);
+            $entries[] = $this->entry($final->winner, 1, 'gold');
         }
 
         $silver = $this->loser($final);
 
         if ($silver) {
-            $entries[] = $this->entry($silver, 2, 'silver', null, $final);
+            $entries[] = $this->entry($silver, 2, 'silver');
         }
 
-        foreach ($this->bronzeAthletes($matches, $final) as $bronze) {
-            $entries[] = $this->entry($bronze['athlete'], 3, 'bronze', null, $bronze['match']);
+        foreach ($this->bronzeAthletes($matches, $final) as $athlete) {
+            $entries[] = $this->entry($athlete, 3, 'bronze');
         }
 
         return $entries;
@@ -132,7 +124,7 @@ class PodiumService
      * When a semifinal is not finished (yet), the best losers of the earlier
      * rounds step in, so the third place always consists of two athletes.
      *
-     * @return array<int, array{athlete: Athlete, match: Matchup|null}>
+     * @return array<int, Athlete>
      */
     protected function bronzeAthletes(Collection $matches, Matchup $final): array
     {
@@ -158,18 +150,17 @@ class PodiumService
         }
 
         return collect($losers)
-            ->reject(fn (array $loser) => in_array((int) $loser['athlete']->id, $excluded, true))
-            ->unique(fn (array $loser) => $loser['athlete']->id)
+            ->reject(fn (Athlete $athlete) => in_array((int) $athlete->id, $excluded, true))
+            ->unique('id')
             ->take(2)
             ->values()
             ->all();
     }
 
     /**
-     * The losers of the given matches with the match they lost, the best one
-     * (most points) first.
+     * The losers of the given matches, the best one (most points) first.
      *
-     * @return array<int, array{athlete: Athlete, match: Matchup|null, points: int}>
+     * @return array<int, Athlete>
      */
     protected function sortedLosers(Collection $matches): array
     {
@@ -185,11 +176,11 @@ class PodiumService
                     ? (int) $match->score_b
                     : (int) $match->score_a;
 
-                return ['athlete' => $loser, 'match' => $match, 'points' => $points];
+                return ['athlete' => $loser, 'points' => $points];
             })
             ->filter()
             ->sortByDesc('points')
-            ->values()
+            ->pluck('athlete')
             ->all();
     }
 
@@ -208,45 +199,15 @@ class PodiumService
     }
 
     /**
-     * @return array{
-     *     athlete: Athlete,
-     *     rank: int,
-     *     medal: string,
-     *     score: float|null,
-     *     result: string|null,
-     *     score_line: string|null,
-     *     round: string|null
-     * }
+     * @return array{athlete: Athlete, rank: int, medal: string, score: float|null}
      */
-    protected function entry(
-        Athlete $athlete,
-        int $rank,
-        string $medal,
-        ?float $score = null,
-        ?Matchup $match = null
-    ): array {
-        $result = null;
-        $scoreLine = null;
-
-        if ($match && $match->winner_athlete_id) {
-            $isA = (int) $match->athlete_a_id === (int) $athlete->id;
-            $result = (int) $match->winner_athlete_id === (int) $athlete->id ? 'Menang' : 'Kalah';
-
-            if ($match->hasScore()) {
-                $scoreLine = $isA
-                    ? "{$match->score_a} - {$match->score_b}"
-                    : "{$match->score_b} - {$match->score_a}";
-            }
-        }
-
+    protected function entry(Athlete $athlete, int $rank, string $medal, ?float $score = null): array
+    {
         return [
             'athlete' => $athlete,
             'rank' => $rank,
             'medal' => $medal,
             'score' => $score,
-            'result' => $result,
-            'score_line' => $scoreLine,
-            'round' => $match?->round,
         ];
     }
 }
