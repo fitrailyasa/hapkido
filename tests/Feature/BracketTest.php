@@ -227,13 +227,18 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
+        // 5 athletes → main bracket size 4 (not inflated to 8/16 by jadwal).
         $this->assertSame(
             0,
             BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
         );
         $this->assertSame(
-            8,
+            0,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+        );
+        $this->assertSame(
+            4,
+            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
     }
 
@@ -486,6 +491,17 @@ class BracketTest extends TestCase
                 ->where('round', '2')
                 ->whereNotNull('athlete_id')
                 ->count()
+        );
+
+        // Viewer must surface all 9 athletes: 7 seeded + "A vs B" placeholder.
+        $prelim = Matchup::with(['athleteA', 'athleteB'])->where('round', 'penyisihan')->first();
+        $this->assertNotNull($prelim);
+        $payload = app(\App\Services\BracketViewerService::class)->payload($category);
+        $names = collect($payload['viewerData']['participants'])->pluck('name');
+        $this->assertTrue($names->contains($prelim->athleteA->name));
+        $this->assertTrue(
+            $names->contains("{$prelim->athleteA->name} vs {$prelim->athleteB->name}"),
+            'Empty QF slot should show both penyisihan athletes'
         );
     }
 

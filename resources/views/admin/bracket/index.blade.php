@@ -164,11 +164,18 @@
             </div>
 
             @if (isset($prelimMatches) && $prelimMatches->isNotEmpty())
-                <div class="card shadow-sm border-0 mb-3">
-                    <div class="card-header">
+                @php
+                    $prelimAthleteCount = $prelimMatches->sum(
+                        fn ($m) => (int) (bool) $m->athlete_a_id + (int) (bool) $m->athlete_b_id
+                    );
+                @endphp
+                <div class="card shadow-sm border-0 mb-3 border-warning">
+                    <div class="card-header bg-warning-subtle">
                         <h6 class="mb-0">
-                            <i class="bi bi-lightning me-2 text-warning"></i>Partai Penyisihan
-                            <small class="text-body-secondary">(pemenang masuk bagan utama)</small>
+                            <i class="bi bi-lightning me-2"></i>Partai Penyisihan
+                            <small class="text-body-secondary">
+                                — {{ $prelimAthleteCount }} peserta bertanding di sini; pemenang masuk slot kosong di bagan
+                            </small>
                         </h6>
                     </div>
                     <div class="list-group list-group-flush">
@@ -195,7 +202,7 @@
                 <div class="card-body py-2 small text-body-secondary">
                     Klik kotak partai untuk membuka detail &middot;
                     <strong class="text-success">Nama hijau tebal</strong> = pemenang &middot;
-                    Slot kosong menunggu pemenang penyisihan.
+                    Tulisan <em>Nama vs Nama</em> di bagan = pasangan penyisihan (belum ada pemenang).
                 </div>
             </div>
 
