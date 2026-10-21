@@ -11,11 +11,19 @@ use App\Models\Performance;
 use App\Models\Schedule;
 use App\Models\Verification;
 use App\Services\ArenaLiveService;
+use App\Services\BracketViewerService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DisplayController extends Controller
 {
+    /**
+     * Bracket payload cache, so a class that is used by several arenas is only built once.
+     *
+     * @var array<int, array<string, mixed>|null>
+     */
+    protected array $bracketCache = [];
+
     public function index()
     {
         $arenas = Arena::orderBy('name')->get()->map(fn (Arena $arena) => [
@@ -69,6 +77,7 @@ class DisplayController extends Controller
                     'photo_a' => $this->photoUrl($match?->athleteA?->photo),
                     'photo_b' => $this->photoUrl($match?->athleteB?->photo),
                     'performers' => $performers,
+                    'bracket' => $this->bracketPayload($arena, $schedule),
                 ];
             });
 
@@ -278,7 +287,45 @@ class DisplayController extends Controller
             'next' => $next,
             'performances' => $performances,
             'results' => $results,
+            'bracket' => $this->bracketPayload($arena, $schedule),
         ]);
+    }
+
+    /**
+     * Bracket of the class that is played in the arena.
+     *
+     * Only arenas that run daeryun matches have a bracket, the art (seni)
+     * classes are scored with the judges table instead.
+     */
+    protected function bracketPayload(Arena $arena, ?Schedule $schedule): ?array
+    {
+        $type = $schedule?->type ?? $arena->match_type ?? 'daeryun';
+
+        if ($type !== 'daeryun') {
+            return null;
+        }
+
+        $category = $schedule?->category ?? $arena->category;
+
+        if (! $category) {
+            return null;
+        }
+
+        if (! array_key_exists($category->id, $this->bracketCache)) {
+            $payload = app(BracketViewerService::class)->payload($category);
+
+            $this->bracketCache[$category->id] = $payload === null ? null : [
+                'category' => $category->name,
+                'category_id' => $category->id,
+                'viewer' => $payload['viewerData'],
+                'roundLabels' => $payload['roundLabels'],
+                'byeIds' => $payload['byeIds'],
+                'emptyIds' => $payload['emptyIds'],
+                'champion' => $payload['champion'],
+            ];
+        }
+
+        return $this->bracketCache[$category->id];
     }
 
     /**

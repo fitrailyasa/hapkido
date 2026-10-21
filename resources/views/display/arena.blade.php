@@ -24,6 +24,7 @@
         })();
     </script>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('vendor/brackets/brackets-viewer.css') }}" />
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}" />
     @include('display.partials.style')
 </head>
@@ -104,9 +105,11 @@
                 </div>
             </div>
         </div>
+        <div id="bracket-list" class="bracket-list"></div>
     </div>
 
     @include('display.partials.frame-js')
+    @include('display.partials.bracket-js')
 
     <script>
         const DATA_URL = @json(route('display.arena.data', $arena));

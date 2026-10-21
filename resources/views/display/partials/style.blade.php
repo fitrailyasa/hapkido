@@ -1327,6 +1327,66 @@
     }
 
     /* ------------------------------------------------------------------
+       Bracket (brackets-viewer.js)
+       ------------------------------------------------------------------ */
+
+    .bracket-panel {
+        overflow: hidden;
+    }
+
+    .bracket-scroll {
+        overflow-x: auto;
+        padding-bottom: var(--ds-space-2);
+    }
+
+    .brackets-viewer .match.bracket-bye .bracket-badge {
+        position: absolute;
+        top: -9px;
+        right: -6px;
+        z-index: 3;
+        font-size: 0.62em;
+        line-height: 1.5;
+        padding: 0 7px;
+        border-radius: 8px;
+        background: #ffc107;
+        color: #212529;
+        font-weight: 700;
+    }
+
+    .brackets-viewer .match.bracket-empty .opponents {
+        opacity: 0.45;
+    }
+
+    /* Match in progress. */
+    .brackets-viewer .match[data-match-status="3"] .opponents {
+        border-color: #50b649;
+        box-shadow: 0 0 0 1px #50b649;
+    }
+
+    /* Follow the display palette so the bracket stays consistent with the panels. */
+    [data-bs-theme="dark"] .brackets-viewer {
+        --primary-background: var(--ds-panel);
+        --secondary-background: var(--ds-panel);
+        --match-background: var(--ds-panel);
+        --font-color: var(--ds-text);
+        --border-color: var(--ds-line);
+        --border-hover-color: #38496e;
+        --border-selected-color: #4d94ff;
+        --hint-color: var(--ds-muted);
+        --label-color: var(--ds-muted);
+        --connector-color: #46567a;
+    }
+
+    [data-bs-theme="light"] .brackets-viewer {
+        --primary-background: var(--ds-panel);
+        --secondary-background: var(--ds-panel);
+        --match-background: var(--ds-panel);
+        --font-color: var(--ds-text);
+        --border-color: var(--ds-line);
+        --connector-color: #93a3c4;
+    }
+
+    /* ------------------------------------------------------------------
        Responsive
        ------------------------------------------------------------------ */
 

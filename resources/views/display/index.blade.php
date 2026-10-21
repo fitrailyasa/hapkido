@@ -24,6 +24,7 @@
         })();
     </script>
     <link rel="stylesheet" href="{{ asset('vendor/bootstrap-icons/bootstrap-icons.min.css') }}" />
+    <link rel="stylesheet" href="{{ asset('vendor/brackets/brackets-viewer.css') }}" />
     <link rel="stylesheet" href="{{ asset('dist/css/adminlte.css') }}" />
     @include('display.partials.style')
 </head>
@@ -107,6 +108,8 @@
             </div>
         </div>
 
+        <div id="bracket-list" class="bracket-list"></div>
+
         <div class="panel" id="juara-panel">
             <div class="panel-title"><i class="bi bi-trophy-fill"></i> Juara 1 - 2 - 3</div>
             <div class="panel-body">
@@ -118,6 +121,7 @@
     </div>
 
     @include('display.partials.frame-js')
+    @include('display.partials.bracket-js')
 
     <script>
         const ARENA_BASE = @json(url('/display/arena'));
@@ -356,6 +360,9 @@
                 nextHtml || '<div class="list-row muted">Tidak ada jadwal.</div>';
 
             renderJuara(data.juara);
+
+            // Brackets of the daeryun arenas
+            window.dsRenderBrackets(data.arenas || []);
 
             const stamp = document.getElementById('last-update');
             if (stamp) {
