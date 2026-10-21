@@ -155,10 +155,20 @@
                         @endif
                     </h6>
                     @can('brackets.generate')
-                        <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
-                            data-bs-target="#modal-generate-bracket" title="Generate ulang bracket">
-                            <i class="bi bi-arrow-clockwise me-1"></i>Generate Ulang Bracket
-                        </button>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+                                data-bs-target="#modal-generate-bracket" title="Generate ulang bracket">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Generate Ulang Bracket
+                            </button>
+                            <form action="{{ route('admin.brackets.destroy') }}" method="POST" id="form-remove-bracket"
+                                class="d-inline">
+                                @csrf
+                                <input type="hidden" name="category_id" value="{{ $selected->id }}" />
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus bracket dan jadwal">
+                                    <i class="bi bi-trash me-1"></i>Hapus Bracket
+                                </button>
+                            </form>
+                        </div>
                     @endcan
                 </div>
             </div>
@@ -312,6 +322,19 @@
                         text: 'Bracket lama pada kelas ini akan dihapus dan dibuat ulang.'
                     }).then(function(result) {
                         if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
+                    });
+                });
+            }
+
+            const removeForm = document.getElementById('form-remove-bracket');
+            if (removeForm) {
+                removeForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    swalConfirm({
+                        title: 'Hapus bracket kelas ini?',
+                        text: 'Bracket, partai, dan semua jadwal Daeryun kelas ini akan dihapus.'
+                    }).then(function(result) {
+                        if (result.isConfirmed) HTMLFormElement.prototype.submit.call(removeForm);
                     });
                 });
             }

@@ -647,6 +647,36 @@ class BracketTest extends TestCase
         $this->assertSame(3, Matchup::count());
     }
 
+    public function test_bracket_can_be_removed_along_with_jadwal(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        foreach (range(1, 4) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertGreaterThan(0, BracketSlot::where('category_id', $category->id)->count());
+        $this->assertGreaterThan(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
+        $this->assertGreaterThan(0, Matchup::count());
+
+        $this->actingAs($user)
+            ->from('/admin/brackets')
+            ->post('/admin/brackets/remove', ['category_id' => $category->id])
+            ->assertRedirect(route('admin.brackets.index', ['category' => $category->id]))
+            ->assertSessionHas(
+                'success',
+                "Bracket dan jadwal Daeryun kelas {$category->name} berhasil dihapus."
+            );
+
+        $this->assertSame(0, BracketSlot::where('category_id', $category->id)->count());
+        $this->assertSame(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
+        $this->assertSame(0, Matchup::count());
+    }
+
     public function test_manual_partai_can_be_created(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);

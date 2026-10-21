@@ -139,6 +139,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::get('brackets', [BracketController::class, 'index'])->middleware('permission:brackets.view')->name('brackets.index');
     Route::post('brackets/generate', [BracketController::class, 'generate'])->middleware('permission:brackets.generate')->name('brackets.generate');
     Route::post('brackets/manual', [BracketController::class, 'manual'])->middleware('permission:brackets.generate')->name('brackets.manual');
+    Route::post('brackets/remove', [BracketController::class, 'destroy'])->middleware('permission:brackets.generate')->name('brackets.destroy');
 
     /* Results & Ranking */
     Route::get('results', [ResultController::class, 'index'])->middleware('permission:results.view')->name('results.index');

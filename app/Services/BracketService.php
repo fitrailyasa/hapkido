@@ -1188,6 +1188,21 @@ class BracketService
     }
 
     /**
+     * Remove the whole bracket for a class: slots, partai (matchups), and
+     * all Daeryun jadwal rows for that class.
+     */
+    public function remove(Category $category): void
+    {
+        $scheduleIds = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->pluck('id');
+
+        Matchup::whereIn('schedule_id', $scheduleIds)->delete();
+        BracketSlot::where('category_id', $category->id)->delete();
+        Schedule::whereIn('id', $scheduleIds)->delete();
+    }
+
+    /**
      * Remove the bracket of a class: the partai (matchups) it produced and the
      * slots. The jadwal of the class is kept, because it is the source of the
      * partai.

@@ -169,6 +169,37 @@ class BracketController extends Controller
             );
     }
 
+    public function destroy(Request $request): RedirectResponse
+    {
+        $data = $request->validate(
+            [
+                'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
+            ],
+            [
+                'category_id.required' => 'Kelas wajib dipilih.',
+                'category_id.exists' => 'Kelas tidak ditemukan.',
+            ]
+        );
+
+        $category = Category::find($data['category_id']);
+
+        if (! $category) {
+            return back()->with('error', 'Kelas tidak ditemukan.');
+        }
+
+        if ($category->type !== 'daeryun') {
+            return back()->with('error', 'Hanya bracket kelas Daeryun yang bisa dihapus.');
+        }
+
+        DB::transaction(function () use ($category) {
+            app(BracketService::class)->remove($category);
+        });
+
+        return redirect()
+            ->route('admin.brackets.index', ['category' => $category->id])
+            ->with('success', "Bracket dan jadwal Daeryun kelas {$category->name} berhasil dihapus.");
+    }
+
     /**
      * Create a partai by hand: the admin picks which two athletes of the class
      * meet in one partai of the jadwal.
