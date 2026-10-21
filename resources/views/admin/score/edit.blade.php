@@ -111,7 +111,7 @@
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <div class="form-text">
-                                            Satu nilai akhir (0&ndash;100) yang dipakai untuk peringkat dan Juara Umum.
+                                            Satu nilai akhir (0&ndash;99999) yang dipakai untuk peringkat dan Juara Umum.
                                         </div>
                                     </div>
                                 </div>
