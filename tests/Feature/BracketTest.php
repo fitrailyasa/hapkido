@@ -197,14 +197,14 @@ class BracketTest extends TestCase
         $this->assertSame(0, Matchup::count());
     }
 
-    public function test_bracket_cannot_be_generated_with_too_few_partai(): void
+    public function test_generate_expands_bracket_when_jadwal_is_smaller_than_athletes(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
         $category = CategoryFactory::new()->daeryun()->create();
         foreach (range(1, 4) as $i) {
             AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
         }
-        // Only one first-round partai → bracket width 2, but there are 4 athletes.
+        // Only one jadwal row — generate grows to size 4 and auto-creates the rest.
         ScheduleFactory::new()->create([
             'category_id' => $category->id,
             'type' => 'daeryun',
@@ -212,18 +212,15 @@ class BracketTest extends TestCase
             'order_no' => 1,
         ]);
 
-        $response = $this->actingAs($user)
-            ->from('/admin/brackets')
-            ->post('/admin/brackets/generate', ['category_id' => $category->id]);
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
 
-        $response->assertSessionHas(
-            'error',
-            "Jadwal partai ronde pertama kelas {$category->name} hanya menampung "
-            . '2 peserta (saat ini 1 partai), sementara ada 4 peserta aktif. '
-            . 'Tambahkan jadwal ronde pertama hingga minimal 2 partai, atau nonaktifkan kelebihan peserta.'
+        $this->assertSame(
+            4,
+            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
-        $this->assertSame(0, BracketSlot::count());
-        $this->assertSame(0, Matchup::count());
+        $this->assertGreaterThanOrEqual(3, Matchup::count());
     }
 
     public function test_regenerate_follows_shrunk_jadwal_and_relabels_first_round(): void
@@ -383,11 +380,71 @@ class BracketTest extends TestCase
                 ->count()
         );
 
-        // Two real first-round matches; the fifth athlete advances by BYE
-        // (no matchup row for that pairing).
+        // 5 athletes in size 8 → 3 BYEs + 1 real first-round match (not 2+1).
         $this->assertSame(
-            2,
+            1,
             Matchup::where('round', 'perempat_final')->count()
+        );
+
+        // After BYEs, four athletes sit in the semifinal — nobody is parked in Final yet.
+        $this->assertSame(
+            4,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '4')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
+        $this->assertSame(
+            0,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '2')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
+    }
+
+    public function test_nine_athletes_get_one_prelim_and_byes_into_quarterfinals(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 9) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        // Enough first-round jadwal width for a 16-slot tree.
+        foreach (range(1, 8) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'penyisihan',
+                'order_no' => $order,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        // Like the paper bracket: only one penyisihan match, seven BYEs into QF.
+        $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
+        $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
+
+        // Seven BYE recipients already sit in the round of 8; the 8th slot waits
+        // for the penyisihan winner. Nobody is parked in the Final yet.
+        $this->assertSame(
+            7,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
+        $this->assertSame(
+            0,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '2')
+                ->whereNotNull('athlete_id')
+                ->count()
         );
     }
 
