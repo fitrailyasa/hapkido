@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        @if ($selected && ! $hasBracket && auth()->user()?->can('brackets.generate'))
+        @if ($selected && (! $hasBracket || $manualPartai->isNotEmpty()) && auth()->user()?->can('brackets.generate'))
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">

@@ -471,8 +471,12 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Penyisihan: 1 real match only; 7 BYE boxes stay empty (black).
+        // Penyisihan: 1 real match only; no empty BYE jadwal rows.
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
+        $this->assertSame(
+            1,
+            Schedule::where('category_id', $category->id)->where('round', 'penyisihan')->count()
+        );
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
         $this->assertSame(
             16,

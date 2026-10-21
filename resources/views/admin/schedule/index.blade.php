@@ -141,7 +141,18 @@
                                                 {{ $schedule->type === 'art' ? 'Seni' : 'Daeryun' }}
                                             </span>
                                         </td>
-                                        <td>{{ \App\Models\Schedule::roundText($schedule->round) }}</td>
+                                        <td>
+                                            <span
+                                                class="badge {{ [
+                                                    'penyisihan' => 'bg-secondary',
+                                                    'perempat_final' => 'bg-info text-dark',
+                                                    'semifinal' => 'bg-primary',
+                                                    'final' => 'bg-danger',
+                                                    'penampilan' => 'bg-warning text-dark',
+                                                ][$schedule->round] ?? 'bg-secondary' }}">
+                                                {{ \App\Models\Schedule::roundText($schedule->round) }}
+                                            </span>
+                                        </td>
                                         <td>{{ $schedule->order_no }}</td>
                                         <td>
                                             <span

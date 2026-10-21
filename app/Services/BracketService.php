@@ -144,6 +144,32 @@ class BracketService
         }
 
         $this->ensureBracketMatches($category);
+        $this->pruneUnusedSchedules($category);
+    }
+
+    /**
+     * Drop Daeryun jadwal rows that have no partai (e.g. leftover BYE stubs).
+     */
+    protected function pruneUnusedSchedules(Category $category): void
+    {
+        Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->whereDoesntHave('match')
+            ->delete();
+    }
+
+    /**
+     * How many real first-round partai are needed (BYE slots are not jadwal).
+     */
+    protected function realEntryMatchCount(int $athleteCount): int
+    {
+        if ($athleteCount < 2) {
+            return 0;
+        }
+
+        $size = $this->nextPowerOfTwo($athleteCount);
+
+        return max(0, $athleteCount - (int) ($size / 2));
     }
 
     /**
@@ -784,13 +810,31 @@ class BracketService
 
         $size = $this->nextPowerOfTwo($athleteCount);
         $label = $this->label($size);
-        $needed = (int) ($size / 2);
+        // Only real meetings — BYE recipients are not empty penyisihan jadwal.
+        $needed = $this->realEntryMatchCount($athleteCount);
         $template = $this->scheduleTemplate($category);
 
-        $existing = Schedule::where('category_id', $category->id)
+        $filled = Schedule::where('category_id', $category->id)
             ->where('type', 'daeryun')
             ->where('round', $label)
+            ->whereHas('match')
             ->count();
+
+        $empties = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->where('round', $label)
+            ->whereDoesntHave('match')
+            ->orderBy('order_no')
+            ->orderBy('id')
+            ->get();
+
+        $keepEmpty = max(0, $needed - $filled);
+
+        foreach ($empties->slice($keepEmpty) as $surplus) {
+            $surplus->delete();
+        }
+
+        $existing = $filled + min($empties->count(), $keepEmpty);
 
         for ($order = $existing + 1; $order <= $needed; $order++) {
             $this->createMissingRoundSchedule($category, $label, $order, $template);
