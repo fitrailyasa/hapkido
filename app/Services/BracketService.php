@@ -31,16 +31,22 @@ class BracketService
             return;
         }
 
-        $jadwal = $this->jadwalQueue($category);
+        $jadwalIds = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->pluck('id');
 
-        if ($jadwal->isEmpty()) {
+        if ($jadwalIds->isEmpty()) {
             throw new BracketNeedsSchedule(
                 "Kelas {$category->name} belum memiliki jadwal partai Daeryun. "
                 . 'Buat jadwal terlebih dahulu di menu Jadwal.'
             );
         }
 
+        // The partai of the previous bracket are removed first, so the jadwal
+        // (which is kept) can hold the new partai again.
         $this->clear($category);
+
+        $jadwal = $this->jadwalQueue($category);
 
         $size = 2;
         while ($size < $athletes->count()) {

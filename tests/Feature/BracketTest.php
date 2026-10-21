@@ -234,7 +234,7 @@ class BracketTest extends TestCase
             'success',
             "Partai {$schedule->match_no} dibuat: {$athletes[0]->name} vs {$athletes[1]->name}."
         );
-        $this->assertDatabaseHas('matchups', [
+        $this->assertDatabaseHas('matches', [
             'schedule_id' => $schedule->id,
             'athlete_a_id' => $athletes[0]->id,
             'athlete_b_id' => $athletes[1]->id,
