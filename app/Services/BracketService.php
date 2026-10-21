@@ -259,11 +259,14 @@ class BracketService
 
         $largest = (int) $sizes->first();
 
-        $hasPrelimFeeders = Matchup::whereHas('schedule', fn ($query) => $query
-            ->where('category_id', $category->id)
-            ->where('type', 'daeryun'))
-            ->where('round', $this->label($largest * 2))
-            ->exists();
+        // Only when a true prelim round exists above the slot tree
+        // (labels differ — e.g. penyisihan feeding a size-8 bagan).
+        $hasPrelimFeeders = $this->label($largest) !== $this->label($largest * 2)
+            && Matchup::whereHas('schedule', fn ($query) => $query
+                ->where('category_id', $category->id)
+                ->where('type', 'daeryun'))
+                ->where('round', $this->label($largest * 2))
+                ->exists();
 
         // Main bracket slots may be fed by prelim matches (no slots at prevSize).
         if ($hasPrelimFeeders) {
@@ -430,17 +433,19 @@ class BracketService
             });
 
         // Prelim matches feed a single main-bracket slot (position = slot+1).
-        Matchup::whereHas('schedule', fn ($query) => $query
-            ->where('category_id', $category->id)
-            ->where('type', 'daeryun'))
-            ->where('round', $this->label($largest * 2))
-            ->get(['position'])
-            ->each(function (Matchup $match) use (&$alive, $largest) {
-                $slot = max(0, ((int) $match->position) - 1);
-                if ($slot < $largest) {
-                    $alive[$largest][$slot] = true;
-                }
-            });
+        if ($this->label($largest) !== $this->label($largest * 2)) {
+            Matchup::whereHas('schedule', fn ($query) => $query
+                ->where('category_id', $category->id)
+                ->where('type', 'daeryun'))
+                ->where('round', $this->label($largest * 2))
+                ->get(['position'])
+                ->each(function (Matchup $match) use (&$alive, $largest) {
+                    $slot = max(0, ((int) $match->position) - 1);
+                    if ($slot < $largest) {
+                        $alive[$largest][$slot] = true;
+                    }
+                });
+        }
 
         for ($roundSize = $largest; $roundSize >= 4; $roundSize = (int) ($roundSize / 2)) {
             $nextSize = (int) ($roundSize / 2);

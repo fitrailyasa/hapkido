@@ -464,36 +464,26 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Like the paper sheet: 1 penyisihan + 1 BYE + 3 partai penuh di bagan 8.
+        // Penyisihan is the first column: 1 real match + BYEs, all 9 names in round 16.
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
         $this->assertSame(
-            0,
+            16,
             BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
         );
         $this->assertSame(
-            8,
-            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+            9,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '16')
+                ->whereNotNull('athlete_id')
+                ->count()
         );
-        // 1 BYE seed + 6 in full QF pairs = 7 names in slots; slot 1 waits for prelim.
         $this->assertSame(
             7,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '8')
                 ->whereNotNull('athlete_id')
                 ->count()
-        );
-        $this->assertNull(
-            BracketSlot::where('category_id', $category->id)
-                ->where('round', '8')
-                ->where('position', 1)
-                ->value('athlete_id')
-        );
-        $this->assertNotNull(
-            BracketSlot::where('category_id', $category->id)
-                ->where('round', '8')
-                ->where('position', 0)
-                ->value('athlete_id')
         );
         $this->assertSame(
             0,
@@ -503,16 +493,10 @@ class BracketTest extends TestCase
                 ->count()
         );
 
-        $prelim = Matchup::with(['athleteA', 'athleteB'])->where('round', 'penyisihan')->first();
-        $this->assertNotNull($prelim);
         $payload = app(\App\Services\BracketViewerService::class)->payload($category);
         $this->assertNotNull($payload);
-        $names = collect($payload['viewerData']['participants'])->pluck('name');
-        $this->assertTrue(
-            $names->contains("{$prelim->athleteA->name} vs {$prelim->athleteB->name}"),
-            'BYE slot opponent shows both penyisihan athletes. Got: '.$names->implode(', ')
-        );
-        $this->assertCount(8, $names);
+        $this->assertSame('Penyisihan', $payload['roundLabels'][0] ?? null);
+        $this->assertCount(9, $payload['viewerData']['participants']);
         $this->assertNotEmpty($payload['byeIds']);
     }
 
