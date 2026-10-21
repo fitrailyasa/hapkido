@@ -86,7 +86,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
-                        <label class="form-label">Nama Role</label>
+                        <label class="form-label">Nama Role <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
                             value="{{ old('name') }}" placeholder="Contoh: Juri" required />
                         @error('name')
@@ -114,7 +114,7 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                     </div>
                     <div class="modal-body">
-                        <label class="form-label">Nama Role</label>
+                        <label class="form-label">Nama Role <span class="text-danger">*</span></label>
                         <input type="text" name="name" class="form-control" required />
                     </div>
                     <div class="modal-footer">

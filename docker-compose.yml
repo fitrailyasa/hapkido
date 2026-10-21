@@ -1,0 +1,71 @@
+# Docker Compose stack for the Hapkido Laravel application.
+#
+#   cp .env.docker.example .env.docker
+#   docker compose up -d --build
+#
+# The application is reachable at http://localhost:8080
+#
+# The stack is completely offline capable: every asset is served from the local
+# public directory and the database is a SQLite file inside a named volume.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: app
+    image: hapkido-app:latest
+    restart: unless-stopped
+    env_file:
+      - .env.docker
+    volumes:
+      # Laravel writable directories (sessions, cache, compiled views, logs).
+      - app_storage:/var/www/html/storage
+      # The SQLite database file together with its migrations.
+      - app_database:/var/www/html/database
+      # The compiled front-end assets that are shared with the nginx container.
+      - app_public:/srv/public
+    expose:
+      - "9000"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s
+    networks:
+      - hapkido
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    volumes:
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - app_public:/var/www/html/public:ro
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - hapkido
+
+volumes:
+  # The Laravel storage directory, it keeps the sessions, the cache, the
+  # compiled views, the uploaded files and the application key.
+  app_storage:
+  # The SQLite database directory, it keeps the database file and the
+  # migrations. The data survives "docker compose down".
+  app_database:
+  # The compiled front-end assets that are served by the nginx container.
+  app_public:
+
+networks:
+  hapkido:
+    driver: bridge

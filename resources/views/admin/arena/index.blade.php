@@ -36,12 +36,12 @@
                                         <tbody>
                                             <tr>
                                                 <th class="text-body-secondary fw-normal p-0" style="width: 45%">
-                                                    Kategori
+                                                    Kelas
                                                 </th>
                                                 <td class="p-0">{{ $arena->category?->name ?? 'Umum / belum ditentukan' }}</td>
                                             </tr>
                                             <tr>
-                                                <th class="text-body-secondary fw-normal p-0">Jenis</th>
+                                                <th class="text-body-secondary fw-normal p-0">Kategori</th>
                                                 <td class="p-0">
                                                     <span
                                                         class="badge {{ $arena->match_type === 'art' ? 'bg-warning text-dark' : 'bg-primary' }}">
@@ -122,7 +122,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="edit-arena-name" class="form-label">Nama Arena</label>
+                            <label for="edit-arena-name" class="form-label">Nama Arena <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="edit-arena-name"
                                 class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                                 required />
@@ -131,7 +131,7 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="edit-arena-label" class="form-label">Label / Keterangan</label>
+                            <label for="edit-arena-label" class="form-label">Label / Keterangan <span class="text-danger">*</span></label>
                             <input type="text" name="label" id="edit-arena-label"
                                 class="form-control @error('label') is-invalid @enderror"
                                 value="{{ old('label') }}" placeholder="Contoh: Lapangan Utama" required />
@@ -140,10 +140,10 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="edit-arena-category_id" class="form-label">Kategori yang Ditangani</label>
+                            <label for="edit-arena-category_id" class="form-label">Kelas yang Ditangani</label>
                             <select id="edit-arena-category_id" name="category_id"
                                 class="form-select @error('category_id') is-invalid @enderror">
-                                <option value="">— Umum / semua kategori —</option>
+                                <option value="">— Umum / semua kelas —</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
                                         {{ $category->name }}
@@ -156,7 +156,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="edit-arena-match_type" class="form-label">Jenis Pertandingan</label>
+                                <label for="edit-arena-match_type" class="form-label">Kategori Pertandingan <span class="text-danger">*</span></label>
                                 <select id="edit-arena-match_type" name="match_type"
                                     class="form-select @error('match_type') is-invalid @enderror" required>
                                     <option value="daeryun" @selected(old('match_type') === 'daeryun')>Daeryun</option>
@@ -167,7 +167,7 @@
                                 @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="edit-arena-status" class="form-label">Status</label>
+                                <label for="edit-arena-status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select id="edit-arena-status" name="status"
                                     class="form-select @error('status') is-invalid @enderror" required>
                                     <option value="idle" @selected(old('status') === 'idle')>Menunggu</option>
@@ -202,7 +202,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="add-arena-name" class="form-label">Nama Arena</label>
+                            <label for="add-arena-name" class="form-label">Nama Arena <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="add-arena-name"
                                 class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                                 placeholder="Contoh: Arena D" required />
@@ -211,7 +211,7 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="add-arena-label" class="form-label">Label / Keterangan</label>
+                            <label for="add-arena-label" class="form-label">Label / Keterangan <span class="text-danger">*</span></label>
                             <input type="text" name="label" id="add-arena-label"
                                 class="form-control @error('label') is-invalid @enderror"
                                 value="{{ old('label') }}" placeholder="Contoh: Lapangan Cadangan" required />
@@ -220,10 +220,10 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="add-arena-category_id" class="form-label">Kategori yang Ditangani</label>
+                            <label for="add-arena-category_id" class="form-label">Kelas yang Ditangani</label>
                             <select id="add-arena-category_id" name="category_id"
                                 class="form-select @error('category_id') is-invalid @enderror">
-                                <option value="">— Umum / semua kategori —</option>
+                                <option value="">— Umum / semua kelas —</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
                                         {{ $category->name }}
@@ -236,7 +236,7 @@
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="add-arena-match_type" class="form-label">Jenis Pertandingan</label>
+                                <label for="add-arena-match_type" class="form-label">Kategori Pertandingan <span class="text-danger">*</span></label>
                                 <select id="add-arena-match_type" name="match_type"
                                     class="form-select @error('match_type') is-invalid @enderror" required>
                                     <option value="daeryun" @selected(old('match_type') === 'daeryun')>Daeryun</option>
@@ -247,7 +247,7 @@
                                 @enderror
                             </div>
                             <div class="col-md-6 mb-3">
-                                <label for="add-arena-status" class="form-label">Status</label>
+                                <label for="add-arena-status" class="form-label">Status <span class="text-danger">*</span></label>
                                 <select id="add-arena-status" name="status"
                                     class="form-select @error('status') is-invalid @enderror" required>
                                     <option value="idle" @selected(old('status') === 'idle')>Menunggu</option>

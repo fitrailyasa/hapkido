@@ -32,7 +32,7 @@
                         </a>
                     </div>
                     <div class="mb-3">
-                        <label for="import-schedule-file" class="form-label">File Excel (.xlsx / .xls, maks 5 MB)</label>
+                        <label for="import-schedule-file" class="form-label">File Excel (.xlsx / .xls, maks 5 MB) <span class="text-danger">*</span></label>
                         <input type="file" name="file" id="import-schedule-file"
                             class="form-control @error('file') is-invalid @enderror" accept=".xlsx,.xls" required />
                         @error('file')

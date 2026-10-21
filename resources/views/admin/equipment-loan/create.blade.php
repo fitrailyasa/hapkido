@@ -10,7 +10,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="borrow-athlete" class="form-label">Atlet</label>
+                        <label for="borrow-athlete" class="form-label">Atlet <span class="text-danger">*</span></label>
                         <select id="borrow-athlete" name="athlete_id"
                             class="form-select @error('athlete_id') is-invalid @enderror" required>
                             <option value="">— Pilih atlet —</option>
@@ -31,7 +31,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="borrow-equipment" class="form-label">Perlengkapan</label>
+                        <label for="borrow-equipment" class="form-label">Perlengkapan <span class="text-danger">*</span></label>
                         <select id="borrow-equipment" name="equipment_id"
                             class="form-select @error('equipment_id') is-invalid @enderror" required>
                             <option value="">— Pilih perlengkapan —</option>
@@ -53,7 +53,7 @@
                     </div>
 
                     <div class="mb-3">
-                        <label for="borrow-qty" class="form-label">Jumlah</label>
+                        <label for="borrow-qty" class="form-label">Jumlah <span class="text-danger">*</span></label>
                         <input type="number" name="qty" id="borrow-qty" min="1" max="1000"
                             class="form-control @error('qty') is-invalid @enderror"
                             value="{{ old('qty', 1) }}" required />

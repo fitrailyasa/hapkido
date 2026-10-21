@@ -13,7 +13,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit-contingent-name" class="form-label">Nama Kontingen</label>
+                        <label for="edit-contingent-name" class="form-label">Nama Kontingen <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="edit-contingent-name"
                             class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                             required />
@@ -22,7 +22,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="edit-contingent-code" class="form-label">Kode</label>
+                        <label for="edit-contingent-code" class="form-label">Kode <span class="text-danger">*</span></label>
                         <input type="text" name="code" id="edit-contingent-code"
                             class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}"
                             required />

@@ -46,7 +46,7 @@
                         <form id="scan-form" action="{{ route('admin.verifications.store') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label for="scan-code" class="form-label">Input Manual (ketik/scan barcode)</label>
+                                <label for="scan-code" class="form-label">Input Manual (ketik/scan barcode) <span class="text-danger">*</span></label>
                                 <input type="text" name="code" id="scan-code"
                                     class="form-control @error('code') is-invalid @enderror"
                                     value="{{ old('code') }}" placeholder="Contoh: QR0001"

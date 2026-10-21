@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Database\Factories\ArenaFactory;
 use Database\Factories\AthleteFactory;
 use Database\Factories\CategoryFactory;
 use Database\Factories\ContingentFactory;
@@ -65,7 +66,8 @@ class MatchTest extends TestCase
     public function test_match_can_be_started(): void
     {
         $user = $this->userWithPermissions(['matches.start']);
-        [$match, $schedule] = $this->matchupWithAthletes(['start_time' => null]);
+        $arena = ArenaFactory::new()->create();
+        [$match, $schedule] = $this->matchupWithAthletes(['start_time' => null, 'arena_id' => $arena->id]);
 
         $response = $this->actingAs($user)
             ->from('/admin/matches')
@@ -76,6 +78,35 @@ class MatchTest extends TestCase
         $this->assertNotNull($match->fresh()->started_at);
         $this->assertDatabaseHas('schedules', ['id' => $schedule->id, 'status' => 'running']);
         $this->assertNotNull($schedule->fresh()->start_time);
+    }
+
+    public function test_start_rejects_schedule_without_arena(): void
+    {
+        $user = $this->userWithPermissions(['matches.start']);
+        [$match] = $this->matchupWithAthletes(['arena_id' => null]);
+
+        $response = $this->actingAs($user)
+            ->from('/admin/matches')
+            ->post("/admin/matches/{$match->id}/start");
+
+        $response->assertSessionHas('error', 'Jadwal ' . $match->schedule->match_no . ' belum memiliki arena. Tentukan arena sebelum memulai pertandingan.');
+        $this->assertDatabaseHas('matches', ['id' => $match->id, 'status' => 'pending']);
+    }
+
+    public function test_start_rejects_when_arena_is_still_busy(): void
+    {
+        $user = $this->userWithPermissions(['matches.start']);
+        $arena = ArenaFactory::new()->create();
+
+        $running = ScheduleFactory::new()->running()->create(['arena_id' => $arena->id]);
+        [$match] = $this->matchupWithAthletes(['arena_id' => $arena->id]);
+
+        $response = $this->actingAs($user)
+            ->from('/admin/matches')
+            ->post("/admin/matches/{$match->id}/start");
+
+        $response->assertSessionHas('error', 'Arena ' . $arena->name . ' masih dipakai oleh Partai ' . $running->match_no . ' yang belum selesai. Selesaikan Partai ' . $running->match_no . ' terlebih dahulu.');
+        $this->assertDatabaseHas('matches', ['id' => $match->id, 'status' => 'pending']);
     }
 
     public function test_start_rejects_art_schedule(): void

@@ -9,6 +9,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Schedule extends Model
 {
+    /**
+     * The rounds a schedule can belong to.
+     *
+     * @var array<string, string>
+     */
+    public const ROUNDS = [
+        'penyisihan' => 'Penyisihan',
+        'perempat_final' => 'Perempat Final',
+        'semifinal' => 'Semifinal',
+        'final' => 'Final',
+    ];
+
     protected $fillable = [
         'match_no', 'category_id', 'arena_id', 'type', 'round', 'order_no',
         'match_date', 'start_time', 'end_time', 'status',
@@ -74,6 +86,18 @@ class Schedule extends Model
     public function statusLabel(): string
     {
         return self::statusText($this->status);
+    }
+
+    /**
+     * Human readable name of a round.
+     */
+    public static function roundText(?string $round): string
+    {
+        if ($round === null || $round === '') {
+            return '—';
+        }
+
+        return self::ROUNDS[$round] ?? ucfirst(str_replace('_', ' ', $round));
     }
 
     public function athletes()

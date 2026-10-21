@@ -152,7 +152,7 @@
                         </span>
                         <h2>Kontingen &amp; Atlet</h2>
                         <p>
-                            Data kontingen, atlet, dan kategori pertandingan yang
+                            Data kontingen, atlet, dan kelas pertandingan yang
                             terdaftar resmi pada kejuaraan tahun ini.
                         </p>
                     </div>
@@ -165,7 +165,7 @@
                         </span>
                         <h2>Hasil &amp; Ranking</h2>
                         <p>
-                            Hasil akhir, bracket, dan perolehan medali setiap kategori
+                            Hasil akhir, bracket, dan perolehan medali setiap kelas
                             ditampilkan pada layar publik.
                         </p>
                     </div>

@@ -30,7 +30,7 @@
                                 <span class="fw-medium">{{ $performance->athlete?->contingent?->name ?? '-' }}</span>
                             </li>
                             <li class="d-flex justify-content-between border-bottom py-2">
-                                <span class="text-body-secondary">Kategori</span>
+                                <span class="text-body-secondary">Kelas</span>
                                 <span class="fw-medium">{{ $performance->schedule?->category?->name ?? '-' }}</span>
                             </li>
                             <li class="d-flex justify-content-between border-bottom py-2">
@@ -92,7 +92,7 @@
                                 <div class="row g-3">
                                     @foreach ([1, 2, 3] as $judgeNo)
                                         <div class="col-md-4">
-                                            <label for="judge-{{ $judgeNo }}" class="form-label">Juri {{ $judgeNo }}</label>
+                                            <label for="judge-{{ $judgeNo }}" class="form-label">Juri {{ $judgeNo }} <span class="text-danger">*</span></label>
                                             <input type="number" name="score_{{ $judgeNo }}" id="judge-{{ $judgeNo }}"
                                                 class="form-control @error('score_' . $judgeNo) is-invalid @enderror"
                                                 min="0" max="100" step="0.01" required

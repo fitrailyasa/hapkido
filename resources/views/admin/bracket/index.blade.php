@@ -35,14 +35,14 @@
         @if (! $selected)
             <div class="card shadow-sm border-0">
                 <div class="card-body text-center text-body-secondary py-5">
-                    Belum ada kategori Daeryun terdaftar.
+                    Belum ada kelas Daeryun terdaftar.
                 </div>
             </div>
         @elseif (! $hasBracket)
             <div class="card shadow-sm border-0">
                 <div class="card-body text-center py-5">
                     <i class="bi bi-diagram-3 fs-1 text-body-secondary"></i>
-                    <p class="mt-3 mb-1 fw-semibold">Belum ada bracket untuk kategori {{ $selected->name }}</p>
+                    <p class="mt-3 mb-1 fw-semibold">Belum ada bracket untuk kelas {{ $selected->name }}</p>
                     <p class="text-body-secondary small mb-3">
                         Peserta aktif: {{ $athleteCount }} orang. Minimal 2 peserta untuk membuat bracket.
                     </p>
@@ -108,13 +108,13 @@
                     </div>
                     <div class="modal-body">
                         <p class="mb-2">
-                            Bracket akan dibuat otomatis untuk kategori
+                            Bracket akan dibuat otomatis untuk kelas
                             <strong>{{ $selected?->name ?? '-' }}</strong>
                             berdasarkan {{ $athleteCount }} peserta aktif.
                         </p>
                         <div class="alert alert-warning small mb-0">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Bracket lama pada kategori ini akan dihapus dan dibuat ulang, termasuk partai yang sudah
+                            Bracket lama pada kelas ini akan dihapus dan dibuat ulang, termasuk partai yang sudah
                             dihasilkannya.
                         </div>
                     </div>
@@ -198,7 +198,7 @@
                     event.preventDefault();
                     swalConfirm({
                         title: 'Generate bracket sekarang?',
-                        text: 'Bracket lama pada kategori ini akan dihapus dan dibuat ulang.'
+                        text: 'Bracket lama pada kelas ini akan dihapus dan dibuat ulang.'
                     }).then(function(result) {
                         if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
                     });

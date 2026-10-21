@@ -10,7 +10,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new-user-name" class="form-label">Nama Lengkap</label>
+                        <label for="new-user-name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="new-user-name"
                             class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                             placeholder="Nama lengkap" required />
@@ -19,7 +19,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="new-user-email" class="form-label">Email</label>
+                        <label for="new-user-email" class="form-label">Email <span class="text-danger">*</span></label>
                         <input type="email" name="email" id="new-user-email"
                             class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}"
                             placeholder="nama@email.com" required />
@@ -28,7 +28,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="new-user-password" class="form-label">Password</label>
+                        <label for="new-user-password" class="form-label">Password <span class="text-danger">*</span></label>
                         <input type="password" name="password" id="new-user-password"
                             class="form-control @error('password') is-invalid @enderror" placeholder="Minimal 8 karakter"
                             required />

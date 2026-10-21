@@ -5,12 +5,12 @@
             <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modal-add-category-label">Tambah Kategori</h5>
+                    <h5 class="modal-title" id="modal-add-category-label">Tambah Kelas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new-category-name" class="form-label">Nama Kategori</label>
+                        <label for="new-category-name" class="form-label">Nama Kelas <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="new-category-name"
                             class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                             placeholder="Contoh: Dewasa Putra -58kg" required />
@@ -20,7 +20,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="new-category-type" class="form-label">Jenis</label>
+                            <label for="new-category-type" class="form-label">Kategori <span class="text-danger">*</span></label>
                             <select id="new-category-type" name="type"
                                 class="form-select @error('type') is-invalid @enderror" required>
                                 <option value="daeryun" @selected(old('type') === 'daeryun')>Daeryun</option>
@@ -31,7 +31,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-category-gender" class="form-label">Gender</label>
+                            <label for="new-category-gender" class="form-label">Gender <span class="text-danger">*</span></label>
                             <select id="new-category-gender" name="gender"
                                 class="form-select @error('gender') is-invalid @enderror" required>
                                 <option value="open" @selected(old('gender', 'open') === 'open')>Terbuka</option>

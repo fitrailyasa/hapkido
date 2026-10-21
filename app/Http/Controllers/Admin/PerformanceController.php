@@ -101,6 +101,18 @@ class PerformanceController extends Controller
             return back()->with('error', 'Atlet tersebut sudah terdaftar pada jadwal ini.');
         }
 
+        $busy = app(\App\Services\ScheduleGuardService::class)
+            ->athleteBusyInPerformance($athlete->id, $schedule->id);
+
+        if ($busy) {
+            return back()->with('error', sprintf(
+                'Atlet %s sedang tampil pada %s (arena %s).',
+                $athlete->name,
+                $busy->match_no,
+                $busy->arena?->name ?? 'tanpa arena'
+            ));
+        }
+
         DB::transaction(function () use ($schedule, $athlete, $data) {
             $schedule->performances()->create([
                 'athlete_id' => $athlete->id,
@@ -126,6 +138,14 @@ class PerformanceController extends Controller
 
         if ($performance->status === $data['status']) {
             return back()->with('info', 'Status penampil sudah seperti itu.');
+        }
+
+        if ($data['status'] === 'performing' && $performance->schedule) {
+            $conflict = app(\App\Services\ScheduleGuardService::class)->guardStart($performance->schedule);
+
+            if ($conflict) {
+                return back()->with('error', $conflict);
+            }
         }
 
         $payload = ['status' => $data['status']];

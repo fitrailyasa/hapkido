@@ -14,7 +14,7 @@
 
                     <div class="row">
                         <div class="col-6 mb-3">
-                            <label for="finish-score-a" class="form-label">Skor Atlet A</label>
+                            <label for="finish-score-a" class="form-label">Skor Atlet A <span class="text-danger">*</span></label>
                             <input type="number" min="0" max="999" step="1" name="score_a" id="finish-score-a"
                                 class="form-control @error('score_a') is-invalid @enderror"
                                 value="{{ old('score_a') }}" required />
@@ -24,7 +24,7 @@
                             @enderror
                         </div>
                         <div class="col-6 mb-3">
-                            <label for="finish-score-b" class="form-label">Skor Atlet B</label>
+                            <label for="finish-score-b" class="form-label">Skor Atlet B <span class="text-danger">*</span></label>
                             <input type="number" min="0" max="999" step="1" name="score_b" id="finish-score-b"
                                 class="form-control @error('score_b') is-invalid @enderror"
                                 value="{{ old('score_b') }}" required />

@@ -14,7 +14,7 @@
                 <div class="modal-body">
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-name" class="form-label">Nama Lengkap</label>
+                            <label for="edit-athlete-name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                             <input type="text" name="name" id="edit-athlete-name"
                                 class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                                 required />
@@ -23,7 +23,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-participant_number" class="form-label">Nomor Peserta</label>
+                            <label for="edit-athlete-participant_number" class="form-label">Nomor Peserta <span class="text-danger">*</span></label>
                             <input type="text" name="participant_number" id="edit-athlete-participant_number"
                                 class="form-control @error('participant_number') is-invalid @enderror"
                                 value="{{ old('participant_number') }}" required />
@@ -32,7 +32,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-gender" class="form-label">Jenis Kelamin</label>
+                            <label for="edit-athlete-gender" class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
                             <select id="edit-athlete-gender" name="gender"
                                 class="form-select @error('gender') is-invalid @enderror" required>
                                 <option value="male" @selected(old('gender') === 'male')>Putra</option>
@@ -61,7 +61,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-contingent_id" class="form-label">Kontingen</label>
+                            <label for="edit-athlete-contingent_id" class="form-label">Kontingen <span class="text-danger">*</span></label>
                             <select id="edit-athlete-contingent_id" name="contingent_id"
                                 class="form-select @error('contingent_id') is-invalid @enderror" required>
                                 <option value="">— Pilih kontingen —</option>
@@ -76,10 +76,10 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-category_id" class="form-label">Kategori</label>
+                            <label for="edit-athlete-category_id" class="form-label">Kelas <span class="text-danger">*</span></label>
                             <select id="edit-athlete-category_id" name="category_id"
                                 class="form-select @error('category_id') is-invalid @enderror" required>
-                                <option value="">— Pilih kategori —</option>
+                                <option value="">— Pilih kelas —</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
                                         {{ $category->name }}
@@ -100,7 +100,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-athlete-status" class="form-label">Status</label>
+                            <label for="edit-athlete-status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select id="edit-athlete-status" name="status"
                                 class="form-select @error('status') is-invalid @enderror" required>
                                 <option value="active" @selected(old('status', 'active') === 'active')>Aktif</option>

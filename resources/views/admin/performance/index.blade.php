@@ -14,7 +14,7 @@
                         <form action="{{ route('admin.performances.index') }}" method="GET"
                             class="d-flex flex-wrap justify-content-md-end gap-2">
                             <select name="category" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                                <option value="">Semua kategori</option>
+                                <option value="">Semua kelas</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected($categoryFilter === (string) $category->id)>{{ $category->name }}</option>
                                 @endforeach
@@ -180,7 +180,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label for="add-performance-schedule" class="form-label">Jadwal</label>
+                            <label for="add-performance-schedule" class="form-label">Jadwal <span class="text-danger">*</span></label>
                             <select name="schedule_id" id="add-performance-schedule"
                                 class="form-select @error('schedule_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih jadwal --</option>
@@ -196,7 +196,7 @@
                             @enderror
                         </div>
                         <div class="mb-3">
-                            <label for="add-performance-athlete" class="form-label">Atlet</label>
+                            <label for="add-performance-athlete" class="form-label">Atlet <span class="text-danger">*</span></label>
                             <select name="athlete_id" id="add-performance-athlete"
                                 class="form-select @error('athlete_id') is-invalid @enderror" required>
                                 <option value="">-- Pilih atlet --</option>
@@ -206,7 +206,7 @@
                             @enderror
                         </div>
                         <div class="mb-0">
-                            <label for="add-performance-order" class="form-label">No. Urut Tampil</label>
+                            <label for="add-performance-order" class="form-label">No. Urut Tampil <span class="text-danger">*</span></label>
                             <input type="number" name="order_no" id="add-performance-order" min="1" max="999"
                                 class="form-control @error('order_no') is-invalid @enderror"
                                 value="{{ old('order_no', 1) }}" required />

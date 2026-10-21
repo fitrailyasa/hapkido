@@ -394,7 +394,7 @@
             const total = (juara && juara.total) || [];
 
             if (!daeryun.length && !art.length) {
-                body.innerHTML = '<div class="muted">Belum ada juara pada kategori selesai.</div>';
+                body.innerHTML = '<div class="muted">Belum ada juara pada kelas selesai.</div>';
                 return;
             }
 

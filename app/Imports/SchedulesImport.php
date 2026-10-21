@@ -161,13 +161,32 @@ class SchedulesImport implements ToModel, WithHeadingRow, WithValidation, SkipsE
             'category_id' => $category->id,
             'arena_id' => $arena?->id,
             'type' => ($row['jenis'] ?? '') !== '' ? $row['jenis'] : 'daeryun',
-            'round' => ($row['ronde'] ?? '') !== '' ? $row['ronde'] : 'penyisihan',
+            'round' => $this->normalizeRound($row['ronde'] ?? null),
             'order_no' => (int) (($row['urutan'] ?? '') !== '' ? $row['urutan'] : 1),
             'match_date' => $this->normalizeDate($row['tanggal'] ?? null),
             'start_time' => $this->normalizeTime($row['mulai'] ?? null),
             'end_time' => $this->normalizeTime($row['selesai'] ?? null),
             'status' => ($row['status'] ?? '') !== '' ? $row['status'] : 'pending',
         ]);
+    }
+
+    /**
+     * Map the "ronde" column of the spreadsheet to one of the known rounds.
+     */
+    protected function normalizeRound(mixed $value): string
+    {
+        $value = strtolower(trim((string) $value));
+
+        $aliases = [
+            'penyisihan' => 'penyisihan',
+            'preliminary' => 'penyisihan',
+            'perempat final' => 'perempat_final',
+            'perempat_final' => 'perempat_final',
+            'semifinal' => 'semifinal',
+            'final' => 'final',
+        ];
+
+        return $aliases[$value] ?? 'penyisihan';
     }
 
     protected function scheduleValues(array $row): array

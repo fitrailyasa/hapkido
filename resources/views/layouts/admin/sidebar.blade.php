@@ -87,21 +87,21 @@
                                     </a>
                                 </li>
                             @endcan
-                            @can('readiness.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.readiness.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.readiness.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-clipboard-check-fill"></i>
-                                        <p>Pemeriksaan Kesiapan</p>
-                                    </a>
-                                </li>
-                            @endcan
                             @can('equipment-loans.view')
                                 <li class="nav-item">
                                     <a href="{{ route('admin.equipment-loans.index') }}"
                                         class="nav-link {{ request()->routeIs('admin.equipment-loans.*') ? 'active' : '' }}">
                                         <i class="nav-icon bi bi-box-seam-fill"></i>
                                         <p>Peminjaman Perlengkapan</p>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('readiness.view')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.readiness.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.readiness.*') ? 'active' : '' }}">
+                                        <i class="nav-icon bi bi-clipboard-check-fill"></i>
+                                        <p>Pemeriksaan Kesiapan</p>
                                     </a>
                                 </li>
                             @endcan
@@ -217,7 +217,7 @@
                                     <a href="{{ route('admin.categories.index') }}"
                                         class="nav-link {{ request()->routeIs('admin.categories.*') ? 'active' : '' }}">
                                         <i class="nav-icon bi bi-bookmark-fill"></i>
-                                        <p>Kategori</p>
+                                        <p>Kelas</p>
                                     </a>
                                 </li>
                             @endcan

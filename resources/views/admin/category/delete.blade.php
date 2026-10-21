@@ -6,12 +6,12 @@
                 @csrf
                 @method('DELETE')
                 <div class="modal-header">
-                    <h5 class="modal-title" id="modal-delete-category-label">Hapus Kategori</h5>
+                    <h5 class="modal-title" id="modal-delete-category-label">Hapus Kelas</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                     <p class="mb-0">
-                        Apakah Anda yakin ingin menghapus kategori
+                        Apakah Anda yakin ingin menghapus kelas
                         <strong data-delete-name>ini</strong>?
                         Tindakan ini tidak dapat dibatalkan.
                     </p>

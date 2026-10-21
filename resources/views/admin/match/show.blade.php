@@ -190,11 +190,11 @@
                     <div class="card-body">
                         <ul class="list-unstyled mb-0">
                             <li class="d-flex justify-content-between border-bottom py-2">
-                                <span class="text-body-secondary">Kategori</span>
+                                <span class="text-body-secondary">Kelas</span>
                                 <span class="fw-medium">{{ $match->schedule?->category?->name ?? '-' }}</span>
                             </li>
                             <li class="d-flex justify-content-between border-bottom py-2">
-                                <span class="text-body-secondary">Jenis</span>
+                                <span class="text-body-secondary">Kategori</span>
                                 <span class="fw-medium">{{ $match->schedule?->isDaeryun() ? 'Daeryun' : 'Seni' }}</span>
                             </li>
                             <li class="d-flex justify-content-between border-bottom py-2">
@@ -246,7 +246,7 @@
                     <div class="card-body">
                         @if ($isBracket)
                             <p class="small text-body-secondary mb-2">
-                                Partai ini berasal dari bracket kategori
+                                Partai ini berasal dari bracket kelas
                                 <strong>{{ $match->schedule?->category?->name ?? '-' }}</strong>.
                             </p>
                             @can('brackets.view')

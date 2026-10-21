@@ -77,7 +77,7 @@
 
         <div class="card shadow-sm border-0 mb-3">
             <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-trophy me-2 text-warning"></i>Podium Juara per Kategori</h6>
+                <h6 class="mb-0"><i class="bi bi-trophy me-2 text-warning"></i>Podium Juara per Kelas</h6>
             </div>
             <div class="card-body">
                 @forelse ($podiumSections as $section)
@@ -121,7 +121,7 @@
                         </div>
 
                         @if (! $slots)
-                            <p class="text-center text-body-secondary py-3 mb-0">Belum ada penampil pada kategori ini.</p>
+                            <p class="text-center text-body-secondary py-3 mb-0">Belum ada penampil pada kelas ini.</p>
                         @else
                             <div class="row g-2 align-items-end podium-row">
                                 @foreach ($podiumOrder as $step)
@@ -166,7 +166,7 @@
                         @endif
                     </div>
                 @empty
-                    <p class="text-center text-body-secondary py-4 mb-0">Belum ada kategori untuk dipamerkan.</p>
+                    <p class="text-center text-body-secondary py-4 mb-0">Belum ada kelas untuk dipamerkan.</p>
                 @endforelse
             </div>
         </div>
@@ -231,7 +231,7 @@
                                         @empty
                                             <tr>
                                                 <td colspan="7" class="text-center text-body-secondary py-4">
-                                                    Belum ada peserta pada kategori ini.
+                                                    Belum ada peserta pada kelas ini.
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -243,7 +243,7 @@
                 </div>
             @empty
                 <div class="col-12">
-                    <div class="alert alert-secondary mb-0">Belum ada kategori Daeryun.</div>
+                    <div class="alert alert-secondary mb-0">Belum ada kelas Daeryun.</div>
                 </div>
             @endforelse
 
@@ -310,7 +310,7 @@
                                         @empty
                                             <tr>
                                                 <td colspan="6" class="text-center text-body-secondary py-4">
-                                                    Belum ada penampil dinilai pada kategori ini.
+                                                    Belum ada penampil dinilai pada kelas ini.
                                                 </td>
                                             </tr>
                                         @endforelse
@@ -322,7 +322,7 @@
                 </div>
             @empty
                 <div class="col-12">
-                    <div class="alert alert-secondary mb-0">Belum ada kategori Seni.</div>
+                    <div class="alert alert-secondary mb-0">Belum ada kelas Seni.</div>
                 </div>
             @endforelse
         </div>

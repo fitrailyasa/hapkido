@@ -102,6 +102,12 @@ class MatchupController extends Controller
             return back()->with('error', 'Kedua atlet belum ditentukan. Lengkapi bracket terlebih dahulu.');
         }
 
+        $conflict = app(\App\Services\ScheduleGuardService::class)->guardStart($schedule);
+
+        if ($conflict) {
+            return back()->with('error', $conflict);
+        }
+
         DB::transaction(function () use ($matchup, $schedule) {
             $matchup->update([
                 'status' => 'running',
@@ -173,6 +179,14 @@ class MatchupController extends Controller
 
         if ($winnerScore < $opponentScore) {
             return back()->with('error', 'Skor pemenang tidak boleh lebih rendah dari skor lawan.');
+        }
+
+        if ($schedule) {
+            $conflict = app(\App\Services\ScheduleGuardService::class)->guardFinish($schedule);
+
+            if ($conflict) {
+                return back()->with('error', $conflict);
+            }
         }
 
         $winner = $matchup->athleteA()->whereKey($data['winner_id'])->first()

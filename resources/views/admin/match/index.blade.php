@@ -15,7 +15,7 @@
                             class="d-flex flex-wrap justify-content-md-end gap-2">
                             <select name="category" class="form-select form-select-sm w-auto"
                                 onchange="this.form.submit()">
-                                <option value="">Semua kategori</option>
+                                <option value="">Semua kelas</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected($categoryFilter === (string) $category->id)>{{ $category->name }}</option>
                                 @endforeach
@@ -51,7 +51,7 @@
                             <tr>
                                 <th style="width: 60px">#</th>
                                 <th>Partai</th>
-                                <th>Kategori / Ronde</th>
+                                <th>Kelas / Ronde</th>
                                 <th>Arena &amp; Jadwal</th>
                                 <th>Atlet</th>
                                 <th class="text-center">Skor</th>

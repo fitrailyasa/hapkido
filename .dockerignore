@@ -1,0 +1,55 @@
+# Dependencies - they are installed again inside the image
+node_modules
+vendor
+
+# Version control
+.git
+.gitattributes
+.gitignore
+
+# Local environment files - the container receives its values from .env.docker
+.env
+.env.*
+!.env.docker.example
+
+# Build artefacts - they are generated inside the image
+public/build
+public/hot
+public/storage
+npm-debug.log
+yarn-error.log
+
+# Runtime artefacts
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+bootstrap/cache/*.php
+
+# Local database files - the container creates its own SQLite file
+database/*.sqlite
+database/*.sqlite-journal
+database/*.sqlite-shm
+database/*.sqlite-wal
+
+# Local scratch file
+public/dist/charts
+
+# Tests
+tests
+phpunit.xml
+.phpunit.result.cache
+.phpunit.cache
+
+# Docker files - they are not needed inside the image
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Editor and operating system files
+.idea
+.vscode
+.DS_Store
+Thumbs.db
+*.swp

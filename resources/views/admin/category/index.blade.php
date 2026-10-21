@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title', 'Kategori')
+@section('title', 'Kelas')
 
 @section('content')
     <div class="container-fluid">
@@ -8,7 +8,7 @@
             <div class="card-header">
                 <div class="row g-2 align-items-center">
                     <div class="col-12 col-md-4">
-                        <h3 class="card-title mb-0">Daftar Kategori</h3>
+                        <h3 class="card-title mb-0">Daftar Kelas</h3>
                     </div>
                     <div class="col-12 col-md-8">
                         <form action="{{ route('admin.categories.index') }}" method="GET"
@@ -16,10 +16,10 @@
                             <div class="input-group input-group-sm w-auto">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="search" name="q" value="{{ $search }}" class="form-control"
-                                    placeholder="Cari nama / kelas usia" style="width: 190px" />
+                                    placeholder="Cari nama kelas" style="width: 190px" />
                             </div>
                             <select name="type" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                                <option value="">Semua jenis</option>
+                                <option value="">Semua kategori</option>
                                 <option value="daeryun" @selected($typeFilter === 'daeryun')>Daeryun</option>
                                 <option value="art" @selected($typeFilter === 'art')>Seni</option>
                             </select>
@@ -29,7 +29,7 @@
                             @can('categories.create')
                                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                     data-bs-target="#modal-add-category">
-                                    <i class="bi bi-plus-lg me-1"></i>Tambah Kategori
+                                    <i class="bi bi-plus-lg me-1"></i>Tambah Kelas
                                 </button>
                             @endcan
                         </form>
@@ -42,8 +42,8 @@
                         <thead>
                             <tr>
                                 <th style="width: 60px">#</th>
-                                <th>Nama Kategori</th>
-                                <th>Jenis</th>
+                                <th>Nama Kelas</th>
+                                <th>Kategori</th>
                                 <th>Gender</th>
                                 <th>Kelas Usia</th>
                                 <th>Atlet</th>
@@ -69,7 +69,7 @@
                                         <div class="btn-group btn-group-sm">
                                             @can('categories.update')
                                                 <button type="button" class="btn btn-outline-secondary" title="Ubah"
-                                                    aria-label="Ubah kategori"
+                                                    aria-label="Ubah kelas"
                                                     data-bs-toggle="modal" data-bs-target="#modal-edit-category"
                                                     data-url="{{ route('admin.categories.update', $category) }}"
                                                     data-name="{{ $category->name }}"
@@ -81,7 +81,7 @@
                                             @endcan
                                             @can('categories.delete')
                                                 <button type="button" class="btn btn-outline-danger" title="Hapus"
-                                                    aria-label="Hapus kategori"
+                                                    aria-label="Hapus kelas"
                                                     data-bs-toggle="modal" data-bs-target="#modal-delete-category"
                                                     data-url="{{ route('admin.categories.delete', $category) }}"
                                                     data-name="{{ $category->name }}">
@@ -94,7 +94,7 @@
                             @empty
                                 <tr>
                                     <td colspan="8" class="text-center text-body-secondary py-4">
-                                        Tidak ada kategori ditemukan.
+                                        Tidak ada kelas ditemukan.
                                     </td>
                                 </tr>
                             @endforelse

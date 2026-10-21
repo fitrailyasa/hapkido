@@ -29,7 +29,7 @@
                                 @endforeach
                             </select>
                             <select name="category" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
-                                <option value="">Semua kategori</option>
+                                <option value="">Semua kelas</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected($categoryFilter == $category->id)>
                                         {{ $category->name }}
@@ -80,9 +80,9 @@
                             <tr>
                                 <th style="width: 110px">Kode Laga</th>
                                 <th style="width: 130px">Jam</th>
-                                <th>Kategori</th>
+                                <th>Kelas</th>
                                 <th>Arena</th>
-                                <th>Jenis</th>
+                                <th>Kategori</th>
                                 <th>Ronde</th>
                                 <th style="width: 70px">Urutan</th>
                                 <th style="width: 110px">Status</th>
@@ -114,7 +114,7 @@
                                                 {{ $schedule->type === 'art' ? 'Seni' : 'Daeryun' }}
                                             </span>
                                         </td>
-                                        <td>{{ $schedule->round }}</td>
+                                        <td>{{ \App\Models\Schedule::roundText($schedule->round) }}</td>
                                         <td>{{ $schedule->order_no }}</td>
                                         <td>
                                             <span
@@ -199,7 +199,7 @@
                 form.querySelector('[name="category_id"]').value = trigger.dataset.category || '';
                 form.querySelector('[name="arena_id"]').value = trigger.dataset.arena || '';
                 form.querySelector('[name="type"]').value = trigger.dataset.type || 'daeryun';
-                form.querySelector('[name="round"]').value = trigger.dataset.round || '';
+                form.querySelector('[name="round"]').value = trigger.dataset.round || 'penyisihan';
                 form.querySelector('[name="order_no"]').value = trigger.dataset.order_no || '';
                 form.querySelector('[name="match_date"]').value = trigger.dataset.date || '';
                 form.querySelector('[name="start_time"]').value = trigger.dataset.start || '';

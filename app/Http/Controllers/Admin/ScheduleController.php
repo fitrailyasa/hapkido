@@ -41,6 +41,12 @@ class ScheduleController extends Controller
     {
         $data = $this->validated($request);
 
+        $conflict = app(\App\Services\ScheduleGuardService::class)->guardSchedule(new Schedule($data));
+
+        if ($conflict) {
+            return back()->with('error', $conflict)->withInput();
+        }
+
         Schedule::create($data);
 
         return redirect()
@@ -87,6 +93,15 @@ class ScheduleController extends Controller
     {
         $data = $this->validated($request, $schedule);
 
+        $draft = clone $schedule;
+        $draft->fill($data);
+
+        $conflict = app(\App\Services\ScheduleGuardService::class)->guardSchedule($draft);
+
+        if ($conflict) {
+            return back()->with('error', $conflict)->withInput();
+        }
+
         $schedule->update($data);
 
         return redirect()
@@ -96,8 +111,12 @@ class ScheduleController extends Controller
 
     public function destroy(Schedule $schedule): RedirectResponse
     {
-        if ($schedule->match && $schedule->match->status === 'running') {
+        if ($schedule->status === 'running' || ($schedule->match && $schedule->match->status === 'running')) {
             return back()->with('error', 'Jadwal tidak bisa dihapus saat pertandingan sedang berlangsung.');
+        }
+
+        if ($schedule->performances()->where('status', 'performing')->exists()) {
+            return back()->with('error', 'Jadwal tidak bisa dihapus saat masih ada penampil yang sedang tampil.');
         }
 
         $schedule->delete();
@@ -172,7 +191,7 @@ class ScheduleController extends Controller
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'arena_id' => ['nullable', Rule::exists('arenas', 'id')],
             'type' => ['required', 'in:daeryun,art'],
-            'round' => ['nullable', 'string', 'max:255'],
+            'round' => ['nullable', Rule::in(array_keys(Schedule::ROUNDS))],
             'order_no' => ['nullable', 'integer', 'min:1'],
             'match_date' => ['required', 'date'],
             'start_time' => ['nullable', 'regex:/^\d{1,2}:\d{2}(:\d{2})?$/'],
@@ -184,11 +203,11 @@ class ScheduleController extends Controller
             'end_time.regex' => 'Format jam selesai tidak valid (HH:MM).',
         ]);
 
-        $data['round'] = $data['round'] ?: 'penyisihan';
-        $data['order_no'] = (int) ($data['order_no'] ?: 1);
-        $data['arena_id'] = $data['arena_id'] ?: null;
-        $data['start_time'] = $this->normalizeTime($data['start_time']);
-        $data['end_time'] = $this->normalizeTime($data['end_time']);
+        $data['round'] = $data['round'] ?? 'penyisihan';
+        $data['order_no'] = (int) ($data['order_no'] ?? 1);
+        $data['arena_id'] = $data['arena_id'] ?? null;
+        $data['start_time'] = $this->normalizeTime($data['start_time'] ?? null);
+        $data['end_time'] = $this->normalizeTime($data['end_time'] ?? null);
 
         return $data;
     }

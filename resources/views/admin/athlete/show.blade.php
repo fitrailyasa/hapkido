@@ -38,7 +38,7 @@
                             <td data-field="region">—</td>
                         </tr>
                         <tr>
-                            <th class="text-body-secondary fw-normal">Kategori</th>
+                            <th class="text-body-secondary fw-normal">Kelas</th>
                             <td>
                                 <span data-field="category">—</span>
                                 <span class="text-body-secondary small" data-field="category_type"></span>

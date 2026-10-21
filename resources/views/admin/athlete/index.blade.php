@@ -29,7 +29,7 @@
                             </select>
                             <select name="category" class="form-select form-select-sm w-auto"
                                 onchange="this.form.submit()">
-                                <option value="">Semua kategori</option>
+                                <option value="">Semua kelas</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected($categoryFilter == $category->id)>
                                         {{ $category->name }}
@@ -65,7 +65,7 @@
                                 <th>No. Peserta</th>
                                 <th>Jenis Kelamin</th>
                                 <th>Kontingen</th>
-                                <th>Kategori</th>
+                                <th>Kelas</th>
                                 <th>Status</th>
                                 <th class="text-end">Aksi</th>
                             </tr>

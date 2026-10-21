@@ -14,7 +14,7 @@
                             <td data-field="match_no">—</td>
                         </tr>
                         <tr>
-                            <th class="text-body-secondary fw-normal">Kategori</th>
+                            <th class="text-body-secondary fw-normal">Kelas</th>
                             <td data-field="category">—</td>
                         </tr>
                         <tr>
@@ -22,7 +22,7 @@
                             <td data-field="arena">—</td>
                         </tr>
                         <tr>
-                            <th class="text-body-secondary fw-normal">Jenis</th>
+                            <th class="text-body-secondary fw-normal">Kategori</th>
                             <td data-field="type">—</td>
                         </tr>
                         <tr>

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use Database\Factories\ArenaFactory;
 use Database\Factories\AthleteFactory;
 use Database\Factories\CategoryFactory;
 use Database\Factories\ContingentFactory;
@@ -131,7 +132,11 @@ class PerformanceTest extends TestCase
     public function test_performance_status_can_be_updated_to_performing(): void
     {
         $user = $this->userWithPermissions(['performances.update']);
-        $performance = PerformanceFactory::new()->create(['status' => 'waiting']);
+        $arena = ArenaFactory::new()->create(['match_type' => 'art']);
+        $performance = PerformanceFactory::new()->create([
+            'status' => 'waiting',
+            'schedule_id' => ScheduleFactory::new()->art()->create(['arena_id' => $arena->id])->id,
+        ]);
 
         $response = $this->actingAs($user)
             ->from('/admin/performances')
@@ -144,6 +149,25 @@ class PerformanceTest extends TestCase
             'id' => $performance->schedule_id,
             'status' => 'running',
         ]);
+    }
+
+    public function test_performance_status_is_rejected_when_arena_is_still_busy(): void
+    {
+        $user = $this->userWithPermissions(['performances.update']);
+        $arena = ArenaFactory::new()->create(['match_type' => 'art']);
+
+        $busy = ScheduleFactory::new()->art()->running()->create(['arena_id' => $arena->id]);
+        $performance = PerformanceFactory::new()->create([
+            'status' => 'waiting',
+            'schedule_id' => ScheduleFactory::new()->art()->create(['arena_id' => $arena->id])->id,
+        ]);
+
+        $response = $this->actingAs($user)
+            ->from('/admin/performances')
+            ->post("/admin/performances/{$performance->id}/status", ['status' => 'performing']);
+
+        $response->assertSessionHas('error', 'Arena ' . $arena->name . ' masih dipakai oleh Seni ' . $busy->match_no . ' yang belum selesai. Selesaikan Seni ' . $busy->match_no . ' terlebih dahulu.');
+        $this->assertDatabaseHas('performances', ['id' => $performance->id, 'status' => 'waiting']);
     }
 
     public function test_performance_status_can_be_finished(): void

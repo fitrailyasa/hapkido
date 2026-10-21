@@ -12,7 +12,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit-user-name" class="form-label">Nama Lengkap</label>
+                        <label for="edit-user-name" class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
                         <input type="text" name="name" id="edit-user-name"
                             class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                             required />
@@ -21,7 +21,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="edit-user-email" class="form-label">Email</label>
+                        <label for="edit-user-email" class="form-label">Email <span class="text-danger">*</span></label>
                         <input type="email" name="email" id="edit-user-email"
                             class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}"
                             required />

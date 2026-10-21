@@ -10,7 +10,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new-equipment-type" class="form-label">Jenis</label>
+                        <label for="new-equipment-type" class="form-label">Jenis <span class="text-danger">*</span></label>
                         <select id="new-equipment-type" name="type"
                             class="form-select @error('type') is-invalid @enderror" required>
                             @foreach ($types as $value => $label)
@@ -22,7 +22,7 @@
                         @enderror
                     </div>
                     <div class="mb-3">
-                        <label for="new-equipment-code" class="form-label">Kode</label>
+                        <label for="new-equipment-code" class="form-label">Kode <span class="text-danger">*</span></label>
                         <input type="text" name="code" id="new-equipment-code"
                             class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}"
                             placeholder="Contoh: HG-M-01" required />
@@ -32,7 +32,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="new-equipment-color" class="form-label">Warna</label>
+                            <label for="new-equipment-color" class="form-label">Warna <span class="text-danger">*</span></label>
                             <input type="text" name="color" id="new-equipment-color"
                                 class="form-control @error('color') is-invalid @enderror" value="{{ old('color') }}"
                                 placeholder="Merah / Biru" required />
@@ -41,7 +41,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-equipment-size" class="form-label">Ukuran</label>
+                            <label for="new-equipment-size" class="form-label">Ukuran <span class="text-danger">*</span></label>
                             <input type="text" name="size" id="new-equipment-size"
                                 class="form-control @error('size') is-invalid @enderror" value="{{ old('size') }}"
                                 placeholder="S / M / L" required />
@@ -52,7 +52,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="new-equipment-qty" class="form-label">Total Stok</label>
+                            <label for="new-equipment-qty" class="form-label">Total Stok <span class="text-danger">*</span></label>
                             <input type="number" name="total_qty" id="new-equipment-qty" min="1" max="1000"
                                 class="form-control @error('total_qty') is-invalid @enderror"
                                 value="{{ old('total_qty', 1) }}" required />
@@ -61,7 +61,7 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-equipment-status" class="form-label">Status</label>
+                            <label for="new-equipment-status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select id="new-equipment-status" name="status"
                                 class="form-select @error('status') is-invalid @enderror" required>
                                 @foreach ($statuses as $value => $label)

@@ -11,7 +11,7 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="edit-equipment-type" class="form-label">Jenis</label>
+                        <label for="edit-equipment-type" class="form-label">Jenis <span class="text-danger">*</span></label>
                         <select id="edit-equipment-type" name="type" class="form-select" required>
                             @foreach ($types as $value => $label)
                                 <option value="{{ $value }}">{{ $label }}</option>
@@ -19,28 +19,28 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label for="edit-equipment-code" class="form-label">Kode</label>
+                        <label for="edit-equipment-code" class="form-label">Kode <span class="text-danger">*</span></label>
                         <input type="text" name="code" id="edit-equipment-code" class="form-control" required />
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="edit-equipment-color" class="form-label">Warna</label>
+                            <label for="edit-equipment-color" class="form-label">Warna <span class="text-danger">*</span></label>
                             <input type="text" name="color" id="edit-equipment-color" class="form-control" required />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-equipment-size" class="form-label">Ukuran</label>
+                            <label for="edit-equipment-size" class="form-label">Ukuran <span class="text-danger">*</span></label>
                             <input type="text" name="size" id="edit-equipment-size" class="form-control" required />
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="edit-equipment-qty" class="form-label">Total Stok</label>
+                            <label for="edit-equipment-qty" class="form-label">Total Stok <span class="text-danger">*</span></label>
                             <input type="number" name="total_qty" id="edit-equipment-qty" min="1" max="1000"
                                 class="form-control" value="1" required />
                             <div class="form-text">Jumlah yang sedang dipinjam tidak dapat dikurangi.</div>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="edit-equipment-status" class="form-label">Status</label>
+                            <label for="edit-equipment-status" class="form-label">Status <span class="text-danger">*</span></label>
                             <select id="edit-equipment-status" name="status" class="form-select" required>
                                 @foreach ($statuses as $value => $label)
                                     <option value="{{ $value }}">{{ $label }}</option>
