@@ -95,8 +95,8 @@
                                         <div class="col-12 col-md-1 text-center fw-bold text-body-secondary">VS</div>
                                         <div class="col-12 col-md-4">
                                             <select name="athlete_b_id"
-                                                class="form-select form-select-sm js-manual-athlete" required>
-                                                <option value="">— Pilih atlet —</option>
+                                                class="form-select form-select-sm js-manual-athlete">
+                                                <option value="">— BYE (tanpa lawan) —</option>
                                                 @foreach ($athletes as $athlete)
                                                     @php $isUsed = $usedAthleteIds->contains($athlete->id); @endphp
                                                     <option value="{{ $athlete->id }}" @disabled($isUsed)
@@ -329,15 +329,17 @@
                     const athleteA = selects[0].value;
                     const athleteB = selects[1].value;
 
-                    if (!athleteA || !athleteB) return;
+                    // athlete_b kosong = BYE; hanya atlet A yang wajib.
+                    if (!athleteA) return;
 
-                    if (athleteA === athleteB) {
+                    if (athleteB && athleteA === athleteB) {
                         event.preventDefault();
                         swalError('Validasi gagal', 'Dua atlet yang dipilih tidak boleh sama.');
                         return;
                     }
 
                     const usedSelected = Array.from(selects).some(function(select) {
+                        if (!select.value) return false;
                         const option = select.selectedOptions[0];
                         return option && option.dataset.used === '1';
                     });

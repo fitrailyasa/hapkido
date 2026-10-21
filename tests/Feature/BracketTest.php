@@ -204,8 +204,7 @@ class BracketTest extends TestCase
         foreach (range(1, 4) as $i) {
             AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
         }
-        // Only one partai, while a bracket of four needs two semifinals and
-        // one final.
+        // Only one first-round partai → bracket width 2, but there are 4 athletes.
         ScheduleFactory::new()->create([
             'category_id' => $category->id,
             'type' => 'daeryun',
@@ -219,11 +218,137 @@ class BracketTest extends TestCase
 
         $response->assertSessionHas(
             'error',
-            "Jadwal partai Daeryun pada kelas {$category->name} tidak mencukupi "
-            . 'untuk 4 peserta. Tambahkan jadwal partai pada ronde Semifinal di menu Jadwal.'
+            "Jadwal partai ronde pertama kelas {$category->name} hanya menampung "
+            . '2 peserta (saat ini 1 partai), sementara ada 4 peserta aktif. '
+            . 'Tambahkan jadwal ronde pertama hingga minimal 2 partai, atau nonaktifkan kelebihan peserta.'
         );
         $this->assertSame(0, BracketSlot::count());
         $this->assertSame(0, Matchup::count());
+    }
+
+    public function test_regenerate_follows_shrunk_jadwal_and_relabels_first_round(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 8) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        // Leftover labels from a larger bracket: 4× penyisihan + SF + Final.
+        // Generate must shrink to size 8 and rename penyisihan → perempat_final.
+        foreach (range(1, 4) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'penyisihan',
+                'order_no' => $order,
+            ]);
+        }
+        foreach (range(1, 2) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'semifinal',
+                'order_no' => $order,
+            ]);
+        }
+        ScheduleFactory::new()->create([
+            'category_id' => $category->id,
+            'type' => 'daeryun',
+            'round' => 'final',
+            'order_no' => 1,
+        ]);
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertSame(
+            8,
+            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+        );
+        $this->assertSame(
+            4,
+            Schedule::where('category_id', $category->id)->where('round', 'perempat_final')->count()
+        );
+        $this->assertSame(
+            0,
+            Schedule::where('category_id', $category->id)->where('round', 'penyisihan')->count()
+        );
+        $this->assertSame(7, Matchup::count());
+    }
+
+    public function test_generate_gives_bye_for_odd_athlete_count(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 5) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->jadwalFor($category, 8);
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertSame(
+            8,
+            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+        );
+        $this->assertSame(
+            5,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '8')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
+
+        // Two real first-round matches; the fifth athlete advances by BYE
+        // (no matchup row for that pairing).
+        $this->assertSame(
+            2,
+            Matchup::where('round', 'perempat_final')->count()
+        );
+    }
+
+    public function test_manual_partai_can_assign_a_bye(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athlete = AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        $this->jadwalFor($category, 2);
+
+        $schedule = Schedule::where('category_id', $category->id)->first();
+
+        $response = $this->actingAs($user)
+            ->from('/admin/brackets')
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedule->id,
+                'athlete_a_id' => $athlete->id,
+                // athlete_b_id omitted → BYE
+            ]);
+
+        $response->assertSessionHas(
+            'success',
+            "Partai {$schedule->match_no}: {$athlete->name} BYE (lolos tanpa lawan)."
+        );
+        $this->assertDatabaseHas('matches', [
+            'schedule_id' => $schedule->id,
+            'athlete_a_id' => $athlete->id,
+            'athlete_b_id' => null,
+            'winner_athlete_id' => $athlete->id,
+            'status' => 'finished',
+        ]);
     }
 
     public function test_regenerating_the_bracket_keeps_the_jadwal(): void

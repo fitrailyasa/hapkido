@@ -147,7 +147,22 @@ class BracketViewerService
                 $opponentB = ['id' => $athleteB];
                 $status = 0;
 
-                if ($match && $match->status === 'finished') {
+                $isByeMatch = ($athleteA !== null && $athleteB === null)
+                    || ($athleteB !== null && $athleteA === null);
+
+                if ($match && $match->status === 'finished' && $isByeMatch) {
+                    // Manual / stored BYE: one athlete, no opponent.
+                    $status = 4;
+                    $byeIds[] = $matchId;
+
+                    if ($athleteA !== null) {
+                        $opponentA['result'] = 'win';
+                        $opponentB = null;
+                    } else {
+                        $opponentB['result'] = 'win';
+                        $opponentA = null;
+                    }
+                } elseif ($match && $match->status === 'finished') {
                     $status = 4; // Completed
                     $winnerId = $match->winner_athlete_id !== null ? (int) $match->winner_athlete_id : null;
 
@@ -179,7 +194,7 @@ class BracketViewerService
                 } elseif ($athleteA !== null && $athleteB !== null) {
                     $status = 2; // Ready (full pairing without a match: unusual)
                 } elseif ($athleteA !== null || $athleteB !== null) {
-                    // Bye: the entrant advances without an opponent, the empty side is shown as "BYE".
+                    // Bye from generate: entrant advances without a matchup row.
                     $status = 4; // Completed
 
                     if ($athleteA !== null) {

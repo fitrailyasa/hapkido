@@ -16,9 +16,9 @@ class BracketService
      * Build the bracket automatically: entrants in the first round, automatic byes,
      * then matches are created for every round up to the final.
      *
-     * The partai are bound to the schedules (jadwal) that the class already
-     * has, so the times, arenas and dates of the jadwal are kept. A class
-     * without jadwal, or with too few partai for its bracket, is refused.
+     * The bracket width follows the current jadwal (ronde dengan partai terbanyak).
+     * Odd athlete counts get BYEs into the next power-of-two size that still fits
+     * that jadwal. The partai are bound to existing schedules so times/arenas stay.
      */
     public function generate(Category $category): void
     {
@@ -31,27 +31,39 @@ class BracketService
             return;
         }
 
-        $jadwalIds = Schedule::where('category_id', $category->id)
-            ->where('type', 'daeryun')
-            ->pluck('id');
+        $roundCounts = $this->daeryunRoundCounts($category);
 
-        if ($jadwalIds->isEmpty()) {
+        if ($roundCounts->isEmpty()) {
             throw new BracketNeedsSchedule(
                 "Kelas {$category->name} belum memiliki jadwal partai Daeryun. "
                 . 'Buat jadwal terlebih dahulu di menu Jadwal.'
             );
         }
 
-        // The partai of the previous bracket are removed first, so the jadwal
-        // (which is kept) can hold the new partai again.
+        // Drop the previous bracket first so a regenerate always follows the
+        // latest jadwal width (not leftover slots from a larger tree).
         $this->clear($category);
 
-        $jadwal = $this->jadwalQueue($category);
+        $size = $this->sizeFromJadwalCounts($roundCounts);
+        $canonicalFirst = $this->label($size);
 
-        $size = 2;
-        while ($size < $athletes->count()) {
-            $size *= 2;
+        if ($athletes->count() > $size) {
+            $neededPartai = (int) ceil($athletes->count() / 2);
+
+            throw new BracketNeedsSchedule(
+                "Jadwal partai ronde pertama kelas {$category->name} hanya menampung "
+                . "{$size} peserta (saat ini {$roundCounts->max()} partai), sementara ada "
+                . "{$athletes->count()} peserta aktif. Tambahkan jadwal ronde pertama "
+                . "hingga minimal {$neededPartai} partai, atau nonaktifkan kelebihan peserta."
+            );
         }
+
+        // Schedules may still carry an old label (e.g. "penyisihan" after the
+        // tree shrank to 8). Align the busiest round to the canonical first-round
+        // label so generate and partai manual share the same names.
+        $this->normalizeFirstRoundLabels($category, $roundCounts, $canonicalFirst);
+
+        $jadwal = $this->jadwalQueue($category);
 
         $slots = [];
 
@@ -74,7 +86,7 @@ class BracketService
 
         // Slots that may still be filled: they hold an entrant, or they are the
         // destination of the winner of the previous match. A dead slot = empty
-        // bracket region.
+        // bracket region. Odd participant counts leave empty slots → BYE.
         $alive = [$size => []];
 
         for ($position = 0; $position < $size; $position++) {
@@ -106,9 +118,8 @@ class BracketService
                     continue;
                 }
 
-                // Bye: only one side is alive. If the entrant is already known
-                // advance them straight away; if not, no match is created and
-                // advance() passes the winner through later.
+                // Bye: only one side is alive. Advance the known entrant; no
+                // jadwal partai is consumed for a BYE.
                 if ($aliveA !== $aliveB) {
                     $winnerId = ($aliveA ? $athleteA : $athleteB) ?? null;
 
@@ -119,8 +130,7 @@ class BracketService
                     continue;
                 }
 
-                // Both sides are alive: the partai comes from the jadwal of the
-                // class (filled in by advance() or already set through a bye).
+                // Both sides are alive: bind a jadwal partai of this round.
                 $schedule = $jadwal->get($this->label($roundSize), collect())->shift();
 
                 if (! $schedule) {
@@ -165,13 +175,13 @@ class BracketService
     }
 
     /**
-     * Create a partai by hand: the admin picks the two athletes that meet in one
-     * partai of the jadwal. Only the first round can be filled by hand, the
-     * later rounds follow the winners of the bracket.
+     * Create a partai by hand. Pass null for $athleteB to award a BYE (odd
+     * participant / single entrant advances without an opponent).
      */
-    public function assignManual(Category $category, Schedule $schedule, Athlete $athleteA, Athlete $athleteB): void
+    public function assignManual(Category $category, Schedule $schedule, Athlete $athleteA, ?Athlete $athleteB = null): void
     {
         $sizes = $this->ensureSlots($category);
+        $schedule->refresh();
         $firstSize = (int) max($sizes);
         $label = $this->label($firstSize);
 
@@ -192,7 +202,6 @@ class BracketService
 
         $index = (int) $siblings->search($schedule->id);
 
-        // The two athletes take the pair of slots of this partai.
         BracketSlot::where('category_id', $category->id)
             ->where('round', (string) $firstSize)
             ->where('position', $index * 2)
@@ -201,7 +210,27 @@ class BracketService
         BracketSlot::where('category_id', $category->id)
             ->where('round', (string) $firstSize)
             ->where('position', ($index * 2) + 1)
-            ->update(['athlete_id' => $athleteB->id]);
+            ->update(['athlete_id' => $athleteB?->id]);
+
+        if ($athleteB === null) {
+            // BYE: one entrant, no opponent. Mark the partai finished and advance.
+            Matchup::updateOrCreate(
+                ['schedule_id' => $schedule->id],
+                [
+                    'athlete_a_id' => $athleteA->id,
+                    'athlete_b_id' => null,
+                    'winner_athlete_id' => $athleteA->id,
+                    'status' => 'finished',
+                    'round' => $label,
+                    'position' => $index + 1,
+                    'finished_at' => now(),
+                ]
+            );
+
+            $this->advanceByeToNextRound($category, $firstSize, $index, $athleteA->id);
+
+            return;
+        }
 
         Matchup::updateOrCreate(
             ['schedule_id' => $schedule->id],
@@ -212,19 +241,85 @@ class BracketService
                 'status' => 'pending',
                 'round' => $label,
                 'position' => $index + 1,
+                'finished_at' => null,
             ]
         );
     }
 
     /**
+     * Advance a BYE winner into the next round slot (and into the next match
+     * if that partai already exists).
+     */
+    protected function advanceByeToNextRound(Category $category, int $roundSize, int $pairing, int $athleteId): void
+    {
+        $nextSize = (int) ($roundSize / 2);
+
+        if ($nextSize < 2) {
+            return;
+        }
+
+        BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', $pairing)
+            ->update(['athlete_id' => $athleteId]);
+
+        $sizes = collect(
+            BracketSlot::where('category_id', $category->id)
+                ->distinct()
+                ->pluck('round')
+                ->map(fn ($round) => (int) $round)
+                ->sortDesc()
+                ->values()
+                ->all()
+        );
+
+        $nextMatchPosition = intdiv($pairing, 2);
+        $nextMatch = $this->findMatch($category, $sizes, $nextSize, $nextMatchPosition + 1);
+
+        if ($nextMatch === null) {
+            return;
+        }
+
+        $slotA = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', $nextMatchPosition * 2)
+            ->first();
+
+        $slotB = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $nextSize)
+            ->where('position', ($nextMatchPosition * 2) + 1)
+            ->first();
+
+        $nextMatch->update([
+            'athlete_a_id' => $slotA?->athlete_id,
+            'athlete_b_id' => $slotB?->athlete_id,
+        ]);
+    }
+
+    /**
      * The bracket slots of the class. When the class does not have a bracket
-     * yet, the slots are built from its jadwal (the first round of the jadwal
-     * decides how wide the bracket is). Returns the round sizes, largest first.
+     * yet — or the jadwal width changed — the slots are (re)built from jadwal.
      *
      * @return array<int, int>
      */
     protected function ensureSlots(Category $category): array
     {
+        $roundCounts = $this->daeryunRoundCounts($category);
+
+        if ($roundCounts->isEmpty()) {
+            throw new BracketNeedsSchedule(
+                "Kelas {$category->name} belum memiliki jadwal partai Daeryun. "
+                . 'Buat jadwal terlebih dahulu di menu Jadwal.'
+            );
+        }
+
+        $expectedSize = $this->sizeFromJadwalCounts($roundCounts);
+        $canonicalFirst = $this->label($expectedSize);
+
+        // Keep schedule.round labels aligned with the bracket width even when
+        // slots already exist (e.g. leftover "penyisihan" after shrinking).
+        $this->normalizeFirstRoundLabels($category, $roundCounts, $canonicalFirst);
+
         $sizes = BracketSlot::where('category_id', $category->id)
             ->distinct()
             ->pluck('round')
@@ -232,35 +327,20 @@ class BracketService
             ->sortDesc()
             ->values();
 
-        if ($sizes->isNotEmpty()) {
+        if ($sizes->isNotEmpty() && (int) $sizes->first() === $expectedSize) {
             return $sizes->all();
         }
 
-        // The first round of the jadwal holds the most partai, so the bracket
-        // is twice that wide (rounded up to a power of two).
-        $firstRoundCount = (int) Schedule::where('category_id', $category->id)
-            ->where('type', 'daeryun')
-            ->get()
-            ->countBy('round')
-            ->max();
-
-        if ($firstRoundCount < 1) {
-            throw new BracketNeedsSchedule(
-                "Kelas {$category->name} belum memiliki jadwal partai Daeryun. "
-                . 'Buat jadwal terlebih dahulu di menu Jadwal.'
-            );
+        // Jadwal was added/removed: drop the stale tree and rebuild empty slots
+        // that match the current first-round width.
+        if ($sizes->isNotEmpty()) {
+            $this->clear($category);
         }
 
-        $size = 1;
+        $built = [];
 
-        while ($size < $firstRoundCount * 2) {
-            $size *= 2;
-        }
-
-        $sizes = [];
-
-        for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
-            $sizes[] = $roundSize;
+        for ($roundSize = $expectedSize; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
+            $built[] = $roundSize;
 
             for ($position = 0; $position < $roundSize; $position++) {
                 BracketSlot::create([
@@ -272,7 +352,61 @@ class BracketService
             }
         }
 
-        return $sizes;
+        return $built;
+    }
+
+    /**
+     * @return \Illuminate\Support\Collection<string, int>
+     */
+    protected function daeryunRoundCounts(Category $category): Collection
+    {
+        return Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->get(['round'])
+            ->countBy('round');
+    }
+
+    /**
+     * Bracket width = next power of two that fits (first-round partai × 2).
+     *
+     * @param  \Illuminate\Support\Collection<string, int>  $roundCounts
+     */
+    protected function sizeFromJadwalCounts(Collection $roundCounts): int
+    {
+        $firstRoundCount = (int) $roundCounts->max();
+
+        $size = 1;
+
+        while ($size < $firstRoundCount * 2) {
+            $size *= 2;
+        }
+
+        return max(2, $size);
+    }
+
+    /**
+     * Rename the busiest jadwal round to the canonical first-round label for
+     * the chosen bracket size (e.g. leftover "penyisihan" → "perempat_final").
+     *
+     * @param  \Illuminate\Support\Collection<string, int>  $roundCounts
+     */
+    protected function normalizeFirstRoundLabels(Category $category, Collection $roundCounts, string $canonicalFirst): void
+    {
+        $busiest = $roundCounts->sortDesc()->keys()->first();
+
+        if ($busiest === null || $busiest === $canonicalFirst) {
+            return;
+        }
+
+        // Do not clobber an existing canonical round if both labels somehow coexist.
+        if ($roundCounts->has($canonicalFirst)) {
+            return;
+        }
+
+        Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->where('round', $busiest)
+            ->update(['round' => $canonicalFirst]);
     }
 
     /**

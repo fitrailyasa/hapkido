@@ -161,12 +161,12 @@ class BracketController extends Controller
             [
                 'schedule_id' => ['required', 'integer', Rule::exists('schedules', 'id')],
                 'athlete_a_id' => ['required', 'integer', Rule::exists('athletes', 'id')],
-                'athlete_b_id' => ['required', 'integer', Rule::exists('athletes', 'id')],
+                // Empty / "bye" = BYE (peserta ganjil, lolos tanpa lawan).
+                'athlete_b_id' => ['nullable', 'integer', Rule::exists('athletes', 'id')],
             ],
             [
                 'schedule_id.required' => 'Partai wajib dipilih.',
                 'athlete_a_id.required' => 'Atlet pertama wajib dipilih.',
-                'athlete_b_id.required' => 'Atlet kedua wajib dipilih.',
             ]
         );
 
@@ -182,22 +182,31 @@ class BracketController extends Controller
             return back()->with('error', "Partai {$schedule->match_no} sudah memiliki atlet.");
         }
 
-        if ((int) $data['athlete_a_id'] === (int) $data['athlete_b_id']) {
+        $athleteBId = isset($data['athlete_b_id']) ? (int) $data['athlete_b_id'] : null;
+        $isBye = $athleteBId === null || $athleteBId === 0;
+
+        if (! $isBye && (int) $data['athlete_a_id'] === $athleteBId) {
             return back()->with('error', 'Dua atlet yang dipilih tidak boleh sama.');
         }
 
-        $athletes = Athlete::whereIn('id', [$data['athlete_a_id'], $data['athlete_b_id']])
+        $athleteIds = array_values(array_filter([(int) $data['athlete_a_id'], $athleteBId]));
+
+        $athletes = Athlete::whereIn('id', $athleteIds)
             ->where('category_id', $category->id)
             ->where('status', 'active')
             ->get()
             ->keyBy('id');
 
-        if ($athletes->count() < 2) {
+        if (! $athletes->has((int) $data['athlete_a_id'])) {
+            return back()->with('error', 'Atlet pertama harus aktif dan berasal dari kelas yang sama.');
+        }
+
+        if (! $isBye && ! $athletes->has($athleteBId)) {
             return back()->with('error', 'Kedua atlet harus aktif dan berasal dari kelas yang sama.');
         }
 
-        $athleteA = $athletes[$data['athlete_a_id']];
-        $athleteB = $athletes[$data['athlete_b_id']];
+        $athleteA = $athletes[(int) $data['athlete_a_id']];
+        $athleteB = $isBye ? null : $athletes[$athleteBId];
 
         $scheduleIds = Schedule::where('category_id', $category->id)
             ->where('type', 'daeryun')
@@ -206,18 +215,20 @@ class BracketController extends Controller
         $existingMatchups = Matchup::whereIn('schedule_id', $scheduleIds)
             ->get(['athlete_a_id', 'athlete_b_id']);
 
-        $alreadyFought = $existingMatchups->contains(function (Matchup $match) use ($athleteA, $athleteB) {
-            $pair = [(int) $match->athlete_a_id, (int) $match->athlete_b_id];
+        if (! $isBye) {
+            $alreadyFought = $existingMatchups->contains(function (Matchup $match) use ($athleteA, $athleteB) {
+                $pair = [(int) $match->athlete_a_id, (int) $match->athlete_b_id];
 
-            return in_array((int) $athleteA->id, $pair, true)
-                && in_array((int) $athleteB->id, $pair, true);
-        });
+                return in_array((int) $athleteA->id, $pair, true)
+                    && in_array((int) $athleteB->id, $pair, true);
+            });
 
-        if ($alreadyFought) {
-            return back()->with(
-                'error',
-                "{$athleteA->name} dan {$athleteB->name} sudah pernah dipertandingkan."
-            );
+            if ($alreadyFought) {
+                return back()->with(
+                    'error',
+                    "{$athleteA->name} dan {$athleteB->name} sudah pernah dipertandingkan."
+                );
+            }
         }
 
         $usedAthleteIds = $existingMatchups
@@ -226,7 +237,9 @@ class BracketController extends Controller
             ->unique()
             ->map(fn ($id) => (int) $id);
 
-        $alreadyPaired = collect([$athleteA, $athleteB])
+        $candidates = $isBye ? collect([$athleteA]) : collect([$athleteA, $athleteB]);
+
+        $alreadyPaired = $candidates
             ->filter(fn (Athlete $athlete) => $usedAthleteIds->contains((int) $athlete->id))
             ->pluck('name')
             ->values();
@@ -246,6 +259,11 @@ class BracketController extends Controller
             });
         } catch (BracketNeedsSchedule $exception) {
             return back()->with('error', $exception->getMessage());
+        }
+
+        if ($isBye) {
+            return back()
+                ->with('success', "Partai {$schedule->match_no}: {$athleteA->name} BYE (lolos tanpa lawan).");
         }
 
         return back()
