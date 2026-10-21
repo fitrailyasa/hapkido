@@ -60,6 +60,16 @@ class BracketController extends Controller
                 ->orderBy('name')
                 ->get(['id', 'name', 'participant_number']);
 
+            // Athletes that already have a partai on another jadwal of this
+            // class: the manual partai shows them as "sudah bertanding" so
+            // they are not paired twice.
+            $usedAthleteIds = Matchup::whereIn('schedule_id', $jadwal->pluck('id'))
+                ->get(['athlete_a_id', 'athlete_b_id'])
+                ->flatMap(fn (Matchup $match) => [$match->athlete_a_id, $match->athlete_b_id])
+                ->filter()
+                ->unique()
+                ->values();
+
             if ($hasBracket) {
                 $rounds = $viewer->rounds($selected);
 

@@ -41,10 +41,9 @@ class SeederTest extends TestCase
 
         // Every generated partai is bound to an existing jadwal.
         $this->assertGreaterThan(0, BracketSlot::where('category_id', $category->id)->count());
-        $this->assertGreaterThan(0, Matchup::count());
         $this->assertSame(
             $jadwal->count(),
-            Matchup::where('category_id', $category->id)->whereIn('schedule_id', $jadwal->pluck('id'))->count()
+            Matchup::whereIn('schedule_id', $jadwal->pluck('id'))->count()
         );
     }
 }

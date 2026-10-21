@@ -3,8 +3,8 @@
     <div class="sidebar-brand">
         <a href="{{ route('admin.dashboard') }}" class="brand-link d-flex align-items-center gap-2">
             @if (config('app.logo'))
-                <img src="{{ config('app.logo') }}" alt="{{ config('app.short_name') }}"
-                    class="rounded shadow-sm" style="height: 30px; width: auto;" />
+                <img src="{{ config('app.logo') }}" alt="{{ config('app.short_name') }}" class="rounded shadow-sm"
+                    style="height: 30px; width: auto;" />
             @endif
             <span class="brand-text fw-semibold">{{ config('app.short_name', 'Hapkido 2026') }}</span>
         </a>
@@ -38,6 +38,7 @@
 
                 {{-- Day-of-event operations --}}
                 @if (auth()->user()->can('schedules.view') ||
+                        auth()->user()->can('brackets.view') ||
                         auth()->user()->can('callings.view') ||
                         auth()->user()->can('verifications.view') ||
                         auth()->user()->can('readiness.view') ||
@@ -45,6 +46,7 @@
                     @php
                         $openOps = request()->routeIs(
                             'admin.schedules.*',
+                            'admin.brackets.*',
                             'admin.callings.*',
                             'admin.verifications.*',
                             'admin.readiness.*',
@@ -66,6 +68,15 @@
                                         class="nav-link {{ request()->routeIs('admin.schedules.*') ? 'active' : '' }}">
                                         <i class="nav-icon bi bi-calendar3"></i>
                                         <p>Jadwal</p>
+                                    </a>
+                                </li>
+                            @endcan
+                            @can('brackets.view')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.brackets.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.brackets.*') ? 'active' : '' }}">
+                                        <i class="nav-icon bi bi-diagram-3-fill"></i>
+                                        <p>Bracket</p>
                                     </a>
                                 </li>
                             @endcan
@@ -112,14 +123,12 @@
                 {{-- Matches --}}
                 @if (auth()->user()->can('matches.view') ||
                         auth()->user()->can('performances.view') ||
-                        auth()->user()->can('brackets.view') ||
                         auth()->user()->can('results.view'))
                     @php
                         $openMatch = request()->routeIs(
                             'admin.matches.*',
                             'admin.performances.*',
                             'admin.scores.*',
-                            'admin.brackets.*',
                             'admin.results.*',
                         );
                     @endphp
@@ -147,15 +156,6 @@
                                         class="nav-link {{ request()->routeIs('admin.performances.*', 'admin.scores.*') ? 'active' : '' }}">
                                         <i class="nav-icon bi bi-star-fill"></i>
                                         <p>Seni</p>
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('brackets.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.brackets.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.brackets.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-diagram-3-fill"></i>
-                                        <p>Bracket</p>
                                     </a>
                                 </li>
                             @endcan

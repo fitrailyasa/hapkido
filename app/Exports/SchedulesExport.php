@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use App\Models\Schedule;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -20,6 +21,14 @@ class SchedulesExport implements FromCollection, WithHeadings, WithMapping, With
     ];
 
     /**
+     * Read-only column: the partai (two athletes) the jadwal already has.
+     *
+     * The partai comes from the bracket, so it is exported for the operator
+     * but ignored on import.
+     */
+    public const PARTAI_HEADING = 'partai';
+
+    /**
      * @var Collection<int, \App\Models\Schedule>
      */
     protected Collection $schedules;
@@ -36,7 +45,7 @@ class SchedulesExport implements FromCollection, WithHeadings, WithMapping, With
 
     public function headings(): array
     {
-        return self::HEADINGS;
+        return array_merge(self::HEADINGS, [self::PARTAI_HEADING]);
     }
 
     public function map($schedule): array
@@ -52,6 +61,7 @@ class SchedulesExport implements FromCollection, WithHeadings, WithMapping, With
             $this->time($schedule->start_time),
             $this->time($schedule->end_time),
             $schedule->status,
+            $this->partai($schedule),
         ];
     }
 
@@ -60,6 +70,25 @@ class SchedulesExport implements FromCollection, WithHeadings, WithMapping, With
         return [
             1 => ['font' => ['bold' => true]],
         ];
+    }
+
+    /**
+     * "Atlet A vs Atlet B" when the jadwal already has a partai.
+     */
+    protected function partai(Schedule $schedule): string
+    {
+        $match = $schedule->match;
+
+        if (! $match) {
+            return '';
+        }
+
+        $names = array_filter([
+            $match->athleteA?->name,
+            $match->athleteB?->name,
+        ], fn (?string $name) => $name !== null && $name !== '');
+
+        return $names === [] ? '' : implode(' vs ', $names);
     }
 
     protected function time(?string $value): string
