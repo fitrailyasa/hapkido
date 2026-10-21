@@ -105,9 +105,9 @@ class BracketController extends Controller
     }
 
     /**
-     * Susun data bracket (brackets-viewer.js) dari round + pairing hasil
-     * bracket_slots dan matches: peserta, bye, slot kosong, skor, status,
-     * serta tautan partai untuk tiap match.
+     * Build the bracket data (brackets-viewer.js) from the rounds plus the pairings
+     * resulting from bracket_slots and matches: entrants, byes, empty slots, scores,
+     * status, and the match links for each match.
      */
     protected function buildViewerPayload(Category $category, array $rounds): array
     {
@@ -181,9 +181,9 @@ class BracketController extends Controller
                         default => 0, // Locked
                     };
                 } elseif ($athleteA !== null && $athleteB !== null) {
-                    $status = 2; // Ready (pasangan penuh tanpa match: tidak lazim)
+                    $status = 2; // Ready (full pairing without a match: unusual)
                 } elseif ($athleteA !== null || $athleteB !== null) {
-                    // Bye: peserta lolos tanpa lawan, sisi kosong ditampilkan "BYE".
+                    // Bye: the entrant advances without an opponent, the empty side is shown as "BYE".
                     $status = 4; // Completed
 
                     if ($athleteA !== null) {
@@ -196,7 +196,7 @@ class BracketController extends Controller
 
                     $byeIds[] = $matchId;
                 } else {
-                    // Slot kosong: tidak pernah ada peserta pada posisi ini.
+                    // Empty slot: no entrant has ever been in this position.
                     $emptyIds[] = $matchId;
                 }
 

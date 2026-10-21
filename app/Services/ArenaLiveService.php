@@ -6,8 +6,8 @@ use App\Models\Arena;
 use App\Models\Schedule;
 
 /**
- * Menjaga agar layar display (dan dashboard) selalu menampilkan
- * partai terbaru di setiap arena, berapa pun status yang berubah.
+ * Keep the display screen (and the dashboard) always showing the most recent
+ * match in every arena, whatever status changes occur.
  */
 class ArenaLiveService
 {
@@ -20,7 +20,7 @@ class ArenaLiveService
     ];
 
     /**
-     * Tandai jadwal ini sedang tampil di arena (dipanggil saat partai/seni dimulai).
+     * Mark this schedule as currently shown in the arena (called when a match or performance starts).
      */
     public function push(Schedule $schedule): void
     {
@@ -35,8 +35,8 @@ class ArenaLiveService
     }
 
     /**
-     * Lepaskan status tampil setelah selesai.
-     * Jadwal tetap ditautkan agar layar menampilkan hasil akhir.
+     * Release the display status once finished.
+     * The schedule stays linked so the screen shows the final result.
      */
     public function release(Schedule $schedule): void
     {
@@ -50,9 +50,9 @@ class ArenaLiveService
     }
 
     /**
-     * Jadwal terbaik untuk sebuah arena: yang sedang berlangsung,
-     * lalu jadwal hari ini yang sedang dipersiapkan/menunggu,
-     * terakhir tautan terakhir yang tersimpan.
+     * Best schedule for an arena: the one in progress,
+     * then today's schedule that is being prepared or waiting,
+     * and finally the last stored link.
      */
     public function resolve(Arena $arena, ?string $today = null): ?Schedule
     {
@@ -75,8 +75,8 @@ class ArenaLiveService
             return $running;
         }
 
-        // Hasil partai yang baru saja selesai tetap ditampilkan agar pemenang
-        // langsung terlihat di layar sebelum berganti ke jadwal berikutnya.
+        // A match that has just finished stays on screen so the winner is
+        // immediately visible before switching to the next schedule.
         if ($current && $current->status === 'finished' && $this->resultIsFresh($current)) {
             return $current;
         }
@@ -92,7 +92,7 @@ class ArenaLiveService
     }
 
     /**
-     * Partai selesai dianggap masih "hangat" selama 15 menit setelah selesai.
+     * A finished match is considered still "fresh" for 15 minutes after it ends.
      */
     protected function resultIsFresh(Schedule $schedule): bool
     {

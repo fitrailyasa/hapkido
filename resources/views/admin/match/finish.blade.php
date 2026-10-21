@@ -1,4 +1,4 @@
-<!--begin::Modal Selesaikan Pertandingan-->
+<!--begin::Finish Match Modal-->
 <div class="modal fade" id="modal-finish-match" tabindex="-1" aria-labelledby="modal-finish-match-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -67,7 +67,7 @@
         </div>
     </div>
 </div>
-<!--end::Modal Selesaikan Pertandingan-->
+<!--end::Finish Match Modal-->
 
 @push('scripts')
     <script>

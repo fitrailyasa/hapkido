@@ -269,7 +269,7 @@
 
 @push('styles')
     <style>
-        /* Panel atlet: merah (A) vs biru (B) — tetap terbaca di tema terang & gelap. */
+        /* Athlete panels: red (A) vs blue (B) - still readable in the light and dark themes. */
         .match-side {
             border: 1px solid var(--bs-border-color);
         }

@@ -1,4 +1,4 @@
-<!--begin::Edit Atlet Modal-->
+<!--begin::Edit Athlete Modal-->
 <div class="modal fade" id="modal-edit-athlete" tabindex="-1" aria-labelledby="modal-edit-athlete-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -128,4 +128,4 @@
         </div>
     </div>
 </div>
-<!--end::Edit Atlet Modal-->
+<!--end::Edit Athlete Modal-->

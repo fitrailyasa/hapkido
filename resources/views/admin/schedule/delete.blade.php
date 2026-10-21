@@ -1,4 +1,4 @@
-<!--begin::Delete Jadwal Modal-->
+<!--begin::Delete Schedule Modal-->
 <div class="modal fade" id="modal-delete-schedule" tabindex="-1" aria-labelledby="modal-delete-schedule-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -24,4 +24,4 @@
         </div>
     </div>
 </div>
-<!--end::Delete Jadwal Modal-->
+<!--end::Delete Schedule Modal-->

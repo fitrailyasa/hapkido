@@ -232,7 +232,7 @@ class ChampionshipSeeder extends Seeder
             $service->generate($categories[$name]);
         }
 
-        // Jadwal awal (arena & jam) untuk match pertama daeryun
+        // Initial schedule (arena & time) for the first daeryun match
         $arena = Arena::where('name', 'A')->first();
 
         Schedule::where('type', 'daeryun')

@@ -1,4 +1,4 @@
-<!--begin::Tambah Jadwal Modal-->
+<!--begin::Add Schedule Modal-->
 <div class="modal fade" id="modal-add-schedule" tabindex="-1" aria-labelledby="modal-add-schedule-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -129,4 +129,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah Jadwal Modal-->
+<!--end::Add Schedule Modal-->

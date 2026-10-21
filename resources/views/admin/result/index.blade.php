@@ -24,7 +24,7 @@
             'rows' => $section['rows'],
         ]))->values();
 
-        // Urutan tampil podium: 2 - 1 - 3 (juara 1 di tengah, lebih tinggi).
+        // Podium display order: 2 - 1 - 3 (the champion in the middle, highest).
         $podiumOrder = [
             ['rank' => 2, 'pos' => 'order-2 order-md-1'],
             ['rank' => 1, 'pos' => 'order-1 order-md-2'],

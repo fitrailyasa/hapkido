@@ -1,4 +1,4 @@
-<!--begin::Tambah Atlet Modal-->
+<!--begin::Add Athlete Modal-->
 <div class="modal fade" id="modal-add-athlete" tabindex="-1" aria-labelledby="modal-add-athlete-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -125,4 +125,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah Atlet Modal-->
+<!--end::Add Athlete Modal-->

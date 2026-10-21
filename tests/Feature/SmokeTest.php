@@ -90,7 +90,7 @@ class SmokeTest extends TestCase
             $this->actingAs($user)->get($uri)->assertOk("GET {$uri} harus 200");
         }
 
-        // Alias dashboard sengaja redirect ke halaman utama back office
+        // The dashboard alias intentionally redirects to the back office main page
         $this->actingAs($user)->get('/dashboard')->assertRedirect('/admin');
     }
 }

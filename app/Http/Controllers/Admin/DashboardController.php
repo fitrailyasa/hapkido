@@ -18,7 +18,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Endpoint polling realtime (tiap 3 detik).
+     * Realtime polling endpoint (every 3 seconds).
      */
     public function data()
     {

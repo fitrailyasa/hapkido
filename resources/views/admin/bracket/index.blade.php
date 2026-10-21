@@ -160,13 +160,13 @@
             opacity: 0.45;
         }
 
-        /* Partai yang sedang berlangsung. */
+        /* Match in progress. */
         .brackets-viewer .match[data-match-status="3"] .opponents {
             border-color: #50b649;
             box-shadow: 0 0 0 1px #50b649;
         }
 
-        /* Ikut palet tema aplikasi (biru gelap) agar konsisten dengan kartu di sekitarnya. */
+        /* Follow the app theme palette (dark blue) to stay consistent with the surrounding cards. */
         [data-bs-theme="dark"] .brackets-viewer {
             --primary-background: var(--bs-card-bg);
             --secondary-background: var(--bs-secondary-bg);

@@ -128,8 +128,8 @@ class VerificationController extends Controller
     }
 
     /**
-     * Jadwal hari ini untuk atlet: prioritas jadwal yang sedang berjalan,
-     * lalu jadwal lain pada kategori yang sama.
+     * Today's schedule for the athlete: the schedule in progress takes priority,
+     * then the other schedules in the same category.
      */
     protected function resolveSchedule(Athlete $athlete, ?int $scheduleId): ?Schedule
     {

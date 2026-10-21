@@ -9,7 +9,7 @@
 
             <div class="row">
                 <div class="col-lg-8">
-                    {{-- Judul & Deskripsi --}}
+                    {{-- Title & Description --}}
                     <div class="card mb-4">
                         <div class="card-header">
                             <h3 class="card-title mb-0">Judul &amp; Deskripsi</h3>
@@ -236,7 +236,7 @@
             </div>
         </form>
 
-        {{-- Kembalikan ke default (form terpisah, tidak boleh bersarang) --}}
+        {{-- Restore defaults (separate form, must not be nested) --}}
         @can('settings.update')
             <div class="card border-danger">
                 <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">

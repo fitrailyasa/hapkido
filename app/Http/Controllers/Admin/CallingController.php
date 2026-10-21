@@ -72,7 +72,7 @@ class CallingController extends Controller
     }
 
     /**
-     * Data polling: jadwal hari ini dikelompokkan per arena beserta daftar calling.
+     * Polling data: today's schedules grouped per arena along with the calling list.
      */
     protected function payload(): array
     {
@@ -176,7 +176,7 @@ class CallingController extends Controller
     }
 
     /**
-     * Pastikan setiap atlet pada jadwal hari ini punya baris calling.
+     * Make sure every athlete on today's schedules has a calling row.
      */
     protected function syncCallings(array $athletesBySchedule): void
     {
@@ -220,7 +220,7 @@ class CallingController extends Controller
     }
 
     /**
-     * Atlet pada sebuah jadwal: seni dari performances, daeryun dari match.
+     * Athletes in a schedule: art from the performances, daeryun from the match.
      *
      * @return Collection<int, Athlete>
      */

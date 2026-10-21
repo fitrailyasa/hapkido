@@ -1,4 +1,4 @@
-<!--begin::Hapus Perlengkapan Modal-->
+<!--begin::Delete Equipment Modal-->
 <div class="modal fade" id="modal-delete-equipment" tabindex="-1" aria-labelledby="modal-delete-equipment-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -24,4 +24,4 @@
         </div>
     </div>
 </div>
-<!--end::Hapus Perlengkapan Modal-->
+<!--end::Delete Equipment Modal-->

@@ -13,7 +13,7 @@
 
     <meta name="csrf-token" content="{{ csrf_token() }}" />
 
-    {{-- Terapkan tema dari localStorage sebelum paint (default: light) --}}
+    {{-- Apply the theme from localStorage before paint (default: light) --}}
     <script>
         (function() {
             var theme = 'light';
@@ -132,7 +132,7 @@
             }, options || {}));
         };
 
-        // POST biasa dengan CSRF token (untuk form dalam modal)
+        // Plain POST with a CSRF token (for forms inside a modal)
         window.postForm = function(action, data) {
             const form = document.createElement('form');
             form.method = 'POST';
@@ -156,7 +156,7 @@
             form.submit();
         };
 
-        // Ganti tema (tersimpan di localStorage, default light)
+        // Toggle theme (stored in localStorage, default light)
         window.applyTheme = function(theme) {
             const root = document.documentElement;
             root.setAttribute('data-bs-theme', theme);
@@ -178,7 +178,7 @@
             }
         });
 
-        // Polling realtime (dashboard / public display / calling)
+        // Realtime polling (dashboard / public display / calling)
         window.startPolling = function(url, interval, callback) {
             const run = function() {
                 fetch(url, { headers: { 'Accept': 'application/json' }, cache: 'no-store' })

@@ -42,7 +42,7 @@ class ResultController extends Controller
     }
 
     /**
-     * Ranking daeryun: menang → selisih skor → total poin.
+     * Daeryun ranking: wins → score difference → total points.
      */
     protected function daeryunRows(Category $category): array
     {
@@ -96,7 +96,7 @@ class ResultController extends Controller
     }
 
     /**
-     * Ranking seni: nilai akhir dari tabel scores (rata-rata juri).
+     * Art ranking: final score from the scores table (judges' average).
      */
     protected function artRows(Category $category): array
     {
@@ -153,7 +153,7 @@ class ResultController extends Controller
     }
 
     /**
-     * Medali daeryun diambil dari hasil bracket (final & semifinal).
+     * Daeryun medals are taken from the bracket results (final & semifinal).
      */
     protected function daeryunMedals(Category $category): array
     {
@@ -234,7 +234,7 @@ class ResultController extends Controller
     }
 
     /**
-     * Juara umum: perolehan medali tiap kontingen.
+     * Overall champion: medal haul per contingent.
      */
     protected function generalChampion($sections): array
     {

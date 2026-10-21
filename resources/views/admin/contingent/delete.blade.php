@@ -1,4 +1,4 @@
-<!--begin::Delete Kontingen Modal-->
+<!--begin::Delete Contingent Modal-->
 <div class="modal fade" id="modal-delete-contingent" tabindex="-1" aria-labelledby="modal-delete-contingent-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -24,4 +24,4 @@
         </div>
     </div>
 </div>
-<!--end::Delete Kontingen Modal-->
+<!--end::Delete Contingent Modal-->

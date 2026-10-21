@@ -12,8 +12,8 @@ use Illuminate\Support\Collection;
 class BracketService
 {
     /**
-     * Bangun bracket otomatis: peserta pada round pertama, bye otomatis,
-     * lalu dibuat match untuk setiap round sampai final.
+     * Build the bracket automatically: entrants in the first round, automatic byes,
+     * then matches are created for every round up to the final.
      */
     public function generate(Category $category): void
     {
@@ -52,8 +52,9 @@ class BracketService
             }
         }
 
-        // Slot yang masih mungkin terisi: ada peserta, atau menjadi tujuan
-        // pemenang partai sebelumnya. Slot mati = daerah bracket kosong.
+        // Slots that may still be filled: they hold an entrant, or they are the
+        // destination of the winner of the previous match. A dead slot = empty
+        // bracket region.
         $alive = [$size => []];
 
         for ($position = 0; $position < $size; $position++) {
@@ -80,14 +81,14 @@ class BracketService
                 $aliveA = $alive[$roundSize][$position * 2];
                 $aliveB = $alive[$roundSize][($position * 2) + 1];
 
-                // Kedua sisi berasal dari daerah kosong: tidak ada partai.
+                // Both sides come from empty regions: no match is created.
                 if (! $aliveA && ! $aliveB) {
                     continue;
                 }
 
-                // Bye: hanya satu sisi yang hidup. Bila pesertanya sudah
-                // diketahui langsung loloskan; bila belum, partai memang tidak
-                // dibuat dan pemenangnya diloloskan oleh advance().
+                // Bye: only one side is alive. If the entrant is already known
+                // advance them straight away; if not, no match is created and
+                // advance() passes the winner through later.
                 if ($aliveA !== $aliveB) {
                     $winnerId = ($aliveA ? $athleteA : $athleteB) ?? null;
 
@@ -98,8 +99,9 @@ class BracketService
                     continue;
                 }
 
-                // Dua sisi hidup: partai dibuat meski pesertanya belum lengkap
-                // (akan diisi oleh advance() atau sudah terisi lewat bye).
+                // Both sides are alive: the match is created even if its entrants
+                // are not complete yet (filled in by advance() or already set
+                // through a bye).
                 $schedule = Schedule::create([
                     'match_no' => $this->nextMatchNo(),
                     'category_id' => $category->id,
@@ -127,7 +129,7 @@ class BracketService
     }
 
     /**
-     * Simpan pemenang match lalu lanjutkan atlet ke round berikutnya.
+     * Save the match winner, then move the athlete to the next round.
      */
     public function advance(Matchup $match, Athlete $winner): void
     {
@@ -142,8 +144,8 @@ class BracketService
 
         $currentSize = $this->resolveRoundSize($match, $sizes);
 
-        // Match ke-P (mulai 1) memperebutkan slot 2(P-1) dan 2(P-1)+1 dari
-        // roundnya, jadi pemenangnya menempati slot (P-1) pada round berikutnya.
+        // Match number P (starting at 1) contests slots 2(P-1) and 2(P-1)+1 of
+        // its round, so its winner takes slot (P-1) in the next round.
         $size = $currentSize;
         $pairing = $match->position - 1;
 
@@ -151,7 +153,7 @@ class BracketService
             $nextSize = (int) ($size / 2);
 
             if ($nextSize < 2) {
-                // Pemenang final
+                // Final winner
                 return;
             }
 
@@ -160,8 +162,8 @@ class BracketService
                 ->where('position', $pairing)
                 ->update(['athlete_id' => $winner->id]);
 
-            // Pasangan slot (2Q dan 2Q+1) pada round berikutnya memberi makan
-            // match ke-(Q+1) pada round berikutnya, berapa pun urutan selesainya.
+            // The slot pair (2Q and 2Q+1) in the next round feeds match
+            // number (Q+1) of that round, regardless of the finishing order.
             $nextMatchPosition = intdiv($pairing, 2);
 
             $nextMatch = $this->findMatch($category, $sizes, $nextSize, $nextMatchPosition + 1);
@@ -185,18 +187,18 @@ class BracketService
                 return;
             }
 
-            // Partai tidak ada (lawan berasal dari daerah kosong): pemenang
-            // lolos terus melewati round ini.
+            // The match does not exist (the opponent comes from an empty
+            // region): the winner advances straight through this round.
             $size = $nextSize;
             $pairing = $nextMatchPosition;
         }
     }
 
     /**
-     * Cari match pada round berukuran $size dengan posisi $position.
-     * Bila label round dipakai beberapa ukuran (mis. 32 dan 16 sama-sama
-     * "penyisihan"), match_no dipakai sebagai pembeda karena round terbesar
-     * selalu dibuat paling awal saat generate.
+     * Find the match in the round of size $size at position $position.
+     * If a round label is used for several sizes (e.g. 32 and 16 are both
+     * "penyisihan"), match_no is used to tell them apart because the largest
+     * round is always created first when generating.
      */
     protected function findMatch(Category $category, Collection $sizes, int $size, int $position): ?Matchup
     {
@@ -234,9 +236,9 @@ class BracketService
     }
 
     /**
-     * Konteks pemetaan match_no -> ukuran round untuk sebuah kategori.
-     * Generate membuat match round terbesar lebih dulu, jadi match_no yang
-     * berurutan bisa dipetakan ke blok round per ukuran.
+     * Context for mapping match_no -> round size for a category.
+     * Generate creates the largest round's matches first, so sequential
+     * match_no values can be mapped to the round blocks per size.
      */
     protected function matchNoContext(Category $category, Collection $sizes): array
     {
@@ -290,7 +292,7 @@ class BracketService
     }
 
     /**
-     * Tentukan ukuran round sebuah match dari match_no-nya.
+     * Determine the round size of a match from its match_no.
      */
     protected function sizeForMatchNo(int $matchNo, Collection $sizes, array $context): int
     {
@@ -315,10 +317,10 @@ class BracketService
     }
 
     /**
-     * Tentukan ukuran round (jumlah slot) sebuah match dari match_no-nya.
-     * Satu label bisa dipakai beberapa ukuran (mis. 32 dan 16 sama-sama
-     * "penyisihan"); urutan match_no dipakai sebagai pembedanya karena
-     * round terbesar selalu dibuat paling awal saat generate.
+     * Determine the round size (number of slots) of a match from its match_no.
+     * A single label can be used for several sizes (e.g. 32 and 16 are both
+     * "penyisihan"); the match_no order is used to tell them apart because
+     * the largest round is always created first when generating.
      */
     protected function resolveRoundSize(Matchup $match, Collection $sizes): int
     {
@@ -340,7 +342,7 @@ class BracketService
     }
 
     /**
-     * Loloskan atlet (bye) ke round berikutnya.
+     * Advance the athlete (bye) to the next round.
      */
     protected function fillNextSlot(array &$slots, int $roundSize, int $position, ?int $athleteId): void
     {

@@ -1,4 +1,4 @@
-<!--begin::Show Atlet Modal-->
+<!--begin::Show Athlete Modal-->
 <div class="modal fade" id="modal-show-athlete" tabindex="-1" aria-labelledby="modal-show-athlete-label" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -69,4 +69,4 @@
         </div>
     </div>
 </div>
-<!--end::Show Atlet Modal-->
+<!--end::Show Athlete Modal-->

@@ -1,4 +1,4 @@
-<!--begin::Pinjam Perlengkapan Modal-->
+<!--begin::Borrow Equipment Modal-->
 <div class="modal fade" id="modal-borrow-equipment" tabindex="-1" aria-labelledby="modal-borrow-equipment-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -80,4 +80,4 @@
         </div>
     </div>
 </div>
-<!--end::Pinjam Perlengkapan Modal-->
+<!--end::Borrow Equipment Modal-->

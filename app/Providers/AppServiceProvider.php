@@ -24,9 +24,9 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Timpa config() dengan nilai dari tabel settings
-     * (judul, tagline, deskripsi, logo, favicon, footer, copyright).
-     * Aman dipanggil sebelum tabel settings ada.
+     * Override config() with the values from the settings table
+     * (title, tagline, description, logo, favicon, footer, copyright).
+     * Safe to call before the settings table exists.
      */
     protected function syncSettingsIntoConfig(): void
     {
@@ -50,7 +50,7 @@ class AppServiceProvider extends ServiceProvider
         foreach (['app.logo', 'app.favicon'] as $configKey) {
             $value = config($configKey);
 
-            // Dukung nilai mentah dari .env (mis. "settings/logo.png").
+            // Support raw values from .env (e.g. "settings/logo.png").
             if (is_string($value) && $value !== '' && ! str_starts_with($value, '/') && ! str_contains($value, '://')) {
                 config()->set($configKey, '/storage/' . ltrim($value, '/'));
             }

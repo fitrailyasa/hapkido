@@ -11,7 +11,7 @@
             <link rel="icon" href="{{ config('app.favicon') }}" />
         @endif
 
-        {{-- Terapkan tema dari localStorage sebelum paint (default: light) --}}
+        {{-- Apply the theme from localStorage before paint (default: light) --}}
         <script>
             (function() {
                 var theme = 'light';
@@ -27,7 +27,7 @@
                 window.__APP_THEME__ = theme;
             })();
 
-            // Ganti tema (tersimpan di localStorage, key 'theme') — sama dengan admin & display
+            // Toggle theme (stored in localStorage, key 'theme') - same as admin & display
             window.applyTheme = function(theme) {
                 var root = document.documentElement;
                 root.setAttribute('data-bs-theme', theme);
@@ -126,7 +126,7 @@
                 </div>
             </main>
 
-            <!-- Fitur -->
+            <!-- Features -->
             <section class="wl-section">
                 <div class="wl-grid">
                     <div class="wl-card">

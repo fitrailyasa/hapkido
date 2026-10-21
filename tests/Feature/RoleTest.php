@@ -182,13 +182,13 @@ class RoleTest extends TestCase
         $user = $this->userWithPermissions(['roles.view', 'roles.permissions']);
         $role = Role::create(['name' => 'Juri']);
 
-        // Permission baru di config belum ada di tabel permissions.
+        // The new permission in the config does not exist in the permissions table yet.
         Permission::where('name', 'settings.view')->delete();
 
         $this->actingAs($user)->get('/admin/roles')->assertOk();
         $this->assertDatabaseHas('permissions', ['name' => 'settings.view']);
 
-        // Submit tetap sukses walau permission hilang lagi dari tabel.
+        // The submit still succeeds even if the permission is deleted from the table again.
         Permission::where('name', 'settings.view')->delete();
 
         $response = $this->actingAs($user)

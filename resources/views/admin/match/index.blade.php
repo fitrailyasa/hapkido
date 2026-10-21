@@ -179,7 +179,7 @@
 
 @push('styles')
     <style>
-        /* Panel atlet: merah (A) vs biru (B) — tetap terbaca di tema terang & gelap. */
+        /* Athlete panels: red (A) vs blue (B) - still readable in the light and dark themes. */
         .match-vs {
             letter-spacing: 1px;
             padding-left: 0.7rem;

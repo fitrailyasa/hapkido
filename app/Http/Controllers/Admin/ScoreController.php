@@ -97,7 +97,7 @@ class ScoreController extends Controller
     }
 
     /**
-     * Nilai akhir = rata-rata 3 juri, dibulatkan 2 desimal.
+     * Final score = average of 3 judges, rounded to 2 decimals.
      */
     protected function average(array $judgeScores): float
     {
@@ -105,7 +105,7 @@ class ScoreController extends Controller
     }
 
     /**
-     * Tandai jadwal seni selesai bila seluruh penampil sudah dinilai.
+     * Mark the art schedule as finished when all performers have been scored.
      */
     protected function syncScheduleStatus(int $scheduleId): void
     {

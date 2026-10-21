@@ -167,7 +167,7 @@
         @endforelse
     </div>
 
-    <!--begin::Tambah Penampil Modal-->
+    <!--begin::Add Performer Modal-->
     <div class="modal fade" id="modal-add-performance" tabindex="-1" aria-labelledby="modal-add-performance-label"
         aria-hidden="true">
         <div class="modal-dialog">
@@ -223,7 +223,7 @@
             </div>
         </div>
     </div>
-    <!--end::Tambah Penampil Modal-->
+    <!--end::Add Performer Modal-->
 @endsection
 
 @push('scripts')

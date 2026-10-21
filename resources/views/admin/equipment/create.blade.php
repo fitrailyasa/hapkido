@@ -1,4 +1,4 @@
-<!--begin::Tambah Perlengkapan Modal-->
+<!--begin::Add Equipment Modal-->
 <div class="modal fade" id="modal-add-equipment" tabindex="-1" aria-labelledby="modal-add-equipment-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -82,4 +82,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah Perlengkapan Modal-->
+<!--end::Add Equipment Modal-->

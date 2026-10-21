@@ -17,10 +17,10 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Identitas Aplikasi (bisa diubah dari menu admin tanpa edit .env)
+    | Application Identity (can be changed from the admin menu without editing .env)
     |--------------------------------------------------------------------------
-    | Nilai berikut menjadi default. Halaman "Identitas & Tampilan" pada
-    | back office menimpa-nya lewat tabel `settings`.
+    | The values below serve as defaults. The "Identitas & Tampilan" page in
+    | the back office overrides them through the `settings` table.
     */
 
     'short_name' => env('APP_SHORT_NAME', 'Hapkido 2026'),

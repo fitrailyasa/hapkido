@@ -286,7 +286,7 @@
             document.getElementById('arena-cards').innerHTML =
                 arenaHtml || '<div class="muted">Tidak ada arena</div>';
 
-            // Panggilan
+            // Callings
             let callHtml = '';
             (data.callings || []).slice(0, 5).forEach(function(item, index) {
                 callHtml += `
@@ -301,7 +301,7 @@
             document.getElementById('callings').innerHTML =
                 callHtml || '<div class="muted">Tidak ada panggilan aktif.</div>';
 
-            // Hasil
+            // Results
             let resultHtml = '';
             (data.results || []).forEach(function(item) {
                 resultHtml += `
@@ -316,7 +316,7 @@
             document.getElementById('results').innerHTML =
                 resultHtml || '<div class="list-row muted">Belum ada hasil.</div>';
 
-            // Seni
+            // Art
             let perfHtml = '';
             let lastPerfGroup = null;
             (data.performances || []).forEach(function(item) {
@@ -340,7 +340,7 @@
             document.getElementById('performances').innerHTML =
                 perfHtml || '<div class="list-row muted">Belum ada penampil.</div>';
 
-            // Jadwal berikutnya
+            // Next schedule
             let nextHtml = '';
             (data.next || []).forEach(function(item) {
                 nextHtml += `

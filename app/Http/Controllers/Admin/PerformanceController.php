@@ -156,7 +156,7 @@ class PerformanceController extends Controller
     }
 
     /**
-     * Samakan status jadwal seni dengan progres penampilannya.
+     * Align the art schedule status with the progress of its performances.
      */
     protected function syncScheduleStatus(int $scheduleId, string $performanceStatus): void
     {

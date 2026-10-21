@@ -131,7 +131,7 @@
             document.getElementById('stat-running').textContent = data.counts.running_matches;
             document.getElementById('stat-waiting').textContent = data.counts.waiting_callings;
 
-            // Calling sekarang
+            // Current calling
             const callingBox = document.getElementById('calling-now');
             if (data.active_match) {
                 const m = data.active_match;
@@ -169,7 +169,7 @@
                     (next ? `<div class="mt-2 small">Partai berikutnya: <strong>${next.match_no}</strong> ${next.category} (Arena ${next.arena})</div>` : '');
             }
 
-            // Jadwal hari ini
+            // Today's schedule
             let jadwalHtml = '';
             if (!data.jadwal.length) {
                 jadwalHtml = '<div class="text-center text-muted py-4">Tidak ada jadwal hari ini.</div>';
@@ -188,7 +188,7 @@
             }
             document.getElementById('jadwal-list').innerHTML = jadwalHtml;
 
-            // Antrean calling
+            // Calling queue
             let callingHtml = '';
             if (!data.callings.length) {
                 callingHtml = '<div class="text-center text-muted py-4">Antrean kosong.</div>';

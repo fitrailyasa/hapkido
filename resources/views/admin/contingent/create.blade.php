@@ -1,4 +1,4 @@
-<!--begin::Tambah Kontingen Modal-->
+<!--begin::Add Contingent Modal-->
 <div class="modal fade" id="modal-add-contingent" tabindex="-1" aria-labelledby="modal-add-contingent-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -54,4 +54,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah Kontingen Modal-->
+<!--end::Add Contingent Modal-->

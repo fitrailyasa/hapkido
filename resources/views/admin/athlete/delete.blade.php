@@ -1,4 +1,4 @@
-<!--begin::Delete Atlet Modal-->
+<!--begin::Delete Athlete Modal-->
 <div class="modal fade" id="modal-delete-athlete" tabindex="-1" aria-labelledby="modal-delete-athlete-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -24,4 +24,4 @@
         </div>
     </div>
 </div>
-<!--end::Delete Atlet Modal-->
+<!--end::Delete Athlete Modal-->

@@ -1,4 +1,4 @@
-<!--begin::Tambah User Modal-->
+<!--begin::Add User Modal-->
 <div class="modal fade" id="modal-add-user" tabindex="-1" aria-labelledby="modal-add-user-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -62,4 +62,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah User Modal-->
+<!--end::Add User Modal-->

@@ -162,7 +162,7 @@ class ReadinessController extends Controller
     }
 
     /**
-     * Buat baris pemeriksaan kesiapan untuk setiap atlet jadwal hari ini.
+     * Create a readiness check row for every athlete on today's schedules.
      */
     protected function syncChecks(array $athletesBySchedule): void
     {

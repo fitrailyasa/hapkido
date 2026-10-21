@@ -1,4 +1,4 @@
-<!--begin::Ubah Perlengkapan Modal-->
+<!--begin::Edit Equipment Modal-->
 <div class="modal fade" id="modal-edit-equipment" tabindex="-1" aria-labelledby="modal-edit-equipment-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -57,4 +57,4 @@
         </div>
     </div>
 </div>
-<!--end::Ubah Perlengkapan Modal-->
+<!--end::Edit Equipment Modal-->

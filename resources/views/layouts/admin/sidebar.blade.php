@@ -36,7 +36,7 @@
                     </li>
                 @endcan
 
-                {{-- Operasional hari-H --}}
+                {{-- Day-of-event operations --}}
                 @if (auth()->user()->can('schedules.view') ||
                         auth()->user()->can('callings.view') ||
                         auth()->user()->can('verifications.view') ||
@@ -109,7 +109,7 @@
                     </li>
                 @endif
 
-                {{-- Pertandingan --}}
+                {{-- Matches --}}
                 @if (auth()->user()->can('matches.view') ||
                         auth()->user()->can('performances.view') ||
                         auth()->user()->can('brackets.view') ||
@@ -172,7 +172,7 @@
                     </li>
                 @endif
 
-                {{-- Data & Pengaturan arena --}}
+                {{-- Arena data & settings --}}
                 @if (auth()->user()->can('arenas.view') ||
                         auth()->user()->can('history.view') ||
                         auth()->user()->can('contingents.view') ||
@@ -234,7 +234,7 @@
                     </li>
                 @endif
 
-                {{-- Pengaturan sistem --}}
+                {{-- System settings --}}
                 @if (auth()->user()->can('users.view') ||
                         auth()->user()->can('roles.view') ||
                         auth()->user()->can('equipments.view') ||

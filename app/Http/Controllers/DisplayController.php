@@ -282,9 +282,9 @@ class DisplayController extends Controller
     }
 
     /**
-     * Jadwal yang tampil di blok match utama layar publik.
-     * Prioritas: sedang berlangsung, baru selesai (1 jam terakhir),
-     * persiapan, menunggu, lalu hasil lama.
+     * Schedule shown in the main match block of the public screen.
+     * Priority: in progress, then recently finished (within the last hour),
+     * preparation, waiting, and finally older results.
      */
     protected function liveSchedule(string $today): ?Schedule
     {
@@ -347,7 +347,7 @@ class DisplayController extends Controller
     }
 
     /**
-     * Field tambahan untuk blok match (frame) — tidak menggantikan key lama.
+     * Extra fields for the match (frame) block — they do not replace the old keys.
      */
     protected function frameExtras(?Schedule $schedule, ?Matchup $match): array
     {
@@ -401,8 +401,8 @@ class DisplayController extends Controller
     }
 
     /**
-     * Hanya foto lokal (di dalam storage aplikasi) yang ditampilkan
-     * agar layar display tetap bekerja tanpa koneksi internet.
+     * Only local photos (inside the application storage) are displayed
+     * so the display screen keeps working without an internet connection.
      */
     protected function photoUrl(?string $photo): ?string
     {
@@ -414,8 +414,8 @@ class DisplayController extends Controller
     }
 
     /**
-     * Juara 1-2-3 tiap kategori (daeryun dari bracket final/semifinal,
-     * seni dari urutan nilai akhir) plus total medali per kontingen.
+     * Top 1-2-3 of each category (daeryun from the final/semifinal bracket,
+     * art from the final score ranking) plus the medal totals per contingent.
      */
     protected function juaraPayload(): array
     {

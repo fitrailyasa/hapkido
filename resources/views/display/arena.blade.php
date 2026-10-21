@@ -195,7 +195,7 @@
         const render = function(data) {
             window.dsRenderFrame('match-frame', frameConfig(data));
 
-            // Panggilan
+            // Callings
             let callHtml = '';
             (data.callings || []).forEach(function(item, index) {
                 callHtml += `
@@ -210,7 +210,7 @@
             document.getElementById('callings').innerHTML =
                 callHtml || '<div class="muted">Tidak ada panggilan aktif.</div>';
 
-            // Penampil seni
+            // Art performers
             const perfPanel = document.getElementById('perf-panel');
             const performances = data.performances || [];
             if (performances.length) {
@@ -240,7 +240,7 @@
                 perfPanel.style.display = 'none';
             }
 
-            // Hasil
+            // Results
             let resultHtml = '';
             (data.results || []).forEach(function(item) {
                 resultHtml += `
@@ -255,7 +255,7 @@
             document.getElementById('results').innerHTML =
                 resultHtml || '<div class="list-row muted">Belum ada hasil.</div>';
 
-            // Jadwal berikutnya
+            // Next schedule
             let nextHtml = '';
             (data.next || []).forEach(function(item) {
                 nextHtml += `

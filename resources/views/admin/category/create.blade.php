@@ -1,4 +1,4 @@
-<!--begin::Tambah Kategori Modal-->
+<!--begin::Add Category Modal-->
 <div class="modal fade" id="modal-add-category" tabindex="-1" aria-labelledby="modal-add-category-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -61,4 +61,4 @@
         </div>
     </div>
 </div>
-<!--end::Tambah Kategori Modal-->
+<!--end::Add Category Modal-->

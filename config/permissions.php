@@ -2,9 +2,9 @@
 
 /*
 |--------------------------------------------------------------------------
-| Daftar permission sistem (dipakai RoleSeeder & halaman setting role)
+| System permission list (used by RoleSeeder & the role settings page)
 |--------------------------------------------------------------------------
-| Struktur: grup label (Indonesia) => [permission => label fitur]
+| Structure: label group (Indonesia) => [permission => feature label]
 */
 
 return [

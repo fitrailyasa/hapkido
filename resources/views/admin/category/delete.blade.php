@@ -1,4 +1,4 @@
-<!--begin::Delete Kategori Modal-->
+<!--begin::Delete Category Modal-->
 <div class="modal fade" id="modal-delete-category" tabindex="-1" aria-labelledby="modal-delete-category-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -24,4 +24,4 @@
         </div>
     </div>
 </div>
-<!--end::Delete Kategori Modal-->
+<!--end::Delete Category Modal-->

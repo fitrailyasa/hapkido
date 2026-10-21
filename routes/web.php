@@ -30,7 +30,7 @@ Route::get('/welcome', fn() => view('welcome'));
 
 /*
 |--------------------------------------------------------------------------
-| Alias dashboard (dipakai redirect Breeze setelah login)
+| Dashboard alias (used by the Breeze redirect after login)
 |--------------------------------------------------------------------------
 */
 Route::get('/dashboard', fn() => redirect()->route('admin.dashboard'))
@@ -39,7 +39,7 @@ Route::get('/dashboard', fn() => redirect()->route('admin.dashboard'))
 
 /*
 |--------------------------------------------------------------------------
-| Public Display (tanpa login)
+| Public Display (no login required)
 |--------------------------------------------------------------------------
 */
 Route::get('/display', [DisplayController::class, 'index'])->name('display.index');
@@ -57,7 +57,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/data', [DashboardController::class, 'data'])->name('dashboard.data');
 
-    /* Data Atlet */
+    /* Athlete Data */
     Route::get('athletes', [AthleteController::class, 'index'])->middleware('permission:athletes.view')->name('athletes.index');
     Route::post('athletes', [AthleteController::class, 'store'])->middleware('permission:athletes.create')->name('athletes.store');
     Route::get('athletes/{athlete}', [AthleteController::class, 'show'])->middleware('permission:athletes.view')->name('athletes.show');
@@ -75,7 +75,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.update')->name('categories.update');
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete')->name('categories.delete');
 
-    /* Jadwal */
+    /* Schedule */
     Route::get('schedules', [ScheduleController::class, 'index'])->middleware('permission:schedules.view')->name('schedules.index');
     Route::post('schedules', [ScheduleController::class, 'store'])->middleware('permission:schedules.create')->name('schedules.store');
     Route::get('schedules/{schedule}', [ScheduleController::class, 'show'])->middleware('permission:schedules.view')->name('schedules.show');
@@ -97,16 +97,16 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::post('callings/{calling}/send', [CallingController::class, 'send'])->middleware('permission:callings.send')->name('callings.send');
     Route::post('callings-schedule/{schedule}/send-all', [CallingController::class, 'sendAll'])->middleware('permission:callings.send')->name('callings.send-all');
 
-    /* Scan / Verifikasi */
+    /* Scan / Verification */
     Route::get('verifications', [VerificationController::class, 'index'])->middleware('permission:verifications.view')->name('verifications.index');
     Route::post('verifications', [VerificationController::class, 'store'])->middleware('permission:verifications.create')->name('verifications.store');
 
-    /* Pemeriksaan kesiapan */
+    /* Readiness Check */
     Route::get('readiness', [ReadinessController::class, 'index'])->middleware('permission:readiness.view')->name('readiness.index');
     Route::post('readiness/{readinessCheck}', [ReadinessController::class, 'update'])->middleware('permission:readiness.update')->name('readiness.update');
     Route::post('readiness-schedule/{schedule}/ready', [ReadinessController::class, 'markReady'])->middleware('permission:readiness.update')->name('readiness.mark-ready');
 
-    /* Perlengkapan */
+    /* Equipment */
     Route::get('equipments', [EquipmentController::class, 'index'])->middleware('permission:equipments.view')->name('equipments.index');
     Route::post('equipments', [EquipmentController::class, 'store'])->middleware('permission:equipments.create')->name('equipments.store');
     Route::put('equipments/{equipment}', [EquipmentController::class, 'update'])->middleware('permission:equipments.update')->name('equipments.update');
@@ -122,7 +122,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::post('matches/{matchup}/start', [MatchupController::class, 'start'])->middleware('permission:matches.start')->name('matches.start');
     Route::post('matches/{matchup}/finish', [MatchupController::class, 'finish'])->middleware('permission:matches.result')->name('matches.finish');
 
-    /* Seni + Nilai Juri */
+    /* Seni + Judges' Scores */
     Route::get('performances', [PerformanceController::class, 'index'])->middleware('permission:performances.view')->name('performances.index');
     Route::post('performances', [PerformanceController::class, 'store'])->middleware('permission:performances.create')->name('performances.store');
     Route::post('performances/{performance}/status', [PerformanceController::class, 'updateStatus'])->middleware('permission:performances.update')->name('performances.status');
@@ -133,13 +133,13 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::get('brackets', [BracketController::class, 'index'])->middleware('permission:brackets.view')->name('brackets.index');
     Route::post('brackets/generate', [BracketController::class, 'generate'])->middleware('permission:brackets.generate')->name('brackets.generate');
 
-    /* Hasil & Ranking */
+    /* Results & Ranking */
     Route::get('results', [ResultController::class, 'index'])->middleware('permission:results.view')->name('results.index');
 
-    /* Riwayat */
+    /* History */
     Route::get('history', [HistoryController::class, 'index'])->middleware('permission:history.view')->name('history.index');
 
-    /* Manajemen user & role */
+    /* User & Role Management */
     Route::get('users', [UserController::class, 'index'])->middleware('permission:users.view')->name('users.index');
     Route::post('users', [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
     Route::get('users/{user}', [UserController::class, 'show'])->middleware('permission:users.view')->name('users.show');
@@ -153,7 +153,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     Route::get('roles/{role}/permissions', [RoleController::class, 'permissions'])->middleware('permission:roles.permissions')->name('roles.permissions');
     Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions'])->middleware('permission:roles.permissions')->name('roles.permissions.update');
 
-    /* Identitas & tampilan aplikasi (judul, deskripsi, logo, favicon) */
+    /* Application identity & appearance (title, description, logo, favicon) */
     Route::get('settings', [SettingController::class, 'index'])->middleware('permission:settings.view')->name('settings.index');
     Route::post('settings', [SettingController::class, 'update'])->middleware('permission:settings.update')->name('settings.update');
     Route::delete('settings', [SettingController::class, 'reset'])->middleware('permission:settings.update')->name('settings.reset');

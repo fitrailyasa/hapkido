@@ -12,7 +12,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 class SchedulesExport implements FromCollection, WithHeadings, WithMapping, WithStyles
 {
     /**
-     * Kolom Excel (Indonesia-friendly) yang dipetakan ke kolom tabel schedules.
+     * Excel columns (Indonesia-friendly) mapped to the schedules table columns.
      */
     public const HEADINGS = [
         'match_no', 'kategori', 'arena', 'jenis', 'ronde',

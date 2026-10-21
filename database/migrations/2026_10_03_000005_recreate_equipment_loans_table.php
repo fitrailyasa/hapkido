@@ -8,11 +8,12 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Migration 000003 membuat foreign key equipment_loans.equipment_id
-     * merujuk ke tabel "equipment" (hasil Str::plural dari nama yang
-     * uncountable), padahal tabelnya bernama "equipments". Akibatnya
-     * setiap INSERT ke equipment_loans gagal ("no such table: main.equipment").
-     * Tabel dibuat ulang dengan rujukan yang benar; isi tabel disalin.
+     * Migration 000003 created the equipment_loans.equipment_id foreign key
+     * referencing the "equipment" table (the result of Str::plural applied to
+     * an uncountable name), even though the table is actually named "equipments".
+     * As a result every INSERT into equipment_loans failed
+     * ("no such table: main.equipment"). The table is recreated with the
+     * correct reference and the existing rows are copied over.
      */
     public function up(): void
     {

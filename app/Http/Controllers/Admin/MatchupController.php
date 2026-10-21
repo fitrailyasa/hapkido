@@ -223,7 +223,7 @@ class MatchupController extends Controller
     }
 
     /**
-     * Partai ini dibuat oleh BracketService (bukan jadwal manual).
+     * This match was created by BracketService (not a manual schedule).
      */
     protected function isBracketMatch(Matchup $matchup): bool
     {
@@ -240,7 +240,7 @@ class MatchupController extends Controller
     }
 
     /**
-     * Map category_id => label ronde yang ada pada bracket.
+     * Map category_id => the round labels that exist in the bracket.
      */
     protected function bracketRounds(): array
     {
@@ -258,8 +258,8 @@ class MatchupController extends Controller
     }
 
     /**
-     * Sinkronkan peserta seluruh babak dari bracket_slots.
-     * (Complementary terhadap BracketService::advance.)
+     * Sync the entrants of every round from bracket_slots.
+     * (Complementary to BracketService::advance.)
      */
     protected function syncMatchesFromSlots(Category $category): void
     {

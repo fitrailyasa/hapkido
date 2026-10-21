@@ -75,7 +75,7 @@
         </div>
     </div>
 
-    <!-- Modal Tambah Role -->
+    <!-- Add Role Modal -->
     <div class="modal fade" id="modal-add-role" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -102,7 +102,7 @@
         </div>
     </div>
 
-    <!-- Modal Ubah Role -->
+    <!-- Edit Role Modal -->
     <div class="modal fade" id="modal-edit-role" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -126,7 +126,7 @@
         </div>
     </div>
 
-    <!-- Modal Hapus Role -->
+    <!-- Delete Role Modal -->
     <div class="modal fade" id="modal-delete-role" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">

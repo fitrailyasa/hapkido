@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 class SettingController extends Controller
 {
     /**
-     * Halaman identitas & tampilan aplikasi.
+     * Application identity & appearance page.
      */
     public function index()
     {
@@ -65,7 +65,7 @@ class SettingController extends Controller
     }
 
     /**
-     * Simpan / hapus file logo & favicon (storage public: folder "settings").
+     * Save / delete the logo & favicon files (public storage: the "settings" folder).
      */
     protected function syncFiles(Request $request): void
     {
@@ -89,7 +89,7 @@ class SettingController extends Controller
                 continue;
             }
 
-            // Hanya hapus file lama bila dicentang & tidak ada unggahan baru.
+            // Only delete the old file when the flag is ticked & there is no new upload.
             if ($request->boolean($removeFlag) && ($old = Setting::get($fileKey))) {
                 Storage::disk('public')->delete($old);
 
@@ -99,7 +99,7 @@ class SettingController extends Controller
     }
 
     /**
-     * Kembalikan semua setting ke nilai default dari config/.env.
+     * Reset all settings to their default values from config/.env.
      */
     public function reset(): RedirectResponse
     {

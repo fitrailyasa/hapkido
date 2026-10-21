@@ -1,4 +1,4 @@
-<!--begin::Import Jadwal Modal-->
+<!--begin::Import Schedule Modal-->
 <div class="modal fade" id="modal-import-schedule" tabindex="-1" aria-labelledby="modal-import-schedule-label" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -48,4 +48,4 @@
         </div>
     </div>
 </div>
-<!--end::Import Jadwal Modal-->
+<!--end::Import Schedule Modal-->

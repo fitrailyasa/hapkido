@@ -1,7 +1,7 @@
 <style>
     /* ==================================================================
-       Display publik — token, skala jarak, blok match (frame)
-       Skala jarak: 4 / 8 / 12 / 16 / 20 / 24 / 28
+       Public display — tokens, spacing scale, match block (frame)
+       Spacing scale: 4 / 8 / 12 / 16 / 20 / 24 / 28
        page-pad 16–24 · panel-pad 20–28 · stack 12–16 · card-gap 16
        ================================================================== */
 
@@ -19,7 +19,7 @@
         --ds-shadow: 0 8px 22px rgba(36, 51, 86, .08);
         --ds-hover: 0 12px 26px rgba(13, 110, 253, .18);
 
-        /* emas gelap untuk tema terang (kontras di atas putih) */
+        /* dark gold for the light theme (contrast over white) */
         --ds-gold: #9a7b00;
         --ds-gold-soft: rgba(154, 123, 0, .14);
 
@@ -35,7 +35,7 @@
         --ds-warn-text: #664d03;
         --ds-muted-bg: rgba(95, 112, 152, .16);
 
-        /* skala jarak */
+        /* spacing scale */
         --ds-space-1: 4px;
         --ds-space-2: 8px;
         --ds-space-3: 12px;
@@ -62,7 +62,7 @@
         --ds-shadow: 0 8px 22px rgba(0, 0, 0, .35);
         --ds-hover: 0 12px 28px rgba(13, 110, 253, .30);
 
-        /* emas terang untuk tema gelap */
+        /* bright gold for the dark theme */
         --ds-gold: #ffd166;
         --ds-gold-soft: rgba(255, 209, 102, .16);
 
@@ -89,7 +89,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Kerangka halaman
+       Page layout
        ------------------------------------------------------------------ */
 
     .ds-shell {
@@ -305,7 +305,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Pindah arena
+       Switch arena
        ------------------------------------------------------------------ */
 
     .arena-switch {
@@ -380,7 +380,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Blok match (frame): [merah] [info] [biru] + status + pemenang
+       Match block (frame): [red] [info] [blue] + status + winner
        ------------------------------------------------------------------ */
 
     .match-frame {
@@ -401,7 +401,7 @@
     }
 
     /* ---------------------------------------------------------------
-       Tampilan khusus saat partai sudah selesai / ada pemenang
+       Special styling once the match has finished / there is a winner
        --------------------------------------------------------------- */
     .match-frame.is-done {
         border-color: rgba(255, 193, 7, .60);
@@ -919,7 +919,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Kartu arena (ringkas)
+       Arena cards (compact)
        ------------------------------------------------------------------ */
 
     .arena-grid {
@@ -1089,7 +1089,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Baris daftar
+       List row
        ------------------------------------------------------------------ */
 
     .list-row {
@@ -1189,7 +1189,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Juara 1-2-3
+       Champions 1-2-3
        ------------------------------------------------------------------ */
 
     .juara-groups {
@@ -1327,7 +1327,7 @@
     }
 
     /* ------------------------------------------------------------------
-       Responsif
+       Responsive
        ------------------------------------------------------------------ */
 
     @media (max-width: 1180px) {

@@ -9,7 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureUserIsActive
 {
     /**
-     * Tolak user yang dinonaktifkan (tetap bisa logout).
+     * Reject users who have been deactivated (they can still log out).
      */
     public function handle(Request $request, Closure $next): Response
     {

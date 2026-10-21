@@ -10,7 +10,7 @@ use Spatie\Permission\PermissionRegistrar;
 class RoleSeeder extends Seeder
 {
     /**
-     * Seed seluruh permission + role beserta hak aksesnya.
+     * Seed all permissions + roles together with their access rights.
      */
     public function run(): void
     {

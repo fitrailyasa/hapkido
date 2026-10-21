@@ -81,8 +81,8 @@ class RoleController extends Controller
 
     public function updatePermissions(Request $request, Role $role): RedirectResponse
     {
-        // Pastikan permission baru di config sudah ada di tabel permissions
-        // sebelum validasi Rule::exists, agar tidak gagal "selected is invalid".
+        // Make sure new permissions from the config already exist in the permissions table
+        // before the Rule::exists validation, so it does not fail with "selected is invalid".
         $this->syncConfiguredPermissions();
 
         $request->validate([
@@ -96,8 +96,8 @@ class RoleController extends Controller
     }
 
     /**
-     * Sinkronkan permission dari config/permissions.php ke tabel permissions
-     * (hanya menambah yang belum ada, tidak pernah menghapus).
+     * Sync the permissions from config/permissions.php into the permissions table
+     * (only adds missing ones, never removes).
      */
     protected function syncConfiguredPermissions(): void
     {

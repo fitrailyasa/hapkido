@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
 /**
- * Penyimpan key-value untuk identitas aplikasi
- * (judul, deskripsi, logo, favicon, footer, dll).
+ * Key-value store for the application identity
+ * (title, description, logo, favicon, footer, etc.).
  */
 class Setting extends Model
 {
@@ -18,7 +18,7 @@ class Setting extends Model
     public const CACHE_KEY = 'settings.all';
 
     /**
-     * Baca seluruh setting (dikutip cache; aman dipanggil sebelum migrasi).
+     * Read all settings (cached; safe to call before the migration runs).
      */
     public static function allSettings(): array
     {
@@ -32,7 +32,7 @@ class Setting extends Model
     }
 
     /**
-     * Ambil satu nilai; kembalikan $default bila kosong/tidak ada.
+     * Get a single value; return $default when it is empty or missing.
      */
     public static function get(string $key, ?string $default = null): ?string
     {
@@ -42,7 +42,7 @@ class Setting extends Model
     }
 
     /**
-     * Simpan satu nilai lalu bersihkan cache.
+     * Save a single value, then clear the cache.
      */
     public static function set(string $key, ?string $value): void
     {
@@ -63,8 +63,8 @@ class Setting extends Model
     }
 
     /**
-     * URL logo bila sudah diunggah, selain itu null.
-     * Dipakai component <x-application-logo> dan layout.
+     * Logo URL once it has been uploaded, otherwise null.
+     * Used by the <x-application-logo> component and the layout.
      */
     public static function logoUrl(): ?string
     {
