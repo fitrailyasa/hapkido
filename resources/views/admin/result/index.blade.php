@@ -275,8 +275,9 @@
                 @endphp
                 <div class="col-xl-6">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <h6 class="mb-0">{{ $section['category']->name }}</h6>
+                            @include('admin.partials.display-button', ['arena' => $section['arena']])
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
