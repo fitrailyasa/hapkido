@@ -7,12 +7,16 @@
         $medalLabels = ['gold' => 'Emas', 'silver' => 'Perak', 'bronze' => 'Perunggu'];
         // Bronze has its own colour (not the red danger state).
         $medalBadges = ['gold' => 'bg-warning text-dark', 'silver' => 'bg-secondary', 'bronze' => 'medal-bronze'];
-        $medalSoft = [
-            'gold' => 'bg-warning-subtle text-warning-emphasis',
-            'silver' => 'bg-secondary-subtle text-secondary-emphasis',
-            'bronze' => 'medal-bronze-soft',
+        // The same medal emoji as the public display.
+        $juaraEmojis = ['gold' => "\u{1F947}", 'silver' => "\u{1F948}", 'bronze' => "\u{1F949}"];
+
+        // Indonesian label of the deciding match of a daeryun podium entry.
+        $roundLabels = [
+            'penyisihan' => 'Penyisihan',
+            'perempat_final' => 'Perempat Final',
+            'semifinal' => 'Semifinal',
+            'final' => 'Final',
         ];
-        $medalIcons = ['gold' => 'bi-trophy-fill', 'silver' => 'bi-award-fill', 'bronze' => 'bi-award'];
 
         $podiumSections = $daeryun->map(fn (array $section) => [
             'category' => $section['category'],
@@ -93,22 +97,26 @@
                                 $position = $medal === 'gold' ? 2 : 1;
                             }
 
+                            // The value of a daeryun podium is the score of the
+                            // deciding match (nilai akhir), never the total points.
+                            $value = $isArt
+                                ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '')
+                                : ($entry['score_line'] ?? '');
+
+                            $sub = $isArt
+                                ? 'Nilai akhir seni'
+                                : trim(($entry['result'] ?? '').' · '.($roundLabels[$entry['round'] ?? ''] ?? ''));
+
                             $slots[] = [
                                 'position' => $position,
                                 'rank' => $entry['rank'],
                                 'medal' => $medal,
-                                'label' => $medalLabels[$medal],
-                                'badge' => $medalBadges[$medal],
-                                'soft' => $medalSoft[$medal],
-                                'icon' => $medalIcons[$medal],
+                                'emoji' => $juaraEmojis[$medal],
                                 'name' => $entry['athlete']->name,
                                 'contingent' => $entry['contingent']?->name ?? '-',
-                                'code' => $entry['contingent']?->code ?? '-',
-                                'value' => $isArt
-                                    ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '-')
-                                    : (string) $entry['wins'],
-                                'valueLabel' => $isArt ? 'Nilai akhir' : 'Menang',
-                                'sub' => $isArt ? 'Seni' : $entry['points_for'] . ' poin',
+                                'code' => $entry['contingent']?->code ?? '',
+                                'value' => $value,
+                                'sub' => $sub,
                             ];
                         }
 
@@ -122,47 +130,42 @@
                             <span class="badge {{ $section['type'] === 'art' ? 'bg-warning text-dark' : 'bg-primary' }}">
                                 {{ $section['type'] === 'art' ? 'Seni' : 'Daeryun' }}
                             </span>
+                            <span class="ms-auto">
+                                @include('admin.partials.display-button', ['arena' => $section['arena']])
+                            </span>
                         </div>
 
                         @if (! $slots)
-                            <p class="text-center text-body-secondary py-3 mb-0">Belum ada penampil pada kelas ini.</p>
+                            <p class="text-center text-body-secondary py-3 mb-0">Belum ada juara pada kelas ini.</p>
                         @else
-                            <div class="row g-2 align-items-end podium-row">
+                            <div class="row g-3 align-items-stretch podium-row">
                                 @foreach ($slots as $slot)
                                     @php
-                                        $isFirst = $slot['rank'] === 1;
                                         $orderClass = match ($slot['position']) {
                                             1 => 'order-2 order-md-1',
                                             2 => 'order-1 order-md-2',
-                                            default => 'order-' . $slot['position'] . ' order-md-' . $slot['position'],
+                                            default => 'order-'.$slot['position'].' order-md-'.$slot['position'],
                                         };
                                     @endphp
                                     <div class="col-12 col-sm-6 col-lg-3 {{ $orderClass }}">
-                                        <div class="card shadow-sm border-0 h-100 text-center {{ $isFirst ? 'podium-first' : '' }}">
-                                            <div class="card-body {{ $isFirst ? 'py-4' : 'py-3' }}">
-                                                <span class="badge {{ $slot['badge'] }}">
-                                                    {{ $slot['label'] }}
-                                                </span>
-                                                <div class="podium-medal mx-auto my-2 {{ $slot['soft'] }}">
-                                                    <i class="bi {{ $slot['icon'] }} {{ $isFirst ? 'fs-3' : 'fs-5' }}"></i>
-                                                </div>
-                                                <div class="{{ $isFirst ? 'fs-5' : 'fs-6' }} fw-bold text-truncate"
-                                                    title="{{ $slot['name'] }}">
-                                                    {{ $slot['name'] }}
-                                                </div>
-                                                <div class="small text-body-secondary text-truncate"
-                                                    title="{{ $slot['contingent'] }}">
-                                                    {{ $slot['contingent'] }} ({{ $slot['code'] }})
-                                                </div>
-                                                <div class="mt-2 pt-2 border-top">
-                                                    <div class="fs-5 fw-bold">
-                                                        {{ $slot['value'] }}
-                                                    </div>
-                                                    <div class="small text-body-secondary">
-                                                        {{ $slot['valueLabel'] }} &middot; {{ $slot['sub'] }}
-                                                    </div>
-                                                </div>
+                                        <div class="juara-admin-card rank-{{ $slot['rank'] }}">
+                                            <div class="juara-admin-medal">{{ $slot['emoji'] }}</div>
+                                            <div class="juara-admin-rank">Juara {{ $slot['rank'] }}</div>
+                                            <div class="juara-admin-name" title="{{ $slot['name'] }}">
+                                                {{ $slot['name'] }}
                                             </div>
+                                            <div class="juara-admin-cont" title="{{ $slot['contingent'] }}">
+                                                @if ($slot['code'] !== '')
+                                                    <span class="fw-semibold">{{ $slot['code'] }}</span> ·
+                                                @endif
+                                                {{ $slot['contingent'] }}
+                                            </div>
+                                            @if ($slot['value'] !== '')
+                                                <div class="juara-admin-score">{{ $slot['value'] }}</div>
+                                            @endif
+                                            @if ($slot['sub'] !== '')
+                                                <div class="juara-admin-sub">{{ $slot['sub'] }}</div>
+                                            @endif
                                         </div>
                                     </div>
                                 @endforeach
@@ -196,8 +199,9 @@
                 @endphp
                 <div class="col-xl-6">
                     <div class="card shadow-sm border-0 h-100">
-                        <div class="card-header">
+                        <div class="card-header d-flex flex-wrap align-items-center justify-content-between gap-2">
                             <h6 class="mb-0">{{ $section['category']->name }}</h6>
+                            @include('admin.partials.display-button', ['arena' => $section['arena']])
                         </div>
                         <div class="card-body p-0">
                             <div class="table-responsive">
@@ -339,17 +343,78 @@
             padding-top: 10px;
         }
 
-        .podium-medal {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* Juara card, the same look as the public display juara cards. */
+        .juara-admin-card {
+            height: 100%;
+            background-color: var(--bs-body-bg);
+            border: 1px solid var(--bs-border-color);
+            border-top: 5px solid var(--bs-secondary);
+            border-radius: 12px;
+            padding: 1rem 0.75rem;
+            text-align: center;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
         }
 
-        .podium-first {
-            transform: translateY(-10px);
+        .juara-admin-card.rank-1 {
+            border-top-color: #f0ad4e;
+            background-image: linear-gradient(180deg, rgba(240, 173, 78, 0.18), transparent 60%);
+        }
+
+        .juara-admin-card.rank-2 {
+            border-top-color: #c9ced6;
+            background-image: linear-gradient(180deg, rgba(201, 206, 214, 0.25), transparent 60%);
+        }
+
+        .juara-admin-card.rank-3 {
+            border-top-color: #cd7f32;
+            background-image: linear-gradient(180deg, rgba(205, 127, 50, 0.18), transparent 60%);
+        }
+
+        .juara-admin-medal {
+            font-size: 2.25rem;
+            line-height: 1;
+        }
+
+        .juara-admin-rank {
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--bs-secondary-color);
+        }
+
+        .juara-admin-name {
+            margin-top: 0.25rem;
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.2;
+            overflow-wrap: anywhere;
+        }
+
+        .juara-admin-cont {
+            margin-top: 0.25rem;
+            font-size: 0.875rem;
+            color: var(--bs-secondary-color);
+            overflow-wrap: anywhere;
+        }
+
+        .juara-admin-score {
+            margin-top: 0.5rem;
+            font-size: 1.0625rem;
+            font-weight: 800;
+        }
+
+        .juara-admin-sub {
+            margin-top: 0.25rem;
+            font-size: 0.8125rem;
+            color: var(--bs-secondary-color);
+        }
+
+        /* Bronze medal badge: bronze, not the red danger state. */
+        .medal-bronze {
+            background-color: #cd7f32;
+            color: #fff;
         }
     </style>
 @endpush
