@@ -5,21 +5,24 @@
 @section('content')
     @php
         $medalLabels = ['gold' => 'Emas', 'silver' => 'Perak', 'bronze' => 'Perunggu'];
-        $medalBadges = ['gold' => 'bg-warning text-dark', 'silver' => 'bg-secondary', 'bronze' => 'bg-danger'];
+        // Bronze has its own colour (not the red danger state).
+        $medalBadges = ['gold' => 'bg-warning text-dark', 'silver' => 'bg-secondary', 'bronze' => 'medal-bronze'];
         $medalSoft = [
             'gold' => 'bg-warning-subtle text-warning-emphasis',
             'silver' => 'bg-secondary-subtle text-secondary-emphasis',
-            'bronze' => 'bg-danger-subtle text-danger-emphasis',
+            'bronze' => 'medal-bronze-soft',
         ];
         $medalIcons = ['gold' => 'bi-trophy-fill', 'silver' => 'bi-award-fill', 'bronze' => 'bi-award'];
 
         $podiumSections = $daeryun->map(fn (array $section) => [
             'category' => $section['category'],
             'type' => 'daeryun',
+            'arena' => $section['arena'],
             'podium' => $section['podium'],
         ])->concat($art->map(fn (array $section) => [
             'category' => $section['category'],
             'type' => 'art',
+            'arena' => $section['arena'],
             'podium' => $section['podium'],
         ]))->values();
     @endphp
