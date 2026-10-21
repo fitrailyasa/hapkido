@@ -67,7 +67,7 @@ class BracketTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Partai Manual');
-        $response->assertSee('Buat jadwal dulu di menu');
+        $response->assertSee('Generate bracket');
     }
 
     public function test_bracket_index_reports_a_full_first_round(): void
@@ -177,7 +177,7 @@ class BracketTest extends TestCase
         );
     }
 
-    public function test_bracket_cannot_be_generated_without_jadwal(): void
+    public function test_bracket_can_be_generated_without_jadwal(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
         $category = CategoryFactory::new()->daeryun()->create();
@@ -185,16 +185,51 @@ class BracketTest extends TestCase
             AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
         }
 
-        $response = $this->actingAs($user)
+        $this->actingAs($user)
             ->from('/admin/brackets')
-            ->post('/admin/brackets/generate', ['category_id' => $category->id]);
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
 
-        $response->assertSessionHas(
-            'error',
-            "Kelas {$category->name} belum memiliki jadwal partai Daeryun. Buat jadwal terlebih dahulu di menu Jadwal."
+        $this->assertSame(
+            4,
+            BracketSlot::where('category_id', $category->id)->where('round', '4')->count()
         );
-        $this->assertSame(0, BracketSlot::count());
-        $this->assertSame(0, Matchup::count());
+        $this->assertGreaterThanOrEqual(3, Matchup::count());
+        $this->assertGreaterThanOrEqual(3, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
+    }
+
+    public function test_generate_does_not_inflate_size_from_oversized_jadwal(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 5) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        // 8 penyisihan rows would formerly force size 16 (11 BYEs). Size must
+        // stay at 8 for 5 athletes (only 3 single-step BYEs).
+        foreach (range(1, 8) as $order) {
+            ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => 'penyisihan',
+                'order_no' => $order,
+            ]);
+        }
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $this->assertSame(
+            0,
+            BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
+        );
+        $this->assertSame(
+            8,
+            BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
+        );
     }
 
     public function test_generate_expands_bracket_when_jadwal_is_smaller_than_athletes(): void
@@ -372,8 +407,11 @@ class BracketTest extends TestCase
             8,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
+
+        // BYE recipients are seeded into the next round — first round only
+        // holds the real match (2 athletes), not a stack of BYE boxes.
         $this->assertSame(
-            5,
+            2,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '8')
                 ->whereNotNull('athlete_id')
@@ -431,8 +469,15 @@ class BracketTest extends TestCase
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
 
-        // Seven BYE recipients already sit in the round of 8; the 8th slot waits
-        // for the penyisihan winner. Nobody is parked in the Final yet.
+        // Penyisihan only shows the real match (2 athletes). Seven BYE
+        // recipients sit in the round of 8; nobody walks into the Final.
+        $this->assertSame(
+            2,
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '16')
+                ->whereNotNull('athlete_id')
+                ->count()
+        );
         $this->assertSame(
             7,
             BracketSlot::where('category_id', $category->id)

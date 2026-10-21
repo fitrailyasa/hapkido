@@ -31,19 +31,16 @@ class BracketService
             return;
         }
 
-        // Bracket first: jadwal is optional. Size follows participants; any
-        // missing partai (including the whole tree) are created automatically.
+        // Bracket first: jadwal is optional. Size follows participants only so
+        // we never invent extra BYEs just because the jadwal list is larger.
+        // Missing partai (including the whole tree) are created automatically.
         $roundCounts = $this->daeryunRoundCounts($category);
 
         // Drop the previous bracket first so a regenerate always follows the
         // latest athlete count (not leftover slots from a larger tree).
         $this->clear($category);
 
-        $sizeFromJadwal = $roundCounts->isEmpty()
-            ? 0
-            : $this->sizeFromJadwalCounts($roundCounts);
-        $sizeFromAthletes = $this->nextPowerOfTwo($athletes->count());
-        $size = max($sizeFromJadwal, $sizeFromAthletes);
+        $size = $this->nextPowerOfTwo($athletes->count());
         $canonicalFirst = $this->label($size);
 
         // Schedules may still carry an old label (e.g. "penyisihan" after the
