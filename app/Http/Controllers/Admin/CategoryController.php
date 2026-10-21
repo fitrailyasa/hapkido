@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
@@ -10,6 +11,7 @@ use Illuminate\Support\Str;
 
 class CategoryController extends Controller
 {
+    use BulkDeletes;
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q'));
@@ -77,12 +79,8 @@ class CategoryController extends Controller
 
     public function destroy(Category $category): RedirectResponse
     {
-        if ($category->athletes()->exists()) {
-            return back()->with('error', 'Kategori tidak bisa dihapus karena masih memiliki atlet.');
-        }
-
-        if ($category->schedules()->exists() || $category->bracketSlots()->exists()) {
-            return back()->with('error', 'Kategori tidak bisa dihapus karena masih terkait jadwal / bracket.');
+        if ($reason = $this->deleteBlocker($category)) {
+            return back()->with('error', $reason);
         }
 
         $category->delete();
@@ -90,6 +88,46 @@ class CategoryController extends Controller
         return redirect()
             ->route('admin.categories.index')
             ->with('success', 'Kategori berhasil dihapus.');
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'categories');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Category::whereIn('id', $ids)->get() as $category) {
+            if ($reason = $this->deleteBlocker($category)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $category->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.categories.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the category cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Category $category): ?string
+    {
+        if ($category->athletes()->exists()) {
+            return 'Kategori tidak bisa dihapus karena masih memiliki atlet.';
+        }
+
+        if ($category->schedules()->exists() || $category->bracketSlots()->exists()) {
+            return 'Kategori tidak bisa dihapus karena masih terkait jadwal / bracket.';
+        }
+
+        return null;
     }
 
     protected function uniqueSlug(string $name, ?int $ignoreId = null): string

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -12,6 +13,7 @@ use Spatie\Permission\PermissionRegistrar;
 
 class RoleController extends Controller
 {
+    use BulkDeletes;
     public function index()
     {
         $this->syncConfiguredPermissions();
@@ -55,12 +57,8 @@ class RoleController extends Controller
 
     public function destroy(Role $role): RedirectResponse
     {
-        if ($role->name === 'Administrator') {
-            return back()->with('error', 'Role Administrator tidak bisa dihapus.');
-        }
-
-        if ($role->users()->exists()) {
-            return back()->with('error', 'Role masih digunakan oleh user dan tidak bisa dihapus.');
+        if ($reason = $this->deleteBlocker($role)) {
+            return back()->with('error', $reason);
         }
 
         $role->delete();
@@ -68,6 +66,46 @@ class RoleController extends Controller
         return redirect()
             ->route('admin.roles.index')
             ->with('success', 'Role berhasil dihapus.');
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'roles');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Role::whereIn('id', $ids)->get() as $role) {
+            if ($reason = $this->deleteBlocker($role)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $role->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.roles.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the role cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Role $role): ?string
+    {
+        if ($role->name === 'Administrator') {
+            return 'Role Administrator tidak bisa dihapus.';
+        }
+
+        if ($role->users()->exists()) {
+            return 'Role masih digunakan oleh user dan tidak bisa dihapus.';
+        }
+
+        return null;
     }
 
     public function permissions(Role $role)

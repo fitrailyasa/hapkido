@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Models\Athlete;
 use App\Models\Category;
@@ -15,6 +16,7 @@ use Illuminate\Validation\Rule;
 
 class AthleteController extends Controller
 {
+    use BulkDeletes;
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q'));
@@ -169,23 +171,67 @@ class AthleteController extends Controller
 
     public function destroy(Athlete $athlete): RedirectResponse
     {
-        $inMatch = Matchup::where('athlete_a_id', $athlete->id)
-            ->orWhere('athlete_b_id', $athlete->id)
-            ->exists();
-
-        if ($inMatch || $athlete->performances()->exists()) {
-            return back()->with('error', 'Atlet tidak bisa dihapus karena sudah terdaftar pada pertandingan.');
+        if ($reason = $this->deleteBlocker($athlete)) {
+            return back()->with('error', $reason);
         }
 
-        if ($athlete->photo && ! Str::startsWith($athlete->photo, ['http://', 'https://'])) {
-            Storage::disk('public')->delete($athlete->photo);
-        }
-
+        $this->removePhoto($athlete);
         $athlete->delete();
 
         return redirect()
             ->route('admin.athletes.index')
             ->with('success', 'Atlet berhasil dihapus.');
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'athletes');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Athlete::whereIn('id', $ids)->get() as $athlete) {
+            if ($reason = $this->deleteBlocker($athlete)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $this->removePhoto($athlete);
+            $athlete->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.athletes.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the athlete cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Athlete $athlete): ?string
+    {
+        $inMatch = Matchup::where('athlete_a_id', $athlete->id)
+            ->orWhere('athlete_b_id', $athlete->id)
+            ->exists();
+
+        if ($inMatch || $athlete->performances()->exists()) {
+            return 'Atlet tidak bisa dihapus karena sudah terdaftar pada pertandingan.';
+        }
+
+        return null;
+    }
+
+    /**
+     * Drop the local photo of the athlete when it is not a remote URL.
+     */
+    protected function removePhoto(Athlete $athlete): void
+    {
+        if ($athlete->photo && ! Str::startsWith($athlete->photo, ['http://', 'https://'])) {
+            Storage::disk('public')->delete($athlete->photo);
+        }
     }
 
     protected function photoUrl(?string $photo): ?string

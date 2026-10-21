@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Models\Arena;
 use App\Models\Category;
@@ -11,6 +12,7 @@ use Illuminate\Validation\Rule;
 
 class ArenaController extends Controller
 {
+    use BulkDeletes;
     public function index()
     {
         return view('admin.arena.index', [
@@ -95,8 +97,8 @@ class ArenaController extends Controller
 
     public function destroy(Arena $arena): RedirectResponse
     {
-        if ($arena->current_schedule_id || \App\Models\Schedule::where('arena_id', $arena->id)->exists()) {
-            return back()->with('error', "Arena {$arena->name} masih digunakan jadwal dan tidak bisa dihapus.");
+        if ($reason = $this->deleteBlocker($arena)) {
+            return back()->with('error', $reason);
         }
 
         $arena->delete();
@@ -104,5 +106,41 @@ class ArenaController extends Controller
         return redirect()
             ->route('admin.arenas.index')
             ->with('success', "Arena {$arena->name} berhasil dihapus.");
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'arenas');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Arena::whereIn('id', $ids)->get() as $arena) {
+            if ($reason = $this->deleteBlocker($arena)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $arena->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.arenas.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the arena cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Arena $arena): ?string
+    {
+        if ($arena->current_schedule_id || \App\Models\Schedule::where('arena_id', $arena->id)->exists()) {
+            return "Arena {$arena->name} masih digunakan jadwal dan tidak bisa dihapus.";
+        }
+
+        return null;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -12,6 +13,7 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
+    use BulkDeletes;
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q'));
@@ -114,8 +116,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
-        if ($user->id === auth()->id()) {
-            return back()->with('error', 'Tidak bisa menghapus akun yang sedang login.');
+        if ($reason = $this->deleteBlocker($user)) {
+            return back()->with('error', $reason);
         }
 
         $user->roles()->detach();
@@ -124,5 +126,42 @@ class UserController extends Controller
         return redirect()
             ->route('admin.users.index')
             ->with('success', 'User berhasil dihapus.');
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'users');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (User::whereIn('id', $ids)->get() as $user) {
+            if ($reason = $this->deleteBlocker($user)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $user->roles()->detach();
+            $user->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.users.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the user cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(User $user): ?string
+    {
+        if ((int) $user->id === $this->currentUserId()) {
+            return 'Tidak bisa menghapus akun yang sedang login.';
+        }
+
+        return null;
     }
 }

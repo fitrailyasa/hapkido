@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Models\Equipment;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
 class EquipmentController extends Controller
 {
+    use BulkDeletes;
     public function index(Request $request)
     {
         $search = trim((string) $request->query('q'));
@@ -101,13 +104,8 @@ class EquipmentController extends Controller
 
     public function destroy(Equipment $equipment)
     {
-        $activeLoans = $equipment->loans()->where('status', 'loaned')->count();
-
-        if ($activeLoans > 0) {
-            return back()->with(
-                'error',
-                sprintf('Tidak bisa menghapus %s, masih ada %d peminjaman aktif.', $equipment->code, $activeLoans)
-            );
+        if ($reason = $this->deleteBlocker($equipment)) {
+            return back()->with('error', $reason);
         }
 
         $equipment->delete();
@@ -115,6 +113,48 @@ class EquipmentController extends Controller
         return redirect()
             ->route('admin.equipments.index')
             ->with('success', sprintf('Perlengkapan %s berhasil dihapus.', $equipment->code));
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'equipments');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Equipment::whereIn('id', $ids)->get() as $equipment) {
+            if ($reason = $this->deleteBlocker($equipment)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $equipment->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.equipments.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the equipment cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Equipment $equipment): ?string
+    {
+        $activeLoans = $equipment->loans()->where('status', 'loaned')->count();
+
+        if ($activeLoans > 0) {
+            return sprintf(
+                'Tidak bisa menghapus %s, masih ada %d peminjaman aktif.',
+                $equipment->code,
+                $activeLoans
+            );
+        }
+
+        return null;
     }
 
     protected function validateData(Request $request, ?Equipment $equipment = null): array

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Exports\ScheduleTemplateExport;
 use App\Exports\SchedulesExport;
+use App\Http\Controllers\Admin\Concerns\BulkDeletes;
 use App\Http\Controllers\Controller;
 use App\Imports\SchedulesImport;
 use App\Models\Arena;
@@ -18,6 +19,8 @@ use Throwable;
 
 class ScheduleController extends Controller
 {
+    use BulkDeletes;
+
     public const STATUSES = ['pending', 'preparation', 'running', 'finished', 'cancelled'];
 
     public function index(Request $request)
@@ -112,12 +115,8 @@ class ScheduleController extends Controller
 
     public function destroy(Schedule $schedule): RedirectResponse
     {
-        if ($schedule->status === 'running' || ($schedule->match && $schedule->match->status === 'running')) {
-            return back()->with('error', 'Jadwal tidak bisa dihapus saat pertandingan sedang berlangsung.');
-        }
-
-        if ($schedule->performances()->where('status', 'performing')->exists()) {
-            return back()->with('error', 'Jadwal tidak bisa dihapus saat masih ada penampil yang sedang tampil.');
+        if ($reason = $this->deleteBlocker($schedule)) {
+            return back()->with('error', $reason);
         }
 
         $schedule->delete();
@@ -125,6 +124,46 @@ class ScheduleController extends Controller
         return redirect()
             ->route('admin.schedules.index')
             ->with('success', 'Jadwal berhasil dihapus.');
+    }
+
+    /**
+     * Delete every selected row that passes the guard of the single delete.
+     */
+    public function bulkDestroy(Request $request): RedirectResponse
+    {
+        $ids = $this->bulkIds($request, 'schedules');
+
+        $deleted = 0;
+        $skipped = [];
+
+        foreach (Schedule::whereIn('id', $ids)->get() as $schedule) {
+            if ($reason = $this->deleteBlocker($schedule)) {
+                $skipped[] = $reason;
+
+                continue;
+            }
+
+            $schedule->delete();
+            $deleted++;
+        }
+
+        return $this->bulkResult('admin.schedules.index', $deleted, $skipped);
+    }
+
+    /**
+     * Why the schedule cannot be deleted, or null when it can be deleted.
+     */
+    protected function deleteBlocker(Schedule $schedule): ?string
+    {
+        if ($schedule->status === 'running' || ($schedule->match && $schedule->match->status === 'running')) {
+            return 'Jadwal tidak bisa dihapus saat pertandingan sedang berlangsung.';
+        }
+
+        if ($schedule->performances()->where('status', 'performing')->exists()) {
+            return 'Jadwal tidak bisa dihapus saat masih ada penampil yang sedang tampil.';
+        }
+
+        return null;
     }
 
     public function export(Request $request)

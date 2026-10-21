@@ -60,6 +60,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     /* Athlete Data */
     Route::get('athletes', [AthleteController::class, 'index'])->middleware('permission:athletes.view')->name('athletes.index');
     Route::post('athletes', [AthleteController::class, 'store'])->middleware('permission:athletes.create')->name('athletes.store');
+    Route::post('athletes/bulk-delete', [AthleteController::class, 'bulkDestroy'])->middleware('permission:athletes.delete')->name('athletes.bulk-destroy');
     Route::get('athletes/{athlete}', [AthleteController::class, 'show'])->middleware('permission:athletes.view')->name('athletes.show');
     Route::put('athletes/{athlete}', [AthleteController::class, 'update'])->middleware('permission:athletes.update')->name('athletes.update');
     Route::delete('athletes/{athlete}', [AthleteController::class, 'destroy'])->middleware('permission:athletes.delete')->name('athletes.destroy');
@@ -67,17 +68,20 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
 
     Route::get('contingents', [ContingentController::class, 'index'])->middleware('permission:contingents.view')->name('contingents.index');
     Route::post('contingents', [ContingentController::class, 'store'])->middleware('permission:contingents.create')->name('contingents.store');
+    Route::post('contingents/bulk-delete', [ContingentController::class, 'bulkDestroy'])->middleware('permission:contingents.delete')->name('contingents.bulk-destroy');
     Route::put('contingents/{contingent}', [ContingentController::class, 'update'])->middleware('permission:contingents.update')->name('contingents.update');
     Route::delete('contingents/{contingent}', [ContingentController::class, 'destroy'])->middleware('permission:contingents.delete')->name('contingents.delete');
 
     Route::get('categories', [CategoryController::class, 'index'])->middleware('permission:categories.view')->name('categories.index');
     Route::post('categories', [CategoryController::class, 'store'])->middleware('permission:categories.create')->name('categories.store');
+    Route::post('categories/bulk-delete', [CategoryController::class, 'bulkDestroy'])->middleware('permission:categories.delete')->name('categories.bulk-destroy');
     Route::put('categories/{category}', [CategoryController::class, 'update'])->middleware('permission:categories.update')->name('categories.update');
     Route::delete('categories/{category}', [CategoryController::class, 'destroy'])->middleware('permission:categories.delete')->name('categories.delete');
 
     /* Schedule */
     Route::get('schedules', [ScheduleController::class, 'index'])->middleware('permission:schedules.view')->name('schedules.index');
     Route::post('schedules', [ScheduleController::class, 'store'])->middleware('permission:schedules.create')->name('schedules.store');
+    Route::post('schedules/bulk-delete', [ScheduleController::class, 'bulkDestroy'])->middleware('permission:schedules.delete')->name('schedules.bulk-destroy');
     Route::get('schedules/{schedule}', [ScheduleController::class, 'show'])->middleware('permission:schedules.view')->name('schedules.show');
     Route::put('schedules/{schedule}', [ScheduleController::class, 'update'])->middleware('permission:schedules.update')->name('schedules.update');
     Route::delete('schedules/{schedule}', [ScheduleController::class, 'destroy'])->middleware('permission:schedules.delete')->name('schedules.delete');
@@ -88,6 +92,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     /* Arena */
     Route::get('arenas', [ArenaController::class, 'index'])->middleware('permission:arenas.view')->name('arenas.index');
     Route::post('arenas', [ArenaController::class, 'store'])->middleware('permission:arenas.create')->name('arenas.store');
+    Route::post('arenas/bulk-delete', [ArenaController::class, 'bulkDestroy'])->middleware('permission:arenas.delete')->name('arenas.bulk-destroy');
     Route::put('arenas/{arena}', [ArenaController::class, 'update'])->middleware('permission:arenas.update')->name('arenas.update');
     Route::delete('arenas/{arena}', [ArenaController::class, 'destroy'])->middleware('permission:arenas.delete')->name('arenas.delete');
 
@@ -109,6 +114,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     /* Equipment */
     Route::get('equipments', [EquipmentController::class, 'index'])->middleware('permission:equipments.view')->name('equipments.index');
     Route::post('equipments', [EquipmentController::class, 'store'])->middleware('permission:equipments.create')->name('equipments.store');
+    Route::post('equipments/bulk-delete', [EquipmentController::class, 'bulkDestroy'])->middleware('permission:equipments.delete')->name('equipments.bulk-destroy');
     Route::put('equipments/{equipment}', [EquipmentController::class, 'update'])->middleware('permission:equipments.update')->name('equipments.update');
     Route::delete('equipments/{equipment}', [EquipmentController::class, 'destroy'])->middleware('permission:equipments.delete')->name('equipments.delete');
 
@@ -142,12 +148,14 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     /* User & Role Management */
     Route::get('users', [UserController::class, 'index'])->middleware('permission:users.view')->name('users.index');
     Route::post('users', [UserController::class, 'store'])->middleware('permission:users.create')->name('users.store');
+    Route::post('users/bulk-delete', [UserController::class, 'bulkDestroy'])->middleware('permission:users.delete')->name('users.bulk-destroy');
     Route::get('users/{user}', [UserController::class, 'show'])->middleware('permission:users.view')->name('users.show');
     Route::put('users/{user}', [UserController::class, 'update'])->middleware('permission:users.update')->name('users.update');
     Route::delete('users/{user}', [UserController::class, 'destroy'])->middleware('permission:users.delete')->name('users.destroy');
 
     Route::get('roles', [RoleController::class, 'index'])->middleware('permission:roles.view')->name('roles.index');
     Route::post('roles', [RoleController::class, 'store'])->middleware('permission:roles.create')->name('roles.store');
+    Route::post('roles/bulk-delete', [RoleController::class, 'bulkDestroy'])->middleware('permission:roles.delete')->name('roles.bulk-destroy');
     Route::put('roles/{role}', [RoleController::class, 'update'])->middleware('permission:roles.update')->name('roles.update');
     Route::delete('roles/{role}', [RoleController::class, 'destroy'])->middleware('permission:roles.delete')->name('roles.destroy');
     Route::get('roles/{role}/permissions', [RoleController::class, 'permissions'])->middleware('permission:roles.permissions')->name('roles.permissions');

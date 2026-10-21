@@ -190,6 +190,89 @@
             run();
             return setInterval(run, interval || AppConfig.pollInterval);
         };
+
+        // Bulk delete: select all, row counter and a confirmed POST of the
+        // selected ids. Delegated so re-rendered tables keep working.
+        document.addEventListener('change', function(event) {
+            const target = event.target;
+
+            if (!target || !target.matches) {
+                return;
+            }
+
+            if (target.matches('[data-bulk-all]')) {
+                const table = target.closest('table');
+                const scoped = (table || document).querySelectorAll('[data-bulk-row]');
+
+                scoped.forEach(function(row) { row.checked = target.checked; });
+            }
+
+            if (target.matches('[data-bulk-all], [data-bulk-row]')) {
+                window.refreshBulkToolbar();
+            }
+        });
+
+        document.addEventListener('submit', function(event) {
+            const form = event.target;
+
+            if (!form || !form.matches || !form.matches('[data-bulk-form]')) {
+                return;
+            }
+
+            const picked = Array.from(form.ownerDocument.querySelectorAll('[data-bulk-row]:checked'));
+
+            if (!picked.length) {
+                event.preventDefault();
+                window.swalInfo('Pilih data', 'Centang minimal satu baris untuk dihapus.');
+                return;
+            }
+
+            event.preventDefault();
+
+            form.querySelectorAll('input[name="ids[]"]').forEach(function(input) { input.remove(); });
+
+            picked.forEach(function(input) {
+                const hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = 'ids[]';
+                hidden.value = input.value;
+                form.appendChild(hidden);
+            });
+
+            window.swalConfirm({
+                icon: 'warning',
+                title: 'Hapus ' + picked.length + ' data?',
+                text: 'Data yang dipilih akan dihapus dari sistem.',
+                confirmButtonColor: '#dc3545',
+                confirmButtonText: 'Ya, hapus'
+            }).then(function(result) {
+                if (result.isConfirmed) HTMLFormElement.prototype.submit.call(form);
+            });
+        });
+
+        window.refreshBulkToolbar = function() {
+            const rows = Array.from(document.querySelectorAll('[data-bulk-row]'));
+            const picked = rows.filter(function(row) { return row.checked; });
+
+            document.querySelectorAll('[data-bulk-count]').forEach(function(el) {
+                el.textContent = String(picked.length);
+            });
+
+            document.querySelectorAll('[data-bulk-submit]').forEach(function(button) {
+                button.disabled = picked.length === 0;
+            });
+
+            document.querySelectorAll('[data-bulk-all]').forEach(function(master) {
+                const table = master.closest('table');
+                const scoped = Array.from((table || document).querySelectorAll('[data-bulk-row]'));
+                const scopedPicked = scoped.filter(function(row) { return row.checked; });
+
+                master.checked = scoped.length > 0 && scopedPicked.length === scoped.length;
+                master.indeterminate = scopedPicked.length > 0 && scopedPicked.length < scoped.length;
+            });
+        };
+
+        document.addEventListener('DOMContentLoaded', window.refreshBulkToolbar);
     </script>
     @stack('scripts')
 </body>
