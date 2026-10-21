@@ -167,8 +167,7 @@
                 <div class="card-body py-2 small text-body-secondary">
                     Klik kotak partai untuk membuka detail &middot;
                     <strong class="text-success">Nama hijau tebal</strong> = pemenang &middot;
-                    <span class="badge bg-warning text-dark">BYE</span> = lolos tanpa lawan &middot;
-                    Kotak hitam = slot kosong (template kuadrat).
+                    Garis panjang tanpa kotak = BYE (langsung ke ronde berikutnya).
                 </div>
             </div>
 
@@ -246,27 +245,30 @@
             font-weight: 700;
         }
 
-        /* Slot kosong (template power-of-two) — kotak tetap ada, diisi hitam. */
+        /* Slot BYE/kosong: tanpa kotak, hanya garis panjang (sejajar template kuadrat). */
         .brackets-viewer .match.bracket-empty {
             pointer-events: none;
+            position: relative;
         }
 
         .brackets-viewer .match.bracket-empty .opponents {
-            background: #111 !important;
-            border-color: #111 !important;
-            box-shadow: none !important;
-            opacity: 1;
-        }
-
-        .brackets-viewer .match.bracket-empty .opponents .participant,
-        .brackets-viewer .match.bracket-empty .opponents .participant .name,
-        .brackets-viewer .match.bracket-empty .opponents .participant .result,
-        .brackets-viewer .match.bracket-empty .opponents .participant .score,
-        .brackets-viewer .match.bracket-empty .opponents .participant span {
-            color: transparent !important;
+            visibility: hidden;
             background: transparent !important;
             border-color: transparent !important;
-            text-shadow: none !important;
+            box-shadow: none !important;
+        }
+
+        .brackets-viewer .match.bracket-empty::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: calc(-1 * var(--round-margin, 40px));
+            top: 50%;
+            height: var(--connector-border-width, 2px);
+            margin-top: calc(var(--connector-border-width, 2px) / -2);
+            background: var(--connector-color, #9e9e9e);
+            z-index: 1;
+            pointer-events: none;
         }
 
         /* Match in progress. */
