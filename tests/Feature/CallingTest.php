@@ -63,6 +63,49 @@ class CallingTest extends TestCase
         $this->assertSame(2, $response->json('counts.waiting'));
     }
 
+    public function test_calling_falls_back_to_the_latest_day_with_schedules(): void
+    {
+        $user = $this->userWithPermissions(['callings.view']);
+        [$schedule] = $this->scheduleWithAthletes();
+
+        $yesterday = now()->subDay()->toDateString();
+        $schedule->update(['match_date' => $yesterday]);
+
+        $response = $this->actingAs($user)->getJson('/admin/callings-data');
+
+        $response->assertOk();
+        $this->assertSame($yesterday, $response->json('date'));
+        $this->assertFalse($response->json('is_today'));
+        $this->assertSame(2, $response->json('counts.total'));
+    }
+
+    public function test_calling_can_show_the_requested_date(): void
+    {
+        $user = $this->userWithPermissions(['callings.view']);
+        [$schedule] = $this->scheduleWithAthletes();
+
+        $date = now()->subDays(3)->toDateString();
+        $schedule->update(['match_date' => $date]);
+
+        $response = $this->actingAs($user)->getJson('/admin/callings-data?date=' . $date);
+
+        $response->assertOk();
+        $this->assertSame($date, $response->json('date'));
+        $this->assertSame(2, $response->json('counts.total'));
+    }
+
+    public function test_calling_ignores_an_invalid_date(): void
+    {
+        $user = $this->userWithPermissions(['callings.view']);
+        [$schedule] = $this->scheduleWithAthletes();
+
+        $response = $this->actingAs($user)->getJson('/admin/callings-data?date=bukan-tanggal');
+
+        $response->assertOk();
+        $this->assertSame(now()->toDateString(), $response->json('date'));
+        $this->assertSame(2, $response->json('counts.total'));
+    }
+
     public function test_calling_can_be_sent(): void
     {
         $user = $this->userWithPermissions(['callings.send']);

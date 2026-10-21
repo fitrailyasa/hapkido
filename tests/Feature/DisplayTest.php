@@ -88,4 +88,48 @@ class DisplayTest extends TestCase
         $response->assertOk();
         $this->assertSame('08:30', $response->json('next.0.time'));
     }
+
+    public function test_display_data_includes_the_bracket_of_a_daeryun_arena(): void
+    {
+        $category = CategoryFactory::new()->daeryun()->create();
+        $arena = ArenaFactory::new()->create([
+            'match_type' => 'daeryun',
+            'category_id' => $category->id,
+        ]);
+
+        foreach (range(1, 4) as $index) {
+            AthleteFactory::new()->create([
+                'category_id' => $category->id,
+                'status' => 'active',
+            ]);
+        }
+
+        app(\App\Services\BracketService::class)->generate($category);
+
+        $response = $this->getJson('/display/data');
+
+        $response->assertOk();
+
+        $bracket = $response->json('arenas.0.bracket');
+
+        $this->assertNotNull($bracket);
+        $this->assertSame($category->name, $bracket['category']);
+        $this->assertNotEmpty($bracket['viewer']['matches']);
+        $this->assertNotEmpty($bracket['roundLabels']);
+        $this->assertSame($arena->id, $response->json('arenas.0.id'));
+    }
+
+    public function test_display_data_has_no_bracket_for_an_art_arena(): void
+    {
+        $category = CategoryFactory::new()->art()->create();
+        ArenaFactory::new()->create([
+            'match_type' => 'art',
+            'category_id' => $category->id,
+        ]);
+
+        $response = $this->getJson('/display/data');
+
+        $response->assertOk();
+        $this->assertNull($response->json('arenas.0.bracket'));
+    }
 }

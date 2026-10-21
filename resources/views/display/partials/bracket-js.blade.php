@@ -75,7 +75,10 @@
 
                 (item.bracket.emptyIds || []).forEach(function(id) {
                     const el = root.querySelector('[data-match-id="' + id + '"]');
-                    if (el) el.classList.add('bracket-empty');
+                    if (!el) return;
+
+                    el.classList.add('bracket-empty');
+                    el.title = 'Slot kosong - tidak ada peserta';
                 });
             }).catch(function() {});
         });
