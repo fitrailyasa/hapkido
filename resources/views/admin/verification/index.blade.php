@@ -180,25 +180,37 @@
 @push('styles')
     <style>
         .scanner-viewport {
-            min-height: 220px;
+            --scanner-height: 260px;
+            position: relative;
+            width: 100%;
+            height: var(--scanner-height);
             background: #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
-        .scanner-viewport video {
-            display: block;
+        /*
+         * Quagga injects a <video> element plus <canvas> overlays into the target.
+         * All of them are absolutely positioned so they do not compete for the
+         * available width (previously the video was squeezed / cropped and
+         * pushed out of the centre).
+         */
+        .scanner-viewport video,
+        .scanner-viewport canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
-            max-height: 280px;
-            object-fit: cover;
+            height: 100%;
+            /* contain = the whole frame stays visible, nothing gets cropped */
+            object-fit: contain;
+        }
+
+        .scanner-viewport video {
             background: #000;
         }
 
         .scanner-viewport canvas {
-            max-width: 100%;
-            height: auto;
+            pointer-events: none;
         }
     </style>
 @endpush
@@ -237,7 +249,7 @@
                     oscillator.start(now);
                     oscillator.stop(now + duration + 0.05);
                 } catch (error) {
-                    /* browser tanpa dukungan audio: abaikan */
+                    /* browser without audio support: ignore */
                 }
             }
 
@@ -295,7 +307,7 @@
                 });
             }
 
-            /* ==== Pemindai kamera offline (Quagga2) ==== */
+            /* ==== Offline camera scanner (Quagga2) ==== */
             const openButton = document.getElementById('btn-open-scanner');
             const section = document.getElementById('scanner-section');
             const startButton = document.getElementById('btn-scanner-start');
@@ -308,6 +320,61 @@
 
             let scannerActive = false;
             let handled = false;
+
+            const VIEWPORT_MIN_HEIGHT = 200;
+            const VIEWPORT_MAX_HEIGHT = 420;
+
+            /* Match the Quagga overlay canvas size to the video resolution so the
+             * barcode boxes stay perfectly aligned with the camera image. */
+            function syncOverlaySize() {
+                const video = viewport.querySelector('video');
+                if (!video || !video.videoWidth || !video.videoHeight) return;
+
+                viewport.querySelectorAll('canvas').forEach(function(canvas) {
+                    if (canvas.width !== video.videoWidth) canvas.width = video.videoWidth;
+                    if (canvas.height !== video.videoHeight) canvas.height = video.videoHeight;
+                });
+            }
+
+            /* Match the viewport height to the camera aspect ratio so the preview
+             * fills the box and stays perfectly centred. */
+            function fitViewport() {
+                const video = viewport.querySelector('video');
+                if (!video || !video.videoWidth || !video.videoHeight) return;
+
+                syncOverlaySize();
+
+                const width = viewport.clientWidth || viewport.offsetWidth;
+                if (!width) return;
+
+                const ratio = video.videoHeight / video.videoWidth;
+                const ideal = Math.round(width * ratio);
+                const height = Math.min(Math.max(ideal, VIEWPORT_MIN_HEIGHT), VIEWPORT_MAX_HEIGHT);
+                const nextHeight = height + 'px';
+
+                if (viewport.style.height !== nextHeight) {
+                    viewport.style.height = nextHeight;
+                }
+            }
+
+            function bindVideoEvents() {
+                const video = viewport.querySelector('video');
+                if (!video || video.dataset.scannerBound === '1') return;
+
+                video.dataset.scannerBound = '1';
+                video.addEventListener('loadedmetadata', fitViewport);
+                video.addEventListener('canplay', fitViewport);
+                video.addEventListener('resize', fitViewport);
+
+                if (video.readyState >= 1) fitViewport();
+            }
+
+            if (window.ResizeObserver) {
+                const viewportObserver = new ResizeObserver(function() {
+                    fitViewport();
+                });
+                viewportObserver.observe(viewport);
+            }
 
             function setStatus(text, className) {
                 if (!statusBadge) return;
@@ -326,7 +393,7 @@
                         }
                         video.pause();
                     } catch (error) {
-                        /* abaikan */
+                        /* ignore */
                     }
                 });
             }
@@ -370,6 +437,7 @@
                 scannerActive = false;
                 startButton.disabled = false;
                 stopButton.disabled = true;
+                viewport.style.height = '';
                 setStatus('Berhenti', 'bg-secondary');
             }
 
@@ -454,6 +522,11 @@
                     startButton.disabled = true;
                     stopButton.disabled = false;
                     setStatus('Kamera aktif', 'bg-success');
+
+                    /* make sure the video is fully rendered, then lock the box size */
+                    bindVideoEvents();
+                    window.setTimeout(fitViewport, 250);
+                    window.setTimeout(fitViewport, 900);
                 });
             }
 
