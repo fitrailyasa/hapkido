@@ -44,19 +44,12 @@ class BracketService
         // latest jadwal width (not leftover slots from a larger tree).
         $this->clear($category);
 
-        $size = $this->sizeFromJadwalCounts($roundCounts);
+        // Width must fit the athletes (e.g. 9 → 16) and may grow beyond the
+        // current first-round jadwal; missing later partai are auto-created.
+        $sizeFromJadwal = $this->sizeFromJadwalCounts($roundCounts);
+        $sizeFromAthletes = $this->nextPowerOfTwo($athletes->count());
+        $size = max($sizeFromJadwal, $sizeFromAthletes);
         $canonicalFirst = $this->label($size);
-
-        if ($athletes->count() > $size) {
-            $neededPartai = (int) ceil($athletes->count() / 2);
-
-            throw new BracketNeedsSchedule(
-                "Jadwal partai ronde pertama kelas {$category->name} hanya menampung "
-                . "{$size} peserta (saat ini {$roundCounts->max()} partai), sementara ada "
-                . "{$athletes->count()} peserta aktif. Tambahkan jadwal ronde pertama "
-                . "hingga minimal {$neededPartai} partai, atau nonaktifkan kelebihan peserta."
-            );
-        }
 
         // Schedules may still carry an old label (e.g. "penyisihan" after the
         // tree shrank to 8). Align the busiest round to the canonical first-round
@@ -65,15 +58,16 @@ class BracketService
 
         $jadwal = $this->jadwalQueue($category);
 
+        // Place athletes so BYEs are single-step only (like a 9-person paper
+        // bracket: one penyisihan match, seven BYEs into perempat final — nobody
+        // walks into the Final on BYEs alone).
+        $placement = $this->placeAthletesWithByes($athletes, $size);
+
         $slots = [];
 
         for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
             for ($position = 0; $position < $roundSize; $position++) {
-                $athleteId = null;
-
-                if ($roundSize === $size && isset($athletes[$position])) {
-                    $athleteId = $athletes[$position]->id;
-                }
+                $athleteId = $roundSize === $size ? ($placement[$position] ?? null) : null;
 
                 $slots[$roundSize][$position] = BracketSlot::create([
                     'category_id' => $category->id,
@@ -159,6 +153,111 @@ class BracketService
         // Guarantee every competitive pairing (including Perempat Final) has a
         // clickable jadwal + matchup, even when the admin only created Penyisihan.
         $this->ensureBracketMatches($category);
+    }
+
+    /**
+     * Next power of two ≥ $count (minimum 2).
+     */
+    protected function nextPowerOfTwo(int $count): int
+    {
+        $size = 2;
+
+        while ($size < $count) {
+            $size *= 2;
+        }
+
+        return $size;
+    }
+
+    /**
+     * Place athletes into first-round slots with balanced single-step BYEs.
+     *
+     * Example (9 athletes → size 16): 7 BYE pairings + 1 real match so the
+     * BYE recipients enter the round of 8, not the Final.
+     *
+     * @return array<int, int|null> slot position => athlete id
+     */
+    protected function placeAthletesWithByes(Collection $athletes, int $size): array
+    {
+        $list = $athletes->values();
+        $n = $list->count();
+        $slots = array_fill(0, $size, null);
+
+        $pairingCount = (int) ($size / 2);
+        $byes = $size - $n;
+
+        $byePairings = $this->distributedByePairings($pairingCount, $byes);
+
+        $index = 0;
+
+        for ($pairing = 0; $pairing < $pairingCount; $pairing++) {
+            if (isset($byePairings[$pairing])) {
+                if ($index < $n) {
+                    $slots[$pairing * 2] = $list[$index]->id;
+                    $index++;
+                }
+
+                continue;
+            }
+
+            if ($index < $n) {
+                $slots[$pairing * 2] = $list[$index]->id;
+                $index++;
+            }
+
+            if ($index < $n) {
+                $slots[($pairing * 2) + 1] = $list[$index]->id;
+                $index++;
+            }
+        }
+
+        // Safety: if distribution left athletes unused (duplicate bye indices),
+        // append them into remaining empty match slots.
+        for ($pairing = 0; $pairing < $pairingCount && $index < $n; $pairing++) {
+            if (isset($byePairings[$pairing])) {
+                continue;
+            }
+
+            if ($slots[$pairing * 2] === null) {
+                $slots[$pairing * 2] = $list[$index]->id;
+                $index++;
+            }
+
+            if ($index < $n && $slots[($pairing * 2) + 1] === null) {
+                $slots[($pairing * 2) + 1] = $list[$index]->id;
+                $index++;
+            }
+        }
+
+        return $slots;
+    }
+
+    /**
+     * Spread BYE pairings evenly around the bracket so each half stays balanced.
+     *
+     * @return array<int, true> pairing index => true
+     */
+    protected function distributedByePairings(int $pairingCount, int $byes): array
+    {
+        $set = [];
+
+        if ($byes <= 0 || $pairingCount <= 0) {
+            return $set;
+        }
+
+        $byes = min($byes, $pairingCount);
+
+        for ($i = 0; $i < $byes; $i++) {
+            $index = (int) floor($i * $pairingCount / $byes);
+
+            while (isset($set[$index])) {
+                $index = ($index + 1) % $pairingCount;
+            }
+
+            $set[$index] = true;
+        }
+
+        return $set;
     }
 
     /**
