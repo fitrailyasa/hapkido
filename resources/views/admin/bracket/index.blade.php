@@ -32,63 +32,81 @@
             </div>
         </div>
 
-        @if ($selected && $manualPartai->isNotEmpty())
+        @if ($selected && auth()->user()?->can('brackets.generate'))
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
                         <i class="bi bi-people me-2 text-primary"></i>Partai Manual
-                        <small class="text-body-secondary">
-                            (pilih sendiri siapa lawan siapa pada ronde {{ \App\Models\Schedule::roundText($firstRound) }})
-                        </small>
+                        @if ($firstRound)
+                            <small class="text-body-secondary">
+                                (pilih sendiri siapa lawan siapa pada ronde {{ \App\Models\Schedule::roundText($firstRound) }})
+                            </small>
+                        @endif
                     </h6>
                 </div>
-                <div class="card-body p-0">
-                    <div class="list-group list-group-flush">
-                        @foreach ($manualPartai as $partai)
-                            <form action="{{ route('admin.brackets.manual') }}" method="POST" class="list-group-item">
-                                @csrf
-                                <input type="hidden" name="schedule_id" value="{{ $partai->id }}" />
-                                <div class="row g-2 align-items-center">
-                                    <div class="col-12 col-md-2">
-                                        <span class="fw-semibold">{{ $partai->match_no }}</span>
-                                        <div class="small text-body-secondary">
-                                            {{ \App\Models\Schedule::roundText($partai->round) }}
-                                            @if ($partai->start_time)
-                                                &middot; {{ substr($partai->start_time, 0, 5) }}
-                                            @endif
+
+                @if ($jadwalCount === 0)
+                    <div class="card-body text-center text-body-secondary">
+                        Kelas ini belum memiliki jadwal partai. Buat jadwal dulu di menu
+                        <a href="{{ route('admin.schedules.create') }}">Jadwal</a>, partai manual mengisi jadwal yang
+                        sudah dibuat.
+                    </div>
+                @elseif ($manualPartai->isEmpty())
+                    <div class="card-body text-center text-body-secondary">
+                        Semua jadwal ronde {{ \App\Models\Schedule::roundText($firstRound) }} sudah terisi atlet.
+                        Tambah jadwal baru di menu
+                        <a href="{{ route('admin.schedules.create') }}">Jadwal</a> bila masih ada peserta yang belum
+                        bertanding.
+                    </div>
+                @else
+                    <div class="card-body p-0">
+                        <div class="list-group list-group-flush">
+                            @foreach ($manualPartai as $partai)
+                                <form action="{{ route('admin.brackets.manual') }}" method="POST" class="list-group-item">
+                                    @csrf
+                                    <input type="hidden" name="schedule_id" value="{{ $partai->id }}" />
+                                    <div class="row g-2 align-items-center">
+                                        <div class="col-12 col-md-2">
+                                            <span class="fw-semibold">{{ $partai->match_no }}</span>
+                                            <div class="small text-body-secondary">
+                                                {{ \App\Models\Schedule::roundText($partai->round) }}
+                                                @if ($partai->start_time)
+                                                    &middot; {{ substr($partai->start_time, 0, 5) }}
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-4">
+                                            <select name="athlete_a_id" class="form-select form-select-sm" required>
+                                                <option value="">— Pilih atlet —</option>
+                                                @foreach ($athletes as $athlete)
+                                                    <option value="{{ $athlete->id }}">
+                                                        {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-1 text-center fw-bold text-body-secondary">VS</div>
+                                        <div class="col-12 col-md-4">
+                                            <select name="athlete_b_id" class="form-select form-select-sm" required>
+                                                <option value="">— Pilih atlet —</option>
+                                                @foreach ($athletes as $athlete)
+                                                    <option value="{{ $athlete->id }}">
+                                                        {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-12 col-md-1 text-md-end">
+                                            <button type="submit" class="btn btn-sm btn-primary w-100">
+                                                <i class="bi bi-check-lg me-1"></i>Simpan
+                                            </button>
                                         </div>
                                     </div>
-                                    <div class="col-12 col-md-4">
-                                        <select name="athlete_a_id" class="form-select form-select-sm" required>
-                                            <option value="">— Pilih atlet —</option>
-                                            @foreach ($athletes as $athlete)
-                                                <option value="{{ $athlete->id }}">
-                                                    {{ $athlete->name }} ({{ $athlete->participant_number }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-12 col-md-1 text-center fw-bold text-body-secondary">VS</div>
-                                    <div class="col-12 col-md-4">
-                                        <select name="athlete_b_id" class="form-select form-select-sm" required>
-                                            <option value="">— Pilih atlet —</option>
-                                            @foreach ($athletes as $athlete)
-                                                <option value="{{ $athlete->id }}">
-                                                    {{ $athlete->name }} ({{ $athlete->participant_number }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-12 col-md-1 text-md-end">
-                                        <button type="submit" class="btn btn-sm btn-primary w-100">
-                                            <i class="bi bi-check-lg me-1"></i>Simpan
-                                        </button>
-                                    </div>
-                                </div>
-                            </form>
-                        @endforeach
+                                </form>
+                            @endforeach
+                        </div>
                     </div>
-                </div>
+                @endif
             </div>
         @endif
 
