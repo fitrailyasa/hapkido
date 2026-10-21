@@ -119,7 +119,14 @@ class ScheduleController extends Controller
             return back()->with('error', $reason);
         }
 
+        $category = $schedule->category;
         $schedule->delete();
+
+        // The bracket is built from the jadwal, so it disappears with the
+        // last jadwal of the class.
+        if ($category && $schedule->type === 'daeryun') {
+            app(\App\Services\BracketService::class)->forgetIfEmpty($category);
+        }
 
         return redirect()
             ->route('admin.schedules.index')
@@ -135,16 +142,27 @@ class ScheduleController extends Controller
 
         $deleted = 0;
         $skipped = [];
+        $categories = collect();
 
-        foreach (Schedule::whereIn('id', $ids)->get() as $schedule) {
+        foreach (Schedule::whereIn('id', $ids)->with('category')->get() as $schedule) {
             if ($reason = $this->deleteBlocker($schedule)) {
                 $skipped[] = $reason;
 
                 continue;
             }
 
+            if ($schedule->type === 'daeryun' && $schedule->category) {
+                $categories->push($schedule->category);
+            }
+
             $schedule->delete();
             $deleted++;
+        }
+
+        // The bracket is built from the jadwal, so it disappears with the
+        // last jadwal of the class.
+        foreach ($categories->unique('id') as $category) {
+            app(\App\Services\BracketService::class)->forgetIfEmpty($category);
         }
 
         return $this->bulkResult('admin.schedules.index', $deleted, $skipped);

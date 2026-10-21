@@ -93,27 +93,6 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-athlete-qr_code" class="form-label">Kode QR</label>
-                            <input type="text" name="qr_code" id="new-athlete-qr_code"
-                                class="form-control @error('qr_code') is-invalid @enderror"
-                                value="{{ old('qr_code') }}" placeholder="Kosongkan untuk memakai nomor peserta" />
-                            @error('qr_code')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="new-athlete-status" class="form-label">Status <span
-                                    class="text-danger">*</span></label>
-                            <select id="new-athlete-status" name="status"
-                                class="form-select @error('status') is-invalid @enderror" required>
-                                <option value="active" @selected(old('status', 'active') === 'active')>Aktif</option>
-                                <option value="inactive" @selected(old('status') === 'inactive')>Nonaktif</option>
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6 mb-3">
                             <label for="new-athlete-photo" class="form-label">Foto (JPG/PNG, maks 2 MB)</label>
                             <input type="file" name="photo" id="new-athlete-photo"
                                 class="form-control @error('photo') is-invalid @enderror" accept="image/*" />

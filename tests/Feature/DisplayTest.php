@@ -104,6 +104,16 @@ class DisplayTest extends TestCase
             ]);
         }
 
+        // The bracket is generated from the jadwal of the class.
+        foreach ([['semifinal', 1], ['semifinal', 2], ['final', 1]] as $partai) {
+            \Database\Factories\ScheduleFactory::new()->create([
+                'category_id' => $category->id,
+                'type' => 'daeryun',
+                'round' => $partai[0],
+                'order_no' => $partai[1],
+            ]);
+        }
+
         app(\App\Services\BracketService::class)->generate($category);
 
         $response = $this->getJson('/display/data');

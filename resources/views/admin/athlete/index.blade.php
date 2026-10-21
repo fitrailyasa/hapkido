@@ -7,7 +7,7 @@
         // The checkbox column and the bulk delete toolbar are only shown with
         // the delete permission.
         $bulkDelete = auth()->user()?->can('athletes.delete') ?? false;
-        $colspan = $bulkDelete ? 9 : 8;
+        $colspan = $bulkDelete ? 8 : 7;
     @endphp
     <div class="container-fluid">
         <div class="card mb-4">
@@ -84,7 +84,6 @@
                                 <th>Jenis Kelamin</th>
                                 <th>Kontingen</th>
                                 <th>Kelas</th>
-                                <th>Status</th>
                                 <th class="text-end">Aksi</th>
                             </tr>
                         </thead>
@@ -109,11 +108,6 @@
                                         @endif
                                     </td>
                                     <td>{{ $athlete->category?->name ?? '—' }}</td>
-                                    <td>
-                                        <span class="badge {{ $athlete->status === 'active' ? 'bg-success' : 'bg-secondary' }}">
-                                            {{ $athlete->statusLabel() }}
-                                        </span>
-                                    </td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
                                             <button type="button" class="btn btn-outline-info" title="Lihat detail"
@@ -132,9 +126,7 @@
                                                     data-id_number="{{ $athlete->id_number }}"
                                                     data-contingent="{{ $athlete->contingent_id }}"
                                                     data-category="{{ $athlete->category_id }}"
-                                                    data-participant_number="{{ $athlete->participant_number }}"
-                                                    data-qr_code="{{ $athlete->qr_code }}"
-                                                    data-status="{{ $athlete->status }}">
+                                                    data-participant_number="{{ $athlete->participant_number }}">
                                                     <i class="bi bi-pencil"></i>
                                                 </button>
                                             @endcan
@@ -192,8 +184,6 @@
                 form.querySelector('[name="contingent_id"]').value = trigger.dataset.contingent || '';
                 form.querySelector('[name="category_id"]').value = trigger.dataset.category || '';
                 form.querySelector('[name="participant_number"]').value = trigger.dataset.participant_number || '';
-                form.querySelector('[name="qr_code"]').value = trigger.dataset.qr_code || '';
-                form.querySelector('[name="status"]').value = trigger.dataset.status || 'active';
                 form.querySelector('[name="photo"]').value = '';
             });
 

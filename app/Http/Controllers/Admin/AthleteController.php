@@ -78,17 +78,16 @@ class AthleteController extends Controller
             'contingent_id' => ['required', Rule::exists('contingents', 'id')],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'participant_number' => ['required', 'string', 'max:255', Rule::unique('athletes', 'participant_number')],
-            'qr_code' => ['nullable', 'string', 'max:255', Rule::unique('athletes', 'qr_code')],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['nullable', 'in:active,inactive'],
             'photo' => ['nullable', 'image', 'max:2048'],
         ], [
             'participant_number.unique' => 'Nomor peserta sudah digunakan atlet lain.',
-            'qr_code.unique' => 'Kode QR sudah digunakan atlet lain.',
         ]);
 
-        $data['qr_code'] = $data['qr_code'] !== '' && $data['qr_code'] !== null
-            ? $data['qr_code']
-            : $data['participant_number'];
+        // The QR code is generated from the (unique) participant number, and
+        // every athlete starts as active.
+        $data['qr_code'] = $data['participant_number'];
+        $data['status'] ??= 'active';
 
         if ($request->hasFile('photo')) {
             $data['photo'] = $request->file('photo')->store('athletes', 'public');
@@ -141,17 +140,16 @@ class AthleteController extends Controller
             'contingent_id' => ['required', Rule::exists('contingents', 'id')],
             'category_id' => ['required', Rule::exists('categories', 'id')],
             'participant_number' => ['required', 'string', 'max:255', Rule::unique('athletes', 'participant_number')->ignore($athlete->id)],
-            'qr_code' => ['nullable', 'string', 'max:255', Rule::unique('athletes', 'qr_code')->ignore($athlete->id)],
-            'status' => ['required', 'in:active,inactive'],
+            'status' => ['nullable', 'in:active,inactive'],
             'photo' => ['nullable', 'image', 'max:2048'],
         ], [
             'participant_number.unique' => 'Nomor peserta sudah digunakan atlet lain.',
-            'qr_code.unique' => 'Kode QR sudah digunakan atlet lain.',
         ]);
 
-        $data['qr_code'] = $data['qr_code'] !== '' && $data['qr_code'] !== null
-            ? $data['qr_code']
-            : $data['participant_number'];
+        // The QR code is generated once (it is printed on the label), so an
+        // edit never changes it. The status keeps its value when not sent.
+        unset($data['qr_code']);
+        $data['status'] ??= $athlete->status;
 
         if ($request->hasFile('photo')) {
             if ($athlete->photo && ! Str::startsWith($athlete->photo, ['http://', 'https://'])) {

@@ -540,6 +540,22 @@ class BracketService
     }
 
     /**
+     * Drop the bracket of a class once its last jadwal is removed: the
+     * bracket is built from the jadwal, so without jadwal there is no
+     * bracket.
+     */
+    public function forgetIfEmpty(Category $category): void
+    {
+        $hasJadwal = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->exists();
+
+        if (! $hasJadwal) {
+            $this->clear($category);
+        }
+    }
+
+    /**
      * Remove the bracket of a class: the partai (matchups) it produced and the
      * slots. The jadwal of the class is kept, because it is the source of the
      * partai.

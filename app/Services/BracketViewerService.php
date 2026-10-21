@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\BracketSlot;
 use App\Models\Category;
 use App\Models\Matchup;
+use App\Models\Schedule;
 
 /**
  * Builds the data for the brackets-viewer.js library.
@@ -20,10 +21,17 @@ class BracketViewerService
 
     /**
      * Does the class already have a bracket?
+     *
+     * The bracket is built from the jadwal of the class, so a class without
+     * jadwal never has a bracket (leftover slots of a removed jadwal are
+     * ignored).
      */
     public function hasBracket(Category $category): bool
     {
-        return BracketSlot::where('category_id', $category->id)->exists();
+        return BracketSlot::where('category_id', $category->id)->exists()
+            && Schedule::where('category_id', $category->id)
+                ->where('type', 'daeryun')
+                ->exists();
     }
 
     /**
