@@ -326,7 +326,18 @@ class BracketService
             }
 
             for ($position = 0; $position < $roundSize; $position++) {
-                $expected = $this->expectedAthleteForSlot($category, $sizes, $prevSize, $position);
+                $currentId = BracketSlot::where('category_id', $category->id)
+                    ->where('round', (string) $roundSize)
+                    ->where('position', $position)
+                    ->value('athlete_id');
+
+                $expected = $this->expectedAthleteForSlot(
+                    $category,
+                    $sizes,
+                    $prevSize,
+                    $position,
+                    $currentId !== null ? (int) $currentId : null
+                );
 
                 BracketSlot::where('category_id', $category->id)
                     ->where('round', (string) $roundSize)
@@ -354,7 +365,7 @@ class BracketService
             $category,
             $sizes,
             $prevSize,
-            $forMainSlot ? ($pairingIndex + 1) : ($pairingIndex + 1)
+            $pairingIndex + 1
         );
 
         if ($forMainSlot) {
@@ -363,11 +374,9 @@ class BracketService
                     return (int) $feederMatch->winner_athlete_id;
                 }
 
-                // Prelim still open — clear premature fill, keep empty.
                 return null;
             }
 
-            // No prelim for this slot: keep the seeded bye athlete.
             return $currentAthleteId;
         }
 
@@ -376,7 +385,6 @@ class BracketService
                 return (int) $feederMatch->winner_athlete_id;
             }
 
-            // Partai still open — nobody has advanced yet.
             return null;
         }
 
@@ -390,13 +398,17 @@ class BracketService
             ->where('position', ($pairingIndex * 2) + 1)
             ->value('athlete_id');
 
-        // Structural BYE: only one side ever had an entrant (no matchup row).
         if ($slotA !== null && $slotB === null) {
             return (int) $slotA;
         }
 
         if ($slotB !== null && $slotA === null) {
             return (int) $slotB;
+        }
+
+        // BYE seeded directly into this round (both first-round feeders empty).
+        if ($slotA === null && $slotB === null) {
+            return $currentAthleteId;
         }
 
         return null;

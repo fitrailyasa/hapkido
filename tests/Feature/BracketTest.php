@@ -409,13 +409,13 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // 5 athletes → size 8: penyisihan column has all names (BYE + 1 real match).
+        // 5 athletes → size 8: penyisihan only holds the real match; BYEs sit in SF.
         $this->assertSame(
             8,
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
         $this->assertSame(
-            5,
+            2,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '8')
                 ->whereNotNull('athlete_id')
@@ -464,7 +464,7 @@ class BracketTest extends TestCase
             ->post('/admin/brackets/generate', ['category_id' => $category->id])
             ->assertSessionHas('success');
 
-        // Penyisihan is the first column: 1 real match + BYEs, all 9 names in round 16.
+        // Penyisihan: 1 real match only; 7 BYE boxes stay empty (black).
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
         $this->assertSame(
@@ -472,7 +472,7 @@ class BracketTest extends TestCase
             BracketSlot::where('category_id', $category->id)->where('round', '16')->count()
         );
         $this->assertSame(
-            9,
+            2,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '16')
                 ->whereNotNull('athlete_id')
@@ -496,8 +496,8 @@ class BracketTest extends TestCase
         $payload = app(\App\Services\BracketViewerService::class)->payload($category);
         $this->assertNotNull($payload);
         $this->assertSame('Penyisihan', $payload['roundLabels'][0] ?? null);
-        $this->assertCount(9, $payload['viewerData']['participants']);
-        $this->assertNotEmpty($payload['byeIds']);
+        $this->assertCount(7, $payload['emptyIds']);
+        $this->assertEmpty($payload['byeIds']);
     }
 
     public function test_reconcile_clears_premature_finalist(): void
