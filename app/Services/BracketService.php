@@ -115,7 +115,15 @@ class BracketService
 
                 // Both sides are alive: the partai comes from the jadwal of the
                 // class (filled in by advance() or already set through a bye).
-                $schedule = $jadwal[$this->label($roundSize)]->shift();
+                $schedule = $jadwal->get($this->label($roundSize), collect())->shift();
+
+                if (! $schedule) {
+                    throw new BracketNeedsSchedule(
+                        "Jadwal partai Daeryun pada kelas {$category->name} tidak mencukupi "
+                        . "untuk {$athletes->count()} peserta. Tambahkan jadwal partai pada ronde "
+                        . "{$this->labelHuman($this->label($roundSize))} di menu Jadwal."
+                    );
+                }
 
                 Matchup::create([
                     'schedule_id' => $schedule->id,
