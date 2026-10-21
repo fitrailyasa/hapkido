@@ -8,7 +8,8 @@
             <a href="{{ route('admin.performances.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i>Kembali ke Seni
             </a>
-            <span class="badge {{ $performance->status === 'finished' ? 'bg-success' : ($performance->status === 'performing' ? 'bg-warning text-dark' : 'bg-info-subtle text-info-emphasis') }}">
+            <span
+                class="badge {{ $performance->status === 'finished' ? 'bg-success' : ($performance->status === 'performing' ? 'bg-warning text-dark' : 'bg-info-subtle text-info-emphasis') }}">
                 {{ $performance->statusLabel() }}
             </span>
         </div>
@@ -69,7 +70,7 @@
                             </li>
                         </ul>
 
-                        @if (collect($judgeScores)->filter(fn ($score) => $score !== null)->isNotEmpty())
+                        @if (collect($judgeScores)->filter(fn($score) => $score !== null)->isNotEmpty())
                             <hr class="my-3">
                             <p class="small text-body-secondary mb-2">
                                 Nilai juri tersimpan (referensi, tidak dipakai untuk nilai akhir):
@@ -96,7 +97,8 @@
                     </div>
                     <div class="card-body">
                         @can('scores.create')
-                            <form action="{{ route('admin.scores.store', $performance) }}" method="POST" id="form-final-score">
+                            <form action="{{ route('admin.scores.store', $performance) }}" method="POST"
+                                id="form-final-score">
                                 @csrf
                                 <div class="row g-3">
                                     <div class="col-md-6">
@@ -105,7 +107,7 @@
                                         </label>
                                         <input type="number" name="final_score" id="final_score"
                                             class="form-control form-control-lg @error('final_score') is-invalid @enderror"
-                                            min="0" max="100" step="0.01" required
+                                            min="0" max="9999" step="0.01" required
                                             value="{{ old('final_score', $finalScore !== null ? number_format($finalScore, 2, '.', '') : '') }}" />
                                         @error('final_score')
                                             <div class="invalid-feedback">{{ $message }}</div>
@@ -116,7 +118,8 @@
                                     </div>
                                 </div>
 
-                                <div class="alert alert-light border mt-4 mb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <div
+                                    class="alert alert-light border mt-4 mb-0 d-flex flex-wrap justify-content-between align-items-center gap-2">
                                     <div>
                                         <span class="text-body-secondary">Nilai akhir penampil:</span>
                                         <div class="fs-4 fw-bold text-primary" data-live-value>0.00</div>
