@@ -130,4 +130,42 @@ class Schedule extends Model
 
         return $this->performances->pluck('athlete');
     }
+
+    /**
+     * Short label of who competes on this schedule (for lists / exports).
+     */
+    public function participantsLabel(): string
+    {
+        if ($this->isDaeryun()) {
+            $match = $this->relationLoaded('match') ? $this->match : $this->match()->with(['athleteA', 'athleteB'])->first();
+
+            if (! $match) {
+                return '—';
+            }
+
+            $nameA = $match->athleteA?->name;
+            $nameB = $match->athleteB?->name;
+
+            if ($nameA && $nameB) {
+                return "{$nameA} vs {$nameB}";
+            }
+
+            if ($nameA) {
+                return "{$nameA} vs —";
+            }
+
+            if ($nameB) {
+                return "— vs {$nameB}";
+            }
+
+            return '—';
+        }
+
+        $names = ($this->relationLoaded('performances')
+            ? $this->performances
+            : $this->performances()->with('athlete')->get()
+        )->pluck('athlete.name')->filter()->values();
+
+        return $names->isEmpty() ? '—' : $names->implode(', ');
+    }
 }

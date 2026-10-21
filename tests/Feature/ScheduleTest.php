@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Exports\SchedulesExport;
 use Database\Factories\ArenaFactory;
+use Database\Factories\AthleteFactory;
 use Database\Factories\CategoryFactory;
 use Database\Factories\MatchupFactory;
 use Database\Factories\ScheduleFactory;
@@ -28,6 +29,38 @@ class ScheduleTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('P-777');
+    }
+
+    public function test_schedule_index_shows_daeryun_participant_names(): void
+    {
+        $user = $this->userWithPermissions(['schedules.view']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athleteA = AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'name' => 'Bima Sakti',
+            'status' => 'active',
+        ]);
+        $athleteB = AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'name' => 'Dimas Prasetyo',
+            'status' => 'active',
+        ]);
+        $schedule = ScheduleFactory::new()->create([
+            'match_no' => 'B-VS-01',
+            'category_id' => $category->id,
+            'type' => 'daeryun',
+        ]);
+        MatchupFactory::new()->create([
+            'schedule_id' => $schedule->id,
+            'athlete_a_id' => $athleteA->id,
+            'athlete_b_id' => $athleteB->id,
+        ]);
+
+        $response = $this->actingAs($user)->get('/admin/schedules');
+
+        $response->assertOk();
+        $response->assertSee('Peserta');
+        $response->assertSee('Bima Sakti vs Dimas Prasetyo');
     }
 
     public function test_schedule_index_can_be_filtered_by_status(): void

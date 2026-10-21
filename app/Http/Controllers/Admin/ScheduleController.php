@@ -335,10 +335,25 @@ class ScheduleController extends Controller
 
     protected function query(array $filters)
     {
-        $query = Schedule::query()->with(['category', 'arena'])->orderBy('match_date')->orderBy('order_no');
+        $query = Schedule::query()
+            ->with([
+                'category',
+                'arena',
+                'match.athleteA',
+                'match.athleteB',
+                'performances.athlete',
+            ])
+            ->orderBy('match_date')
+            ->orderBy('order_no');
 
         if ($filters['q'] !== '') {
-            $query->where('match_no', 'like', "%{$filters['q']}%");
+            $term = '%'.$filters['q'].'%';
+            $query->where(function ($builder) use ($term) {
+                $builder->where('match_no', 'like', $term)
+                    ->orWhereHas('match.athleteA', fn ($q) => $q->where('name', 'like', $term))
+                    ->orWhereHas('match.athleteB', fn ($q) => $q->where('name', 'like', $term))
+                    ->orWhereHas('performances.athlete', fn ($q) => $q->where('name', 'like', $term));
+            });
         }
 
         if ($filters['date'] !== '') {

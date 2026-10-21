@@ -7,7 +7,7 @@
         // The checkbox column and the bulk delete toolbar are only shown with
         // the delete permission.
         $bulkDelete = auth()->user()?->can('schedules.delete') ?? false;
-        $colspan = $bulkDelete ? 10 : 9;
+        $colspan = $bulkDelete ? 11 : 10;
     @endphp
     <div class="container-fluid">
         <div class="card mb-4">
@@ -22,7 +22,7 @@
                             <div class="input-group input-group-sm w-auto">
                                 <span class="input-group-text"><i class="bi bi-search"></i></span>
                                 <input type="search" name="q" value="{{ $q }}" class="form-control"
-                                    placeholder="Cari kode laga" style="width: 150px" />
+                                    placeholder="Cari kode / nama atlet" style="width: 180px" />
                             </div>
                             <input type="date" name="date" value="{{ $dateFilter }}"
                                 class="form-control form-control-sm w-auto" title="Filter tanggal" />
@@ -99,6 +99,7 @@
                                 <th style="width: 110px">Kode Laga</th>
                                 <th style="width: 130px">Jam</th>
                                 <th>Kelas</th>
+                                <th>Peserta</th>
                                 <th>Arena</th>
                                 <th>Kategori</th>
                                 <th>Ronde</th>
@@ -132,6 +133,7 @@
                                             @endif
                                         </td>
                                         <td>{{ $schedule->category?->name ?? '—' }}</td>
+                                        <td class="small">{{ $schedule->participantsLabel() }}</td>
                                         <td>{{ $schedule->arena?->name ?? '—' }}</td>
                                         <td>
                                             <span
