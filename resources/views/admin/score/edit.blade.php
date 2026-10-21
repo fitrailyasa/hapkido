@@ -107,7 +107,7 @@
                                         </label>
                                         <input type="number" name="final_score" id="final_score"
                                             class="form-control form-control-lg @error('final_score') is-invalid @enderror"
-                                            min="0" max="9999" step="0.01" required
+                                            min="0" max="99999" step="0.01" required
                                             value="{{ old('final_score', $finalScore !== null ? number_format($finalScore, 2, '.', '') : '') }}" />
                                         @error('final_score')
                                             <div class="invalid-feedback">{{ $message }}</div>
