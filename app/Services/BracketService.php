@@ -53,27 +53,16 @@ class BracketService
         $jadwal = $this->jadwalQueue($category);
 
         // Place athletes so BYEs are single-step only (like a 9-person paper
-        // bracket: one penyisihan match, seven BYEs into perempat final — nobody
-        // walks into the Final on BYEs alone). Bye recipients are seeded
-        // directly into the next round so Penyisihan does not show a stack of
-        // BYE boxes.
+        // bracket: one penyisihan match + seven "Nama vs BYE", then into
+        // perempat final — nobody walks into the Final on BYEs alone).
         $placement = $this->placeAthletesWithByes($athletes, $size);
-        $byePairings = $placement['byePairings'];
         $firstRoundSlots = $placement['slots'];
 
         $slots = [];
 
         for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
             for ($position = 0; $position < $roundSize; $position++) {
-                $athleteId = null;
-
-                if ($roundSize === $size) {
-                    $pairing = intdiv($position, 2);
-                    // Bye pairings stay empty in the first round (seeded below).
-                    $athleteId = isset($byePairings[$pairing])
-                        ? null
-                        : ($firstRoundSlots[$position] ?? null);
-                }
+                $athleteId = $roundSize === $size ? ($firstRoundSlots[$position] ?? null) : null;
 
                 $slots[$roundSize][$position] = BracketSlot::create([
                     'category_id' => $category->id,
@@ -82,18 +71,6 @@ class BracketService
                     'athlete_id' => $athleteId,
                 ]);
             }
-        }
-
-        $nextSize = (int) ($size / 2);
-
-        foreach ($byePairings as $pairing => $true) {
-            $athleteId = $firstRoundSlots[$pairing * 2] ?? $firstRoundSlots[($pairing * 2) + 1] ?? null;
-
-            if ($athleteId === null || $nextSize < 2) {
-                continue;
-            }
-
-            $slots[$nextSize][$pairing]->update(['athlete_id' => $athleteId]);
         }
 
         // Slots that may still be filled: they hold an entrant, or they are the
@@ -109,8 +86,7 @@ class BracketService
             $childSize = (int) ($roundSize / 2);
 
             for ($position = 0; $position < $childSize; $position++) {
-                $alive[$childSize][$position] = ($slots[$childSize][$position]->athlete_id !== null)
-                    || ($alive[$roundSize][$position * 2] ?? false)
+                $alive[$childSize][$position] = ($alive[$roundSize][$position * 2] ?? false)
                     || ($alive[$roundSize][($position * 2) + 1] ?? false);
             }
         }
@@ -321,18 +297,7 @@ class BracketService
             }
 
             for ($position = 0; $position < $roundSize; $position++) {
-                $currentId = BracketSlot::where('category_id', $category->id)
-                    ->where('round', (string) $roundSize)
-                    ->where('position', $position)
-                    ->value('athlete_id');
-
-                $expected = $this->expectedAthleteForSlot(
-                    $category,
-                    $sizes,
-                    $prevSize,
-                    $position,
-                    $currentId !== null ? (int) $currentId : null
-                );
+                $expected = $this->expectedAthleteForSlot($category, $sizes, $prevSize, $position);
 
                 BracketSlot::where('category_id', $category->id)
                     ->where('round', (string) $roundSize)
@@ -349,8 +314,7 @@ class BracketService
         Category $category,
         Collection $sizes,
         int $prevSize,
-        int $pairingIndex,
-        ?int $currentAthleteId = null
+        int $pairingIndex
     ): ?int {
         $feederMatch = $this->findMatch($category, $sizes, $prevSize, $pairingIndex + 1);
 
@@ -380,11 +344,6 @@ class BracketService
 
         if ($slotB !== null && $slotA === null) {
             return (int) $slotB;
-        }
-
-        // First-round BYE seeded directly into this round (both feeders empty).
-        if ($slotA === null && $slotB === null) {
-            return $currentAthleteId;
         }
 
         return null;

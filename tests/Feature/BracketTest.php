@@ -409,10 +409,9 @@ class BracketTest extends TestCase
             BracketSlot::where('category_id', $category->id)->where('round', '8')->count()
         );
 
-        // BYE recipients are seeded into the next round — first round only
-        // holds the real match (2 athletes), not a stack of BYE boxes.
+        // First round shows every entrant (real match + Nama vs BYE).
         $this->assertSame(
-            2,
+            5,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '8')
                 ->whereNotNull('athlete_id')
@@ -470,10 +469,10 @@ class BracketTest extends TestCase
         $this->assertSame(1, Matchup::where('round', 'penyisihan')->count());
         $this->assertSame(4, Matchup::where('round', 'perempat_final')->count());
 
-        // Penyisihan only shows the real match (2 athletes). Seven BYE
-        // recipients sit in the round of 8; nobody walks into the Final.
+        // Penyisihan holds all 9 (1 real match + 7 BYE). BYE winners also
+        // sit in the round of 8; nobody walks into the Final.
         $this->assertSame(
-            2,
+            9,
             BracketSlot::where('category_id', $category->id)
                 ->where('round', '16')
                 ->whereNotNull('athlete_id')

@@ -249,8 +249,10 @@
             font-weight: 700;
         }
 
-        .brackets-viewer .match.bracket-empty .opponents {
-            opacity: 0.45;
+        /* Dead bracket regions (no entrant) — hide so the bagan does not look hollow. */
+        .brackets-viewer .match.bracket-empty {
+            visibility: hidden;
+            pointer-events: none;
         }
 
         /* Match in progress. */
