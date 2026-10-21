@@ -36,9 +36,18 @@
                     </li>
                 @endcan
 
+                @can('brackets.view')
+                    <li class="nav-item">
+                        <a href="{{ route('admin.brackets.index') }}"
+                            class="nav-link {{ request()->routeIs('admin.brackets.*') ? 'active' : '' }}">
+                            <i class="nav-icon bi bi-diagram-3-fill"></i>
+                            <p>Bracket</p>
+                        </a>
+                    </li>
+                @endcan
+
                 {{-- Day-of-event operations --}}
                 @if (auth()->user()->can('schedules.view') ||
-                        auth()->user()->can('brackets.view') ||
                         auth()->user()->can('callings.view') ||
                         auth()->user()->can('verifications.view') ||
                         auth()->user()->can('readiness.view') ||
@@ -46,7 +55,6 @@
                     @php
                         $openOps = request()->routeIs(
                             'admin.schedules.*',
-                            'admin.brackets.*',
                             'admin.callings.*',
                             'admin.verifications.*',
                             'admin.readiness.*',
@@ -62,15 +70,6 @@
                             </p>
                         </a>
                         <ul class="nav nav-treeview">
-                            @can('brackets.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.brackets.index') }}"
-                                        class="nav-link {{ request()->routeIs('admin.brackets.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-diagram-3-fill"></i>
-                                        <p>Bracket</p>
-                                    </a>
-                                </li>
-                            @endcan
                             @can('schedules.view')
                                 <li class="nav-item">
                                     <a href="{{ route('admin.schedules.index') }}"
