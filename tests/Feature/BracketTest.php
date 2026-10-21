@@ -58,6 +58,45 @@ class BracketTest extends TestCase
         $response->assertSee('Kategori Kosong');
     }
 
+    public function test_bracket_index_shows_the_manual_partai_card_without_jadwal(): void
+    {
+        $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
+
+        $response->assertOk();
+        $response->assertSee('Partai Manual');
+        $response->assertSee('Buat jadwal dulu di menu');
+    }
+
+    public function test_bracket_index_reports_a_full_first_round(): void
+    {
+        $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 2) as $index) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->jadwalFor($category, 2);
+
+        $athletes = $category->athletes()->orderBy('id')->get();
+
+        app(BracketService::class)->assignManual(
+            $category,
+            $category->schedules()->where('type', 'daeryun')->firstOrFail(),
+            $athletes[0],
+            $athletes[1]
+        );
+
+        $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
+
+        $response->assertOk();
+        $response->assertSee('Partai Manual');
+        $response->assertSee('sudah terisi atlet');
+    }
+
     public function test_bracket_cannot_be_generated_for_art_category(): void
     {
         $user = $this->userWithPermissions(['brackets.generate']);
