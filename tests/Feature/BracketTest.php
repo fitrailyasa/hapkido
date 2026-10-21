@@ -157,7 +157,8 @@ class BracketTest extends TestCase
         $response->assertRedirect(route('admin.brackets.index', ['category' => $category->id]));
         $response->assertSessionHas(
             'success',
-            "Bracket kelas {$category->name} berhasil dibuat untuk 4 peserta."
+            "Bracket kelas {$category->name} berhasil dibuat untuk 4 peserta. "
+            .'Lengkapi jam dan arena partai di menu Jadwal bila perlu.'
         );
         $this->assertGreaterThan(0, BracketSlot::where('category_id', $category->id)->count());
         $this->assertGreaterThan(0, Matchup::count());

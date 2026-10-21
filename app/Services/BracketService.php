@@ -610,6 +610,10 @@ class BracketService
      */
     public function assignManual(Category $category, Schedule $schedule, Athlete $athleteA, ?Athlete $athleteB = null): void
     {
+        if (! BracketSlot::where('category_id', $category->id)->exists()) {
+            $this->prepareManual($category);
+        }
+
         $sizes = $this->ensureSlots($category);
         $schedule->refresh();
         $firstSize = (int) max($sizes);
