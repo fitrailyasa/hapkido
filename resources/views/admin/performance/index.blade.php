@@ -104,7 +104,7 @@
                                             </span>
                                         </td>
                                         <td class="text-end fw-bold">
-                                            {{ $performance->final_score !== null ? number_format((float) $performance->final_score, 2) : '-' }}
+                                            {{ $performance->final_score !== null ? number_format((float) $performance->final_score) : '-' }}
                                         </td>
                                         <td class="text-end">
                                             <div class="btn-group btn-group-sm">

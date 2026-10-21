@@ -90,10 +90,10 @@ class ScoreTest extends TestCase
         $response = $this->actingAs($user)
             ->from("/admin/scores/{$performance->id}")
             ->post("/admin/scores/{$performance->id}", [
-                'final_score' => 120,
+                'final_score' => 100000,
             ]);
 
-        $response->assertSessionHasErrors('final_score', 'Nilai akhir maksimal 100.');
+        $response->assertSessionHasErrors('final_score', 'Nilai akhir maksimal 99999.');
     }
 
     public function test_finishing_all_performances_finishes_schedule(): void

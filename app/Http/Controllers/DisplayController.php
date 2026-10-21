@@ -133,7 +133,7 @@ class DisplayController extends Controller
                 'match_no' => $performance->schedule?->match_no ?? '—',
                 'schedule_key' => (string) $performance->schedule?->id,
                 'status' => $performance->status,
-                'score' => $performance->final_score,
+                'score' => $this->scoreValue($performance->final_score),
             ]);
 
         $next = Schedule::with(['category', 'arena'])
@@ -247,7 +247,7 @@ class DisplayController extends Controller
                 'status' => $performance->statusLabel(),
                 'is_performing' => $performance->status === 'performing',
                 'photo' => $this->photoUrl($performance->athlete?->photo),
-                'score' => $performance->final_score,
+                'score' => $this->scoreValue($performance->final_score),
                 'match_no' => $performance->schedule?->match_no ?? '—',
                 'category' => $performance->schedule?->category?->name ?? '—',
                 'schedule_key' => (string) $performance->schedule?->id,
@@ -443,7 +443,7 @@ class DisplayController extends Controller
                 'photo' => $this->photoUrl($performance->athlete?->photo),
                 'status' => $performance->statusLabel(),
                 'is_performing' => $performance->status === 'performing',
-                'score' => $performance->final_score,
+                'score' => $this->scoreValue($performance->final_score),
             ])
             ->values()
             ->all();
@@ -460,6 +460,15 @@ class DisplayController extends Controller
         }
 
         return '/storage/' . ltrim($photo, '/');
+    }
+
+    /**
+     * The seni score as shown on the display: a whole number with thousands
+     * separators (56,000), never a decimal.
+     */
+    protected function scoreValue(?float $score): ?string
+    {
+        return $score === null ? null : number_format($score);
     }
 
     /**
@@ -513,7 +522,7 @@ class DisplayController extends Controller
                 'contingent' => $athlete->contingent?->name,
                 'contingent_code' => $athlete->contingent?->code,
                 'medal' => $medals[$entry['medal']] ?? 'emas',
-                'score' => $entry['score'],
+                'score' => $this->scoreValue($entry['score']),
             ];
         }
 

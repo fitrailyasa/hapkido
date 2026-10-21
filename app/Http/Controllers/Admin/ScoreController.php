@@ -68,7 +68,7 @@ class ScoreController extends Controller
 
         return redirect()
             ->route('admin.scores.edit', $performance)
-            ->with('success', 'Nilai akhir tersimpan: ' . number_format($finalScore, 2));
+            ->with('success', 'Nilai akhir tersimpan: ' . number_format($finalScore));
     }
 
     /**

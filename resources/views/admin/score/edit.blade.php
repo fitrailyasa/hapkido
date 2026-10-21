@@ -65,7 +65,7 @@
                             <li class="d-flex justify-content-between border-bottom py-2">
                                 <span class="fw-semibold">Nilai akhir</span>
                                 <span class="fw-bold fs-5 text-primary" data-final-value>
-                                    {{ $finalScore !== null ? number_format($finalScore, 2) : '-' }}
+                                    {{ $finalScore !== null ? number_format($finalScore) : '-' }}
                                 </span>
                             </li>
                         </ul>
@@ -80,7 +80,7 @@
                                     <li class="d-flex justify-content-between border-bottom py-2">
                                         <span class="text-body-secondary">Juri {{ $judgeNo }}</span>
                                         <span class="fw-semibold">
-                                            {{ $judgeScore !== null ? number_format($judgeScore, 2) : '-' }}
+                                            {{ $judgeScore !== null ? number_format($judgeScore) : '-' }}
                                         </span>
                                     </li>
                                 @endforeach
@@ -107,8 +107,8 @@
                                         </label>
                                         <input type="number" name="final_score" id="final_score"
                                             class="form-control form-control-lg @error('final_score') is-invalid @enderror"
-                                            min="0" max="99999" step="0.01" required
-                                            value="{{ old('final_score', $finalScore !== null ? number_format($finalScore, 2, '.', '') : '') }}" />
+                                            min="0" max="99999" step="1" required
+                                            value="{{ old('final_score', $finalScore !== null ? number_format($finalScore, 0, '.', '') : '') }}" />
                                         @error('final_score')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

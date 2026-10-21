@@ -85,7 +85,7 @@
                             // Only the seni podium shows a score (nilai akhir);
                             // the daeryun score is shown in the bracket.
                             $value = $isArt
-                                ? ($entry['score'] !== null ? number_format((float) $entry['score'], 2) : '')
+                                ? ($entry['score'] !== null ? number_format((float) $entry['score']) : '')
                                 : '';
 
                             // The cards are shown in rank order: 1, 2, 3 and 3.
@@ -293,7 +293,7 @@
                                                 <td>{{ $row['contingent']?->code ?? '-' }}</td>
                                                 <td>{{ $row['schedule']->match_no ?? '-' }}</td>
                                                 <td class="text-end fw-bold">
-                                                    {{ $row['score'] !== null ? number_format($row['score'], 2) : '-' }}
+                                                    {{ $row['score'] !== null ? number_format($row['score']) : '-' }}
                                                 </td>
                                                 <td>
                                                     <span class="badge {{ ($row['performance']->status ?? '') === 'finished' ? 'bg-success' : 'bg-secondary' }}">

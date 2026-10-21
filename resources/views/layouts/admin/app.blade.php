@@ -262,6 +262,11 @@
                 button.disabled = picked.length === 0;
             });
 
+            // The toolbar is hidden while nothing is selected.
+            document.querySelectorAll('[data-bulk-bar]').forEach(function(bar) {
+                bar.classList.toggle('d-none', picked.length === 0);
+            });
+
             document.querySelectorAll('[data-bulk-all]').forEach(function(master) {
                 const table = master.closest('table');
                 const scoped = Array.from((table || document).querySelectorAll('[data-bulk-row]'));

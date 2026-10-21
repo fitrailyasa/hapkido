@@ -5,7 +5,7 @@
      selected ids and posts them to the given bulk destroy route after a
      confirmation. --}}
 @can($permission)
-    <form action="{{ route($route) }}" method="POST" data-bulk-form class="mb-3">
+    <form action="{{ route($route) }}" method="POST" data-bulk-form data-bulk-bar class="mb-3">
         @csrf
         <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="text-body-secondary small">
