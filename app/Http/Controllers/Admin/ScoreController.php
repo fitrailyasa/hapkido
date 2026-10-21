@@ -41,13 +41,13 @@ class ScoreController extends Controller
     {
         $data = $request->validate(
             [
-                'final_score' => ['required', 'numeric', 'min:0', 'max:100'],
+                'final_score' => ['required', 'numeric', 'min:0', 'max:99999'],
             ],
             [
                 'final_score.required' => 'Nilai akhir wajib diisi.',
                 'final_score.numeric' => 'Nilai akhir harus berupa angka.',
                 'final_score.min' => 'Nilai akhir minimal 0.',
-                'final_score.max' => 'Nilai akhir maksimal 100.',
+                'final_score.max' => 'Nilai akhir maksimal 99999.',
             ]
         );
 

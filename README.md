@@ -115,15 +115,22 @@ DATA ATLET → JADWAL → CALLING → SCAN → PEMERIKSAAN → PERLENGKAPAN → 
 - Hyung, Hosinsul, Nakbop, Lompat Tinggi, Seni Senjata.
 - **Nomor urut tampil** (bukan sistem VS — mekanisme terpisah dari Daeryun).
 
-## 12. Input Nilai Juri (Wajib)
+## 12. Input Nilai Seni (Wajib)
 
-- Nilai Juri 1, Juri 2, Juri 3.
-- Perhitungan nilai akhir + **ranking otomatis** (untuk cabang seni).
+- **Satu nilai akhir** per penampil (0–100), dipakai untuk ranking dan podium.
+- Nilai akhir ini yang menentukan peringkat; tidak lagi memakai rata-rata tiga juri.
+- Nilai juri yang tersimpan sebelumnya tetap ditampilkan sebagai referensi (tidak dipakai untuk ranking).
+- **Ranking otomatis** (untuk cabang seni) + podium per kelas.
 
 ## 13. Hasil & Ranking (Wajib)
 
 - Hasil tiap match, ranking per kelas.
 - Juara 1 / 2 / 3 + perolehan medali per kontingen.
+- **Juara 3 selalu dua orang**:
+  - Daeryun: **dua orang yang kalah semifinal** mendapat Perunggu.
+  - Seni: **peringkat 3 dan 4** (nilai akhir) sama-sama mendapat Perunggu.
+  - Podium memakai urutan 1, 2, 3, 3 dan tabel ranking memakai peringkat yang sama.
+- Logika podium dipakai bersama oleh halaman admin dan display lewat `App\Services\PodiumService`.
 
 ## 14. Public Display (Pendukung) — `/display`, tanpa login
 

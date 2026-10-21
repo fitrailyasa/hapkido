@@ -156,8 +156,8 @@ class MatchupController extends Controller
         $data = $request->validate(
             [
                 'winner_id' => ['required', 'integer', Rule::in($athleteIds)],
-                'score_a' => ['required', 'integer', 'min:0', 'max:999'],
-                'score_b' => ['required', 'integer', 'min:0', 'max:999'],
+                'score_a' => ['required', 'integer', 'min:0', 'max:100'],
+                'score_b' => ['required', 'integer', 'min:0', 'max:100'],
             ],
             [
                 'winner_id.required' => 'Pemenang wajib dipilih.',
@@ -168,8 +168,8 @@ class MatchupController extends Controller
                 'score_b.integer' => 'Skor atlet B harus berupa angka bulat.',
                 'score_a.min' => 'Skor atlet A tidak boleh kurang dari 0.',
                 'score_b.min' => 'Skor atlet B tidak boleh kurang dari 0.',
-                'score_a.max' => 'Skor atlet A maksimal 999.',
-                'score_b.max' => 'Skor atlet B maksimal 999.',
+                'score_a.max' => 'Skor atlet A maksimal 100.',
+                'score_b.max' => 'Skor atlet B maksimal 100.',
             ]
         );
 
