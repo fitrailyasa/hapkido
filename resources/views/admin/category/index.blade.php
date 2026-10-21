@@ -45,7 +45,7 @@
                                 <th>Nama Kelas</th>
                                 <th>Kategori</th>
                                 <th>Gender</th>
-                                <th>Kelas</th>
+                                <th>Tingkat</th>
                                 <th>Atlet</th>
                                 <th>Jadwal</th>
                                 <th class="text-end">Aksi</th>
@@ -57,23 +57,25 @@
                                     <td>{{ $category->id }}</td>
                                     <td class="fw-medium">{{ $category->name }}</td>
                                     <td>
-                                        <span class="badge {{ $category->isArt() ? 'bg-warning text-dark' : 'bg-primary' }}">
+                                        <span
+                                            class="badge {{ $category->isArt() ? 'bg-warning text-dark' : 'bg-primary' }}">
                                             {{ $category->typeLabel() }}
                                         </span>
                                     </td>
                                     <td>{{ $category->genderLabel() }}</td>
                                     <td>{{ $category->age_class ?? '—' }}</td>
-                                    <td><span class="badge bg-info-subtle text-info-emphasis">{{ $category->athletes_count }}</span></td>
+                                    <td><span
+                                            class="badge bg-info-subtle text-info-emphasis">{{ $category->athletes_count }}</span>
+                                    </td>
                                     <td><span class="badge bg-secondary">{{ $category->schedules_count }}</span></td>
                                     <td class="text-end">
                                         <div class="btn-group btn-group-sm">
                                             @can('categories.update')
                                                 <button type="button" class="btn btn-outline-secondary" title="Ubah"
-                                                    aria-label="Ubah kelas"
-                                                    data-bs-toggle="modal" data-bs-target="#modal-edit-category"
+                                                    aria-label="Ubah kelas" data-bs-toggle="modal"
+                                                    data-bs-target="#modal-edit-category"
                                                     data-url="{{ route('admin.categories.update', $category) }}"
-                                                    data-name="{{ $category->name }}"
-                                                    data-type="{{ $category->type }}"
+                                                    data-name="{{ $category->name }}" data-type="{{ $category->type }}"
                                                     data-gender="{{ $category->gender }}"
                                                     data-age_class="{{ $category->age_class }}">
                                                     <i class="bi bi-pencil"></i>
@@ -81,8 +83,8 @@
                                             @endcan
                                             @can('categories.delete')
                                                 <button type="button" class="btn btn-outline-danger" title="Hapus"
-                                                    aria-label="Hapus kelas"
-                                                    data-bs-toggle="modal" data-bs-target="#modal-delete-category"
+                                                    aria-label="Hapus kelas" data-bs-toggle="modal"
+                                                    data-bs-target="#modal-delete-category"
                                                     data-url="{{ route('admin.categories.delete', $category) }}"
                                                     data-name="{{ $category->name }}">
                                                     <i class="bi bi-trash"></i>

@@ -10,7 +10,8 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="new-category-name" class="form-label">Nama Kelas <span class="text-danger">*</span></label>
+                        <label for="new-category-name" class="form-label">Nama Kelas <span
+                                class="text-danger">*</span></label>
                         <input type="text" name="name" id="new-category-name"
                             class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}"
                             placeholder="Contoh: Dewasa Putra -58kg" required />
@@ -20,7 +21,8 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label for="new-category-type" class="form-label">Kategori <span class="text-danger">*</span></label>
+                            <label for="new-category-type" class="form-label">Kategori <span
+                                    class="text-danger">*</span></label>
                             <select id="new-category-type" name="type"
                                 class="form-select @error('type') is-invalid @enderror" required>
                                 <option value="daeryun" @selected(old('type') === 'daeryun')>Daeryun</option>
@@ -31,7 +33,8 @@
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label for="new-category-gender" class="form-label">Gender <span class="text-danger">*</span></label>
+                            <label for="new-category-gender" class="form-label">Gender <span
+                                    class="text-danger">*</span></label>
                             <select id="new-category-gender" name="gender"
                                 class="form-select @error('gender') is-invalid @enderror" required>
                                 <option value="open" @selected(old('gender', 'open') === 'open')>Terbuka</option>
@@ -44,10 +47,10 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="new-category-age_class" class="form-label">Kelas</label>
+                        <label for="new-category-age_class" class="form-label">Tingkat</label>
                         <input type="text" name="age_class" id="new-category-age_class"
-                            class="form-control @error('age_class') is-invalid @enderror"
-                            value="{{ old('age_class') }}" placeholder="Contoh: Dewasa / Junior / Senior" />
+                            class="form-control @error('age_class') is-invalid @enderror" value="{{ old('age_class') }}"
+                            placeholder="Contoh: Dewasa / Junior / Senior" />
                         @error('age_class')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
