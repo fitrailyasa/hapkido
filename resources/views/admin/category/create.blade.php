@@ -44,7 +44,7 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="new-category-age_class" class="form-label">Kelas Usia</label>
+                        <label for="new-category-age_class" class="form-label">Kelas</label>
                         <input type="text" name="age_class" id="new-category-age_class"
                             class="form-control @error('age_class') is-invalid @enderror"
                             value="{{ old('age_class') }}" placeholder="Contoh: Dewasa / Junior / Senior" />

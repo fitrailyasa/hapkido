@@ -45,7 +45,7 @@
                                 <th>Nama Kelas</th>
                                 <th>Kategori</th>
                                 <th>Gender</th>
-                                <th>Kelas Usia</th>
+                                <th>Kelas</th>
                                 <th>Atlet</th>
                                 <th>Jadwal</th>
                                 <th class="text-end">Aksi</th>
