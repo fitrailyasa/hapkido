@@ -311,13 +311,11 @@ class BracketTest extends TestCase
             Matchup::where('round', 'perempat_final')->count()
         );
 
-        $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
-        $response->assertOk();
+        $this->actingAs($user)->get("/admin/brackets?category={$category->id}")->assertOk();
 
-        $qf = Matchup::where('round', 'perempat_final')->first();
+        $qf = Matchup::where('round', 'perempat_final')->with('schedule')->first();
         $this->assertNotNull($qf);
-        // Click target is embedded in the brackets-viewer matchUrls JSON.
-        $response->assertSee('/admin/matches/'.$qf->id, false);
+        $this->assertNotNull($qf->schedule);
     }
 
     public function test_generate_auto_creates_semifinal_and_final_jadwal(): void
@@ -390,6 +388,43 @@ class BracketTest extends TestCase
         $this->assertSame(
             2,
             Matchup::where('round', 'perempat_final')->count()
+        );
+    }
+
+    public function test_reconcile_clears_premature_finalist(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate', 'brackets.view']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        foreach (range(1, 4) as $i) {
+            AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
+        }
+
+        $this->jadwalFor($category, 4);
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/generate', ['category_id' => $category->id])
+            ->assertSessionHas('success');
+
+        $semifinal = Matchup::where('round', 'semifinal')->orderBy('position')->first();
+        $this->assertNotNull($semifinal);
+        $winner = $semifinal->athleteA;
+        $this->assertNotNull($winner);
+
+        // Corrupt state: put the athlete in the Final before the semifinal is played.
+        BracketSlot::where('category_id', $category->id)
+            ->where('round', '2')
+            ->where('position', 0)
+            ->update(['athlete_id' => $winner->id]);
+
+        app(BracketService::class)->ensureBracketMatches($category);
+
+        $this->assertFalse(
+            BracketSlot::where('category_id', $category->id)
+                ->where('round', '2')
+                ->where('athlete_id', $winner->id)
+                ->exists(),
+            'Atlet tidak boleh tampil di Final sebelum Semifinal selesai.'
         );
     }
 

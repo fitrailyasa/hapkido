@@ -162,6 +162,97 @@ class BracketService
     }
 
     /**
+     * Rebuild later-round slots from real results only.
+     *
+     * An athlete may occupy a slot in round N only when:
+     * - the feeder partai in round 2N is finished and they are the winner, or
+     * - the feeder pairing is a structural BYE (one entrant, no matchup).
+     *
+     * This clears premature names in Semifinal/Final when earlier partai are
+     * still open (e.g. after an old multi-hop advance bug).
+     */
+    public function reconcileAdvancement(Category $category): void
+    {
+        $sizes = BracketSlot::where('category_id', $category->id)
+            ->distinct()
+            ->pluck('round')
+            ->map(fn ($round) => (int) $round)
+            ->sortDesc()
+            ->values();
+
+        if ($sizes->count() < 2) {
+            return;
+        }
+
+        $largest = (int) $sizes->first();
+
+        foreach ($sizes as $roundSize) {
+            $roundSize = (int) $roundSize;
+
+            if ($roundSize >= $largest) {
+                continue;
+            }
+
+            $prevSize = $roundSize * 2;
+
+            if (! $sizes->contains($prevSize)) {
+                continue;
+            }
+
+            for ($position = 0; $position < $roundSize; $position++) {
+                $expected = $this->expectedAthleteForSlot($category, $sizes, $prevSize, $position);
+
+                BracketSlot::where('category_id', $category->id)
+                    ->where('round', (string) $roundSize)
+                    ->where('position', $position)
+                    ->update(['athlete_id' => $expected]);
+            }
+        }
+    }
+
+    /**
+     * Who belongs in next-round slot $pairingIndex, based on the previous round.
+     */
+    protected function expectedAthleteForSlot(
+        Category $category,
+        Collection $sizes,
+        int $prevSize,
+        int $pairingIndex
+    ): ?int {
+        $feederMatch = $this->findMatch($category, $sizes, $prevSize, $pairingIndex + 1);
+
+        if ($feederMatch) {
+            if ($feederMatch->status === 'finished' && $feederMatch->winner_athlete_id) {
+                return (int) $feederMatch->winner_athlete_id;
+            }
+
+            // Partai still open — nobody has advanced yet.
+            return null;
+        }
+
+        $slotA = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $prevSize)
+            ->where('position', $pairingIndex * 2)
+            ->value('athlete_id');
+
+        $slotB = BracketSlot::where('category_id', $category->id)
+            ->where('round', (string) $prevSize)
+            ->where('position', ($pairingIndex * 2) + 1)
+            ->value('athlete_id');
+
+        // Structural BYE: only one side ever had an entrant (no matchup row).
+        if ($slotA !== null && $slotB === null) {
+            return (int) $slotA;
+        }
+
+        if ($slotB !== null && $slotA === null) {
+            return (int) $slotB;
+        }
+
+        return null;
+    }
+
+    /**
      * Ensure every competitive pairing has a Matchup + Schedule so bracket
      * boxes (Perempat Final, Semifinal, Final) are clickable.
      *
@@ -169,6 +260,8 @@ class BracketService
      */
     public function ensureBracketMatches(Category $category): void
     {
+        $this->reconcileAdvancement($category);
+
         $sizes = BracketSlot::where('category_id', $category->id)
             ->distinct()
             ->pluck('round')
@@ -193,8 +286,7 @@ class BracketService
             $alive[$largest][$position] = ($row?->athlete_id !== null);
         }
 
-        // Also treat a finished/pending first-round matchup as keeping that
-        // branch alive even if slots were cleared oddly.
+        // First-round matchups keep a branch alive even before slots look filled.
         Matchup::whereHas('schedule', fn ($query) => $query
             ->where('category_id', $category->id)
             ->where('type', 'daeryun'))
@@ -220,6 +312,12 @@ class BracketService
         }
 
         $template = $this->scheduleTemplate($category);
+
+        // Refresh slots after reconcile.
+        $slotsByRound = BracketSlot::where('category_id', $category->id)
+            ->orderBy('position')
+            ->get(['round', 'position', 'athlete_id'])
+            ->groupBy('round');
 
         foreach ($sizes as $roundSize) {
             $roundSize = (int) $roundSize;
@@ -268,9 +366,10 @@ class BracketService
 
         if ($existing) {
             if ($existing->status !== 'finished') {
+                // Sync from slots (null clears a premature advance).
                 $existing->update([
-                    'athlete_a_id' => $athleteAId ?? $existing->athlete_a_id,
-                    'athlete_b_id' => $athleteBId ?? $existing->athlete_b_id,
+                    'athlete_a_id' => $athleteAId,
+                    'athlete_b_id' => $athleteBId,
                 ]);
             }
 
