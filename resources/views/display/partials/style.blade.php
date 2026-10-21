@@ -1334,6 +1334,18 @@
         overflow: hidden;
     }
 
+    .bracket-list {
+        display: flex;
+        flex-direction: column;
+        gap: var(--ds-space-3);
+        margin-bottom: var(--ds-space-3);
+    }
+
+    .bracket-list:empty {
+        display: none;
+        margin-bottom: 0;
+    }
+
     .bracket-scroll {
         overflow-x: auto;
         padding-bottom: var(--ds-space-2);

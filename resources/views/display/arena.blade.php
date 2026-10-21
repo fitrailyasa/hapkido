@@ -273,6 +273,14 @@
             document.getElementById('next-list').innerHTML =
                 nextHtml || '<div class="list-row muted">Tidak ada jadwal.</div>';
 
+            // Bracket of the class played in this arena (daeryun only)
+            window.dsRenderBrackets([{
+                id: (data.arena || {}).id,
+                label: (data.arena || {}).label,
+                name: (data.arena || {}).name,
+                bracket: data.bracket
+            }]);
+
             const stamp = document.getElementById('last-update');
             if (stamp) {
                 stamp.textContent = 'Diperbarui ' + (data.now || '') + ':' + String(new Date().getSeconds()).padStart(2, '0');
