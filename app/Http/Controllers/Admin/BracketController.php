@@ -152,7 +152,11 @@ class BracketController extends Controller
 
         return redirect()
             ->route('admin.brackets.index', ['category' => $category->id])
-            ->with('success', "Bracket kelas {$category->name} berhasil dibuat untuk {$athleteCount} peserta.");
+            ->with(
+                'success',
+                "Bracket kelas {$category->name} berhasil dibuat untuk {$athleteCount} peserta. "
+                .'Lengkapi jam dan arena partai di menu Jadwal bila perlu.'
+            );
     }
 
     /**
