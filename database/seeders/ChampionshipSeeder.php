@@ -252,25 +252,58 @@ class ChampionshipSeeder extends Seeder
         $service = app(BracketService::class);
 
         foreach (['Daeryun Putra', 'Daeryun Putri'] as $name) {
-            $service->generate($categories[$name]);
+            $category = $categories[$name];
+
+            // The bracket is generated from the jadwal, so the jadwal of the
+            // class must exist first.
+            $this->seedDaeryunSchedules($category, $service);
+
+            $service->generate($category);
+        }
+    }
+
+    /**
+     * Create the daeryun jadwal of a class: one row per partai, from the
+     * widest round down to the final. The bracket generator reuses these rows
+     * instead of creating new ones.
+     */
+    protected function seedDaeryunSchedules(Category $category, BracketService $service): void
+    {
+        $athleteCount = $category->athletes()->where('status', 'active')->count();
+
+        if ($athleteCount < 2) {
+            return;
         }
 
-        // Initial schedule (arena & time) for the first daeryun matches
-        foreach (['Daeryun Putra', 'Daeryun Putri'] as $name) {
-            $arena = Arena::where('category_id', $categories[$name]->id)->first();
+        $arena = Arena::forCategory($category->id, 'daeryun');
 
-            Schedule::where('type', 'daeryun')
-                ->where('category_id', $categories[$name]->id)
-                ->orderBy('id')
-                ->take(4)
-                ->get()
-                ->each(function ($schedule, $index) use ($arena) {
-                    $schedule->update([
+        // The bracket is a power of two: 4 athletes -> 2 + 1 partai.
+        $size = 2;
+        while ($size < $athleteCount) {
+            $size *= 2;
+        }
+
+        $sequence = 1;
+
+        for ($roundSize = $size; $roundSize >= 2; $roundSize = (int) ($roundSize / 2)) {
+            for ($position = 1; $position <= $roundSize / 2; $position++) {
+                Schedule::firstOrCreate(
+                    ['match_no' => sprintf('B-%s-%02d', $category->id, $sequence)],
+                    [
+                        'category_id' => $category->id,
                         'arena_id' => $arena?->id,
-                        'start_time' => sprintf('%02d:00:00', 9 + $index),
-                        'end_time' => sprintf('%02d:00:00', 10 + $index),
-                    ]);
-                });
+                        'type' => 'daeryun',
+                        'round' => $service->label($roundSize),
+                        'order_no' => $position,
+                        'match_date' => now()->toDateString(),
+                        'start_time' => sprintf('%02d:00:00', 9 + $sequence),
+                        'end_time' => sprintf('%02d:00:00', 10 + $sequence),
+                        'status' => 'pending',
+                    ]
+                );
+
+                $sequence++;
+            }
         }
     }
 }
