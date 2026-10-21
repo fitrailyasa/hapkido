@@ -102,10 +102,9 @@ namespace Hapkido
                 // updates of a newer installer.
                 Run(php, root, phpDir, "artisan migrate --force");
 
-                if (firstRun)
-                {
-                    Run(php, root, phpDir, "artisan db:seed --class=ProductionSeeder --force");
-                }
+                // Always ensure admin + roles exist. firstRun alone is not enough:
+                // a leftover empty sqlite from a failed earlier start would skip seeding.
+                Run(php, root, phpDir, "artisan db:seed --class=ProductionSeeder --force");
 
                 Console.WriteLine();
                 Console.WriteLine("Aplikasi berjalan di " + url);
