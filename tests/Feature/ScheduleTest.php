@@ -47,12 +47,14 @@ class ScheduleTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.create']);
         $category = CategoryFactory::new()->daeryun()->create();
-        $arena = ArenaFactory::new()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
 
         $response = $this->actingAs($user)->post('/admin/schedules', [
             'match_no' => 'X-001',
             'category_id' => $category->id,
-            'arena_id' => $arena->id,
             'type' => 'daeryun',
             'round' => '',
             'order_no' => '',
@@ -66,12 +68,58 @@ class ScheduleTest extends TestCase
         $response->assertSessionHas('success', 'Jadwal berhasil ditambahkan.');
         $this->assertDatabaseHas('schedules', [
             'match_no' => 'X-001',
+            'arena_id' => $arena->id,
             'round' => 'penyisihan',
             'order_no' => 1,
             'start_time' => '09:30:00',
             'end_time' => '10:15:00',
             'status' => 'pending',
         ]);
+    }
+
+    public function test_schedule_uses_the_arena_of_the_class(): void
+    {
+        $user = $this->userWithPermissions(['schedules.create']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
+
+        // The arena of another class is ignored: the arena follows the class.
+        $otherArena = ArenaFactory::new()->create(['match_type' => 'daeryun']);
+
+        $response = $this->actingAs($user)->post('/admin/schedules', [
+            'match_no' => 'X-100',
+            'category_id' => $category->id,
+            'arena_id' => $otherArena->id,
+            'type' => 'daeryun',
+            'match_date' => '2026-10-20',
+            'status' => 'pending',
+        ]);
+
+        $response->assertRedirect(route('admin.schedules.index'));
+        $this->assertDatabaseHas('schedules', [
+            'match_no' => 'X-100',
+            'arena_id' => $arena->id,
+        ]);
+    }
+
+    public function test_schedule_is_rejected_when_the_class_has_no_arena(): void
+    {
+        $user = $this->userWithPermissions(['schedules.create']);
+        $category = CategoryFactory::new()->daeryun()->create();
+
+        $response = $this->actingAs($user)->from('/admin/schedules')->post('/admin/schedules', [
+            'match_no' => 'X-101',
+            'category_id' => $category->id,
+            'type' => 'daeryun',
+            'match_date' => '2026-10-20',
+            'status' => 'pending',
+        ]);
+
+        $response->assertSessionHasErrors('category_id');
+        $this->assertDatabaseMissing('schedules', ['match_no' => 'X-101']);
     }
 
     public function test_schedule_rejects_invalid_time_format(): void
@@ -128,11 +176,14 @@ class ScheduleTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.update']);
         $schedule = ScheduleFactory::new()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $schedule->category_id,
+            'match_type' => 'art',
+        ]);
 
         $response = $this->actingAs($user)->put("/admin/schedules/{$schedule->id}", [
             'match_no' => $schedule->match_no,
             'category_id' => $schedule->category_id,
-            'arena_id' => '',
             'type' => 'art',
             'round' => 'penampilan',
             'order_no' => 5,
@@ -149,6 +200,7 @@ class ScheduleTest extends TestCase
             'type' => 'art',
             'round' => 'penampilan',
             'status' => 'preparation',
+            'arena_id' => $arena->id,
         ]);
     }
 

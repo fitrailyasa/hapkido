@@ -29,4 +29,35 @@ class Arena extends Model
             default => 'Menunggu',
         };
     }
+
+    /**
+     * The arena that handles the given class.
+     *
+     * Every arena handles one class, so a schedule only needs the class: the
+     * arena follows the class. When the class has no arena yet, a general
+     * arena (without a class) of the same type is used.
+     */
+    public static function forCategory(?int $categoryId, ?string $type = null): ?self
+    {
+        if ($categoryId) {
+            $arena = static::query()
+                ->where('category_id', $categoryId)
+                ->orderBy('id')
+                ->first();
+
+            if ($arena) {
+                return $arena;
+            }
+        }
+
+        if ($type === null) {
+            return null;
+        }
+
+        return static::query()
+            ->whereNull('category_id')
+            ->where('match_type', $type)
+            ->orderBy('id')
+            ->first();
+    }
 }

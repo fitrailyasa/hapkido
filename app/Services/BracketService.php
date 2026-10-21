@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Athlete;
 use App\Models\BracketSlot;
 use App\Models\Category;
+use App\Models\Arena;
 use App\Models\Matchup;
 use App\Models\Schedule;
 use Illuminate\Support\Collection;
@@ -105,7 +106,8 @@ class BracketService
                 $schedule = Schedule::create([
                     'match_no' => $this->nextMatchNo(),
                     'category_id' => $category->id,
-                    'arena_id' => null,
+                    // The arena follows the class.
+                    'arena_id' => Arena::forCategory($category->id, 'daeryun')?->id,
                     'type' => 'daeryun',
                     'round' => $this->label($roundSize),
                     'order_no' => $position + 1,

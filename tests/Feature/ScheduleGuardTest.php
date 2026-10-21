@@ -23,13 +23,15 @@ class ScheduleGuardTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.create']);
         $category = CategoryFactory::new()->daeryun()->create();
-        $arena = ArenaFactory::new()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
         $busy = ScheduleFactory::new()->running()->create(['arena_id' => $arena->id]);
 
         $response = $this->actingAs($user)->from('/admin/schedules')->post('/admin/schedules', [
             'match_no' => 'X-101',
             'category_id' => $category->id,
-            'arena_id' => $arena->id,
             'type' => 'daeryun',
             'match_date' => now()->toDateString(),
             'start_time' => '13:00',
@@ -45,7 +47,10 @@ class ScheduleGuardTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.create']);
         $category = CategoryFactory::new()->daeryun()->create();
-        $arena = ArenaFactory::new()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
         $existing = ScheduleFactory::new()->create([
             'arena_id' => $arena->id,
             'start_time' => '09:00:00',
@@ -56,7 +61,6 @@ class ScheduleGuardTest extends TestCase
         $response = $this->actingAs($user)->from('/admin/schedules')->post('/admin/schedules', [
             'match_no' => 'X-102',
             'category_id' => $category->id,
-            'arena_id' => $arena->id,
             'type' => 'daeryun',
             'match_date' => now()->toDateString(),
             'start_time' => '09:30',
@@ -72,12 +76,14 @@ class ScheduleGuardTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.create']);
         $category = CategoryFactory::new()->daeryun()->create();
-        $arena = ArenaFactory::new()->create();
+        ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
 
         $response = $this->actingAs($user)->from('/admin/schedules')->post('/admin/schedules', [
             'match_no' => 'X-103',
             'category_id' => $category->id,
-            'arena_id' => $arena->id,
             'type' => 'daeryun',
             'match_date' => now()->toDateString(),
             'start_time' => '14:00',
@@ -93,7 +99,10 @@ class ScheduleGuardTest extends TestCase
     {
         $user = $this->userWithPermissions(['schedules.create']);
         $category = CategoryFactory::new()->daeryun()->create();
-        $arena = ArenaFactory::new()->create();
+        $arena = ArenaFactory::new()->create([
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+        ]);
         ScheduleFactory::new()->create([
             'arena_id' => $arena->id,
             'start_time' => '09:00:00',
@@ -104,7 +113,6 @@ class ScheduleGuardTest extends TestCase
         $response = $this->actingAs($user)->post('/admin/schedules', [
             'match_no' => 'X-104',
             'category_id' => $category->id,
-            'arena_id' => $arena->id,
             'type' => 'daeryun',
             'match_date' => now()->toDateString(),
             'start_time' => '10:00',

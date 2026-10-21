@@ -61,6 +61,64 @@ class ArenaTest extends TestCase
         $response->assertSessionHasErrors('name', 'Nama arena sudah digunakan.');
     }
 
+    public function test_a_class_can_only_be_handled_by_one_arena(): void
+    {
+        $user = $this->userWithPermissions(['arenas.create']);
+        $category = CategoryFactory::new()->create();
+        ArenaFactory::new()->create(['category_id' => $category->id]);
+
+        $response = $this->actingAs($user)->from('/admin/arenas')->post('/admin/arenas', [
+            'name' => 'Arena Kedua',
+            'label' => 'K2',
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+            'status' => 'idle',
+        ]);
+
+        $response->assertSessionHasErrors('category_id', 'Kelas ini sudah dipakai arena lain.');
+        $this->assertDatabaseMissing('arenas', ['name' => 'Arena Kedua']);
+    }
+
+    public function test_an_arena_cannot_take_a_class_of_another_arena(): void
+    {
+        $user = $this->userWithPermissions(['arenas.update']);
+        $category = CategoryFactory::new()->create();
+        ArenaFactory::new()->create(['category_id' => $category->id]);
+        $arena = ArenaFactory::new()->create();
+
+        $response = $this->actingAs($user)->from('/admin/arenas')->put("/admin/arenas/{$arena->id}", [
+            'name' => $arena->name,
+            'label' => $arena->label,
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+            'status' => 'idle',
+        ]);
+
+        $response->assertSessionHasErrors('category_id', 'Kelas ini sudah dipakai arena lain.');
+        $this->assertDatabaseHas('arenas', ['id' => $arena->id, 'category_id' => null]);
+    }
+
+    public function test_an_arena_can_keep_its_own_class(): void
+    {
+        $user = $this->userWithPermissions(['arenas.update']);
+        $category = CategoryFactory::new()->create();
+        $arena = ArenaFactory::new()->create(['category_id' => $category->id]);
+
+        $response = $this->actingAs($user)->from('/admin/arenas')->put("/admin/arenas/{$arena->id}", [
+            'name' => 'Arena Diubah',
+            'label' => 'ZZ',
+            'category_id' => $category->id,
+            'match_type' => 'daeryun',
+            'status' => 'preparation',
+        ]);
+
+        $response->assertSessionHas('success', 'Arena berhasil diperbarui.');
+        $this->assertDatabaseHas('arenas', [
+            'id' => $arena->id,
+            'category_id' => $category->id,
+        ]);
+    }
+
     public function test_arena_status_validation_is_enforced(): void
     {
         $user = $this->userWithPermissions(['arenas.create']);

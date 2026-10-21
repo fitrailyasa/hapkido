@@ -154,8 +154,11 @@ class SchedulesImport implements ToModel, WithHeadingRow, WithValidation, SkipsE
             return null;
         }
 
-        $arena = $this->resolveArena($row['arena'] ?? null);
         $type = ($row['jenis'] ?? '') !== '' ? $row['jenis'] : 'daeryun';
+
+        // The arena follows the class. The arena column of the spreadsheet is
+        // only used when the class has no arena yet.
+        $arena = Arena::forCategory($category->id, $type) ?? $this->resolveArena($row['arena'] ?? null);
 
         return new Schedule([
             'match_no' => (string) ($row['match_no'] ?? ''),

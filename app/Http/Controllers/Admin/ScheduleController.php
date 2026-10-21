@@ -28,6 +28,7 @@ class ScheduleController extends Controller
             'schedules' => $this->query($filters)->paginate(10)->withQueryString(),
             'arenas' => Arena::orderBy('name')->get(['id', 'name']),
             'categories' => Category::orderBy('name')->get(),
+            'arenaByCategory' => $this->arenaByCategory(),
             'statuses' => self::STATUSES,
             'q' => $filters['q'],
             'dateFilter' => $filters['date'],
@@ -189,7 +190,6 @@ class ScheduleController extends Controller
         $data = $request->validate([
             'match_no' => ['required', 'string', 'max:255', $uniqueMatchNo],
             'category_id' => ['required', Rule::exists('categories', 'id')],
-            'arena_id' => ['nullable', Rule::exists('arenas', 'id')],
             'type' => ['required', 'in:daeryun,art'],
             'round' => [
                 'nullable',
@@ -214,11 +214,52 @@ class ScheduleController extends Controller
 
         $data['round'] = $data['round'] ?? ($data['type'] === 'art' ? 'penampilan' : 'penyisihan');
         $data['order_no'] = (int) ($data['order_no'] ?? 1);
-        $data['arena_id'] = $data['arena_id'] ?? null;
+        $data['arena_id'] = $this->resolveArenaId((int) $data['category_id'], $data['type']);
         $data['start_time'] = $this->normalizeTime($data['start_time'] ?? null);
         $data['end_time'] = $this->normalizeTime($data['end_time'] ?? null);
 
         return $data;
+    }
+
+    /**
+     * The arena that handles the class of the schedule.
+     *
+     * The arena follows the class, so the schedule form only asks for the
+     * class. When no arena handles the class yet, the schedule is rejected
+     * with a hint to assign the class to an arena first.
+     */
+    protected function resolveArenaId(int $categoryId, string $type): ?int
+    {
+        $arena = Arena::forCategory($categoryId, $type);
+
+        if ($arena) {
+            return $arena->id;
+        }
+
+        $category = Category::find($categoryId);
+
+        throw \Illuminate\Validation\ValidationException::withMessages([
+            'category_id' => sprintf(
+                'Kelas %s belum memiliki arena. Tetapkan kelas ini ke arena pada menu Arena terlebih dahulu.',
+                $category?->name ?? 'terpilih'
+            ),
+        ]);
+    }
+
+    /**
+     * The arena of every class, so the form can show which arena will be used.
+     *
+     * @return array<string, string>
+     */
+    protected function arenaByCategory(): array
+    {
+        $map = [];
+
+        foreach (Arena::query()->whereNotNull('category_id')->orderBy('id')->get() as $arena) {
+            $map[(string) $arena->category_id] ??= $arena->name;
+        }
+
+        return $map;
     }
 
     /**

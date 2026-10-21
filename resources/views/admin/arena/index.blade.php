@@ -146,13 +146,14 @@
                                 <option value="">— Umum / semua kelas —</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
-                                        {{ $category->name }}
+                                        {{ $category->name }}{{ isset($arenaOwners[$category->id]) ? ' — dipakai ' . $arenaOwners[$category->id] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('category_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="form-text">Satu kelas hanya bisa ditangani satu arena.</div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">
@@ -226,13 +227,14 @@
                                 <option value="">— Umum / semua kelas —</option>
                                 @foreach ($categories as $category)
                                     <option value="{{ $category->id }}" @selected(old('category_id') == $category->id)>
-                                        {{ $category->name }}
+                                        {{ $category->name }}{{ isset($arenaOwners[$category->id]) ? ' — dipakai ' . $arenaOwners[$category->id] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                             @error('category_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            <div class="form-text">Satu kelas hanya bisa ditangani satu arena.</div>
                         </div>
                         <div class="row">
                             <div class="col-md-6 mb-3">

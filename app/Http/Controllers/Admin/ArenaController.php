@@ -19,7 +19,26 @@ class ArenaController extends Controller
                 ->orderBy('name')
                 ->get(),
             'categories' => Category::orderBy('name')->get(),
+            // The arena of every class, so the form can mark the classes that
+            // are already handled by another arena.
+            'arenaOwners' => $this->arenaOwners(),
         ]);
+    }
+
+    /**
+     * The arena that handles every class.
+     *
+     * @return array<string, string>
+     */
+    protected function arenaOwners(): array
+    {
+        $map = [];
+
+        foreach (Arena::query()->whereNotNull('category_id')->orderBy('id')->get() as $arena) {
+            $map[(string) $arena->category_id] ??= $arena->name;
+        }
+
+        return $map;
     }
 
     public function store(Request $request): RedirectResponse
@@ -27,11 +46,12 @@ class ArenaController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('arenas', 'name')],
             'label' => ['required', 'string', 'max:255'],
-            'category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'category_id' => ['nullable', Rule::exists('categories', 'id'), Rule::unique('arenas', 'category_id')],
             'match_type' => ['required', 'in:daeryun,art'],
             'status' => ['required', 'in:idle,preparation,running'],
         ], [
             'name.unique' => 'Nama arena sudah digunakan.',
+            'category_id.unique' => 'Kelas ini sudah dipakai arena lain.',
         ]);
 
         Arena::create([
@@ -52,11 +72,16 @@ class ArenaController extends Controller
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('arenas', 'name')->ignore($arena->id)],
             'label' => ['required', 'string', 'max:255'],
-            'category_id' => ['nullable', Rule::exists('categories', 'id')],
+            'category_id' => [
+                'nullable',
+                Rule::exists('categories', 'id'),
+                Rule::unique('arenas', 'category_id')->ignore($arena->id),
+            ],
             'match_type' => ['required', 'in:daeryun,art'],
             'status' => ['required', 'in:idle,preparation,running'],
         ], [
             'name.unique' => 'Nama arena sudah digunakan.',
+            'category_id.unique' => 'Kelas ini sudah dipakai arena lain.',
         ]);
 
         $data['category_id'] = $data['category_id'] ?: null;

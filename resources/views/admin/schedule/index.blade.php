@@ -136,7 +136,6 @@
                                                         data-url="{{ route('admin.schedules.update', $schedule) }}"
                                                         data-match_no="{{ $schedule->match_no }}"
                                                         data-category="{{ $schedule->category_id }}"
-                                                        data-arena="{{ $schedule->arena_id }}"
                                                         data-type="{{ $schedule->type }}" data-round="{{ $schedule->round }}"
                                                         data-order_no="{{ $schedule->order_no }}"
                                                         data-date="{{ $schedule->match_date?->format('Y-m-d') }}"
@@ -226,6 +225,37 @@
 
             bindRoundSelect('new-schedule-type', 'new-schedule-round');
 
+            // The arena follows the class, so the form only shows which arena
+            // will be used.
+            const arenaByCategory = @json($arenaByCategory);
+
+            const syncArenaInfo = function(categorySelect, arenaInput) {
+                if (!categorySelect || !arenaInput) return;
+
+                const name = arenaByCategory[categorySelect.value] || '';
+
+                arenaInput.value = name;
+                arenaInput.placeholder = name === ''
+                    ? '— Kelas ini belum punya arena —'
+                    : '— Pilih kelas dulu —';
+            };
+
+            const bindArenaInfo = function(categoryId, arenaId) {
+                const categorySelect = document.getElementById(categoryId);
+                const arenaInput = document.getElementById(arenaId);
+
+                if (!categorySelect || !arenaInput) return;
+
+                syncArenaInfo(categorySelect, arenaInput);
+
+                categorySelect.addEventListener('change', function() {
+                    syncArenaInfo(categorySelect, arenaInput);
+                });
+            };
+
+            bindArenaInfo('new-schedule-category_id', 'new-schedule-arena');
+            bindArenaInfo('edit-schedule-category_id', 'edit-schedule-arena');
+
             editModalEl.addEventListener('show.bs.modal', function(event) {
                 const trigger = event.relatedTarget;
                 if (!trigger) return;
@@ -234,7 +264,10 @@
                 form.setAttribute('action', trigger.dataset.url);
                 form.querySelector('[name="match_no"]').value = trigger.dataset.match_no || '';
                 form.querySelector('[name="category_id"]').value = trigger.dataset.category || '';
-                form.querySelector('[name="arena_id"]').value = trigger.dataset.arena || '';
+                syncArenaInfo(
+                    form.querySelector('[name="category_id"]'),
+                    document.getElementById('edit-schedule-arena')
+                );
                 form.querySelector('[name="type"]').value = trigger.dataset.type || 'daeryun';
                 form.querySelector('[name="round"]').value = trigger.dataset.round || 'penyisihan';
                 syncRoundOptions(form.querySelector('[name="round"]'), form.querySelector('[name="type"]').value);

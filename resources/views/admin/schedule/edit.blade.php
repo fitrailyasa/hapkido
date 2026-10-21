@@ -38,19 +38,10 @@
                             @enderror
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label for="edit-schedule-arena_id" class="form-label">Arena</label>
-                            <select id="edit-schedule-arena_id" name="arena_id"
-                                class="form-select @error('arena_id') is-invalid @enderror">
-                                <option value="">— Belum ditentukan —</option>
-                                @foreach ($arenas as $arena)
-                                    <option value="{{ $arena->id }}" @selected(old('arena_id') == $arena->id)>
-                                        {{ $arena->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('arena_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                            <label for="edit-schedule-arena" class="form-label">Arena</label>
+                            <input type="text" id="edit-schedule-arena" class="form-control" readonly
+                                value="" placeholder="— Pilih kelas dulu —" />
+                            <div class="form-text">Arena mengikuti kelas.</div>
                         </div>
                         <div class="col-md-3 mb-3">
                             <label for="edit-schedule-type" class="form-label">Kategori <span class="text-danger">*</span></label>
