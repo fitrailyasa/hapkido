@@ -43,10 +43,20 @@ namespace Hapkido
                 if (args.Length > 1 && args[1].Length > 0) port = args[1];
 
                 // The .env is created on the first run, so every installation gets
-                // its own application key.
+                // its own application key. Older builds used ';' comments which
+                // Laravel dotenv rejects — rewrite those from the template.
                 if (!File.Exists(envFile) && File.Exists(envTemplate))
                 {
                     File.Copy(envTemplate, envFile);
+                }
+                else if (File.Exists(envFile) && File.Exists(envTemplate) && EnvLooksBroken(envFile))
+                {
+                    string previousKey = ReadEnv(envFile, "APP_KEY");
+                    File.Copy(envTemplate, envFile, true);
+                    if (previousKey.Length > 0)
+                    {
+                        WriteEnv(envFile, "APP_KEY", previousKey);
+                    }
                 }
 
                 if (!File.Exists(envFile))
@@ -57,9 +67,10 @@ namespace Hapkido
                 string url = "http://" + (host == "0.0.0.0" ? "127.0.0.1" : host) + ":" + port;
                 WriteEnv(envFile, "APP_URL", url);
 
-                // SQLite database file.
+                // SQLite database file (absolute path — empty DB_DATABASE breaks PDO on Windows).
                 string database = Path.Combine(root, "database", "database.sqlite");
                 Directory.CreateDirectory(Path.GetDirectoryName(database));
+                WriteEnv(envFile, "DB_DATABASE", database.Replace('\\', '/'));
 
                 bool firstRun = !File.Exists(database);
 
@@ -69,6 +80,7 @@ namespace Hapkido
                 }
 
                 Console.WriteLine("Menyiapkan aplikasi ...");
+                EnsureStorageDirs(root);
 
                 if (ReadEnv(envFile, "APP_KEY").Length == 0)
                 {
@@ -85,8 +97,6 @@ namespace Hapkido
                     Directory.CreateDirectory(target);
                     Run("cmd.exe", root, null, "/c mklink /J \"" + link + "\" \"" + target + "\"");
                 }
-
-                EnsureStorageDirs(root);
 
                 // Migrations are idempotent, so they run on every start and pick up
                 // updates of a newer installer.
@@ -158,7 +168,7 @@ namespace Hapkido
             }
         }
 
-        private static Process Start(string file, string workingDirectory, string phpDir, string arguments)
+        private static Process Start(string file, string workingDirectory, string phpDir, string arguments, bool redirect = false)
         {
             try
             {
@@ -168,8 +178,8 @@ namespace Hapkido
                     WorkingDirectory = workingDirectory,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    RedirectStandardOutput = false,
-                    RedirectStandardError = false
+                    RedirectStandardOutput = redirect,
+                    RedirectStandardError = redirect
                 };
 
                 if (!string.IsNullOrEmpty(phpDir))
@@ -191,19 +201,35 @@ namespace Hapkido
 
         private static void Run(string file, string workingDirectory, string phpDir, string arguments)
         {
-            Process process = Start(file, workingDirectory, phpDir, arguments);
+            Process process = Start(file, workingDirectory, phpDir, arguments, redirect: true);
 
             if (process == null)
             {
                 throw new InvalidOperationException("Perintah gagal: " + file + " " + arguments);
             }
 
+            string stdout = process.StandardOutput.ReadToEnd();
+            string stderr = process.StandardError.ReadToEnd();
             process.WaitForExit();
+
+            if (!string.IsNullOrWhiteSpace(stdout))
+            {
+                Console.WriteLine(stdout.TrimEnd());
+            }
 
             if (process.ExitCode != 0)
             {
+                string detail = string.IsNullOrWhiteSpace(stderr) ? stdout : stderr;
+                detail = (detail ?? string.Empty).Trim();
+
+                if (detail.Length > 800)
+                {
+                    detail = detail.Substring(detail.Length - 800);
+                }
+
                 throw new InvalidOperationException(
-                    "Perintah gagal (" + process.ExitCode + "): " + file + " " + arguments);
+                    "Perintah gagal (" + process.ExitCode + "): " + file + " " + arguments
+                    + (detail.Length > 0 ? Environment.NewLine + detail : string.Empty));
             }
         }
 
@@ -235,6 +261,21 @@ namespace Hapkido
             {
                 // The browser is optional; the address is printed on screen.
             }
+        }
+
+        private static bool EnvLooksBroken(string file)
+        {
+            foreach (string line in File.ReadAllLines(file))
+            {
+                string trimmed = line.TrimStart();
+
+                if (trimmed.StartsWith(";") && !trimmed.StartsWith("#!"))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static string ReadEnv(string file, string key)
