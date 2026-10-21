@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Athlete;
 use App\Models\BracketSlot;
 use App\Models\Category;
+use App\Models\Matchup;
 use App\Models\Schedule;
 use App\Services\BracketViewerService;
 use Illuminate\Http\RedirectResponse;
@@ -37,6 +38,7 @@ class BracketController extends Controller
         $firstRound = null;
         $manualPartai = collect();
         $athletes = collect();
+        $usedAthleteIds = collect();
 
         if ($selected) {
             $athleteCount = $selected->athletes()->where('status', 'active')->count();
@@ -100,6 +102,7 @@ class BracketController extends Controller
             'firstRound' => $firstRound,
             'manualPartai' => $manualPartai,
             'athletes' => $athletes,
+            'usedAthleteIds' => $usedAthleteIds,
         ]);
     }
 
@@ -179,7 +182,7 @@ class BracketController extends Controller
             return back()->with('error', "Partai {$schedule->match_no} sudah memiliki atlet.");
         }
 
-        if ($data['athlete_a_id'] === $data['athlete_b_id']) {
+        if ((int) $data['athlete_a_id'] === (int) $data['athlete_b_id']) {
             return back()->with('error', 'Dua atlet yang dipilih tidak boleh sama.');
         }
 
@@ -195,6 +198,47 @@ class BracketController extends Controller
 
         $athleteA = $athletes[$data['athlete_a_id']];
         $athleteB = $athletes[$data['athlete_b_id']];
+
+        $scheduleIds = Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->pluck('id');
+
+        $existingMatchups = Matchup::whereIn('schedule_id', $scheduleIds)
+            ->get(['athlete_a_id', 'athlete_b_id']);
+
+        $alreadyFought = $existingMatchups->contains(function (Matchup $match) use ($athleteA, $athleteB) {
+            $pair = [(int) $match->athlete_a_id, (int) $match->athlete_b_id];
+
+            return in_array((int) $athleteA->id, $pair, true)
+                && in_array((int) $athleteB->id, $pair, true);
+        });
+
+        if ($alreadyFought) {
+            return back()->with(
+                'error',
+                "{$athleteA->name} dan {$athleteB->name} sudah pernah dipertandingkan."
+            );
+        }
+
+        $usedAthleteIds = $existingMatchups
+            ->flatMap(fn (Matchup $match) => [$match->athlete_a_id, $match->athlete_b_id])
+            ->filter()
+            ->unique()
+            ->map(fn ($id) => (int) $id);
+
+        $alreadyPaired = collect([$athleteA, $athleteB])
+            ->filter(fn (Athlete $athlete) => $usedAthleteIds->contains((int) $athlete->id))
+            ->pluck('name')
+            ->values();
+
+        if ($alreadyPaired->isNotEmpty()) {
+            return back()->with(
+                'error',
+                $alreadyPaired->count() === 1
+                    ? "Atlet {$alreadyPaired[0]} sudah bertanding di partai lain."
+                    : 'Atlet '.$alreadyPaired->implode(' dan ').' sudah bertanding di partai lain.'
+            );
+        }
 
         try {
             DB::transaction(function () use ($category, $schedule, $athleteA, $athleteB) {

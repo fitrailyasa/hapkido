@@ -311,6 +311,140 @@ class BracketTest extends TestCase
         $this->assertSame(0, Matchup::count());
     }
 
+    public function test_manual_partai_rejects_the_same_athlete_on_both_sides(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athlete = AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        AthleteFactory::new()->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        $this->jadwalFor($category, 2);
+
+        $schedule = Schedule::where('category_id', $category->id)->first();
+
+        $response = $this->actingAs($user)
+            ->from('/admin/brackets')
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedule->id,
+                'athlete_a_id' => $athlete->id,
+                'athlete_b_id' => $athlete->id,
+            ]);
+
+        $response->assertSessionHas('error', 'Dua atlet yang dipilih tidak boleh sama.');
+        $this->assertSame(0, Matchup::count());
+    }
+
+    public function test_manual_partai_rejects_an_athlete_already_paired(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athletes = AthleteFactory::new()->times(4)->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        $this->jadwalFor($category, 4);
+
+        $schedules = Schedule::where('category_id', $category->id)
+            ->where('round', 'semifinal')
+            ->orderBy('order_no')
+            ->get();
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedules[0]->id,
+                'athlete_a_id' => $athletes[0]->id,
+                'athlete_b_id' => $athletes[1]->id,
+            ])
+            ->assertSessionHas('success');
+
+        $response = $this->actingAs($user)
+            ->from('/admin/brackets')
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedules[1]->id,
+                'athlete_a_id' => $athletes[0]->id,
+                'athlete_b_id' => $athletes[2]->id,
+            ]);
+
+        $response->assertSessionHas(
+            'error',
+            "Atlet {$athletes[0]->name} sudah bertanding di partai lain."
+        );
+        $this->assertSame(1, Matchup::count());
+    }
+
+    public function test_manual_partai_rejects_athletes_that_already_fought(): void
+    {
+        $user = $this->userWithPermissions(['brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athletes = AthleteFactory::new()->times(4)->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        $this->jadwalFor($category, 4);
+
+        $schedules = Schedule::where('category_id', $category->id)
+            ->where('round', 'semifinal')
+            ->orderBy('order_no')
+            ->get();
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedules[0]->id,
+                'athlete_a_id' => $athletes[0]->id,
+                'athlete_b_id' => $athletes[1]->id,
+            ])
+            ->assertSessionHas('success');
+
+        $response = $this->actingAs($user)
+            ->from('/admin/brackets')
+            ->post('/admin/brackets/manual', [
+                'schedule_id' => $schedules[1]->id,
+                'athlete_a_id' => $athletes[1]->id,
+                'athlete_b_id' => $athletes[0]->id,
+            ]);
+
+        $response->assertSessionHas(
+            'error',
+            "{$athletes[1]->name} dan {$athletes[0]->name} sudah pernah dipertandingkan."
+        );
+        $this->assertSame(1, Matchup::count());
+    }
+
+    public function test_manual_partai_marks_athletes_that_already_fought(): void
+    {
+        $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
+        $category = CategoryFactory::new()->daeryun()->create();
+        $athletes = AthleteFactory::new()->times(4)->create([
+            'category_id' => $category->id,
+            'status' => 'active',
+        ]);
+        $this->jadwalFor($category, 4);
+
+        $schedule = Schedule::where('category_id', $category->id)
+            ->where('round', 'semifinal')
+            ->orderBy('order_no')
+            ->first();
+
+        app(BracketService::class)->assignManual(
+            $category,
+            $schedule,
+            $athletes[0],
+            $athletes[1]
+        );
+
+        $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
+
+        $response->assertOk();
+        $response->assertSee('— sudah bertanding');
+        $response->assertSee($athletes[0]->name);
+        $response->assertSee($athletes[1]->name);
+    }
+
     public function test_generated_bracket_is_shown_on_index(): void
     {
         $user = $this->userWithPermissions(['brackets.generate', 'brackets.view']);

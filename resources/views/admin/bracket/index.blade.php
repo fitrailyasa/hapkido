@@ -62,7 +62,8 @@
                     <div class="card-body p-0">
                         <div class="list-group list-group-flush">
                             @foreach ($manualPartai as $partai)
-                                <form action="{{ route('admin.brackets.manual') }}" method="POST" class="list-group-item">
+                                <form action="{{ route('admin.brackets.manual') }}" method="POST"
+                                    class="list-group-item js-manual-partai">
                                     @csrf
                                     <input type="hidden" name="schedule_id" value="{{ $partai->id }}" />
                                     <div class="row g-2 align-items-center">
@@ -76,22 +77,34 @@
                                             </div>
                                         </div>
                                         <div class="col-12 col-md-4">
-                                            <select name="athlete_a_id" class="form-select form-select-sm" required>
+                                            <select name="athlete_a_id"
+                                                class="form-select form-select-sm js-manual-athlete" required>
                                                 <option value="">— Pilih atlet —</option>
                                                 @foreach ($athletes as $athlete)
-                                                    <option value="{{ $athlete->id }}">
+                                                    @php $isUsed = $usedAthleteIds->contains($athlete->id); @endphp
+                                                    <option value="{{ $athlete->id }}" @disabled($isUsed)
+                                                        data-used="{{ $isUsed ? '1' : '0' }}">
                                                         {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                        @if ($isUsed)
+                                                            — sudah bertanding
+                                                        @endif
                                                     </option>
                                                 @endforeach
                                             </select>
                                         </div>
                                         <div class="col-12 col-md-1 text-center fw-bold text-body-secondary">VS</div>
                                         <div class="col-12 col-md-4">
-                                            <select name="athlete_b_id" class="form-select form-select-sm" required>
+                                            <select name="athlete_b_id"
+                                                class="form-select form-select-sm js-manual-athlete" required>
                                                 <option value="">— Pilih atlet —</option>
                                                 @foreach ($athletes as $athlete)
-                                                    <option value="{{ $athlete->id }}">
+                                                    @php $isUsed = $usedAthleteIds->contains($athlete->id); @endphp
+                                                    <option value="{{ $athlete->id }}" @disabled($isUsed)
+                                                        data-used="{{ $isUsed ? '1' : '0' }}">
                                                         {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                        @if ($isUsed)
+                                                            — sudah bertanding
+                                                        @endif
                                                     </option>
                                                 @endforeach
                                             </select>
@@ -285,6 +298,56 @@
                     });
                 });
             }
+
+            document.querySelectorAll('.js-manual-partai').forEach(function(partaiForm) {
+                const selects = partaiForm.querySelectorAll('.js-manual-athlete');
+                if (selects.length !== 2) return;
+
+                function syncManualAthletes() {
+                    const selected = Array.from(selects).map(function(select) {
+                        return select.value;
+                    });
+
+                    selects.forEach(function(select, index) {
+                        const otherValue = selected[index === 0 ? 1 : 0];
+
+                        Array.from(select.options).forEach(function(option) {
+                            if (!option.value) return;
+
+                            const used = option.dataset.used === '1';
+                            option.disabled = used || (otherValue !== '' && option.value === otherValue);
+                        });
+                    });
+                }
+
+                selects.forEach(function(select) {
+                    select.addEventListener('change', syncManualAthletes);
+                });
+                syncManualAthletes();
+
+                partaiForm.addEventListener('submit', function(event) {
+                    const athleteA = selects[0].value;
+                    const athleteB = selects[1].value;
+
+                    if (!athleteA || !athleteB) return;
+
+                    if (athleteA === athleteB) {
+                        event.preventDefault();
+                        swalError('Validasi gagal', 'Dua atlet yang dipilih tidak boleh sama.');
+                        return;
+                    }
+
+                    const usedSelected = Array.from(selects).some(function(select) {
+                        const option = select.selectedOptions[0];
+                        return option && option.dataset.used === '1';
+                    });
+
+                    if (usedSelected) {
+                        event.preventDefault();
+                        swalError('Validasi gagal', 'Salah satu atlet sudah bertanding di partai lain.');
+                    }
+                });
+            });
 
             const data = @json($viewerData);
             const container = document.querySelector('.brackets-viewer');
