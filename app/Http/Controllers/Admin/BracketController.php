@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\BracketNeedsSchedule;
 use App\Http\Controllers\Controller;
+use App\Models\Athlete;
 use App\Models\BracketSlot;
 use App\Models\Category;
+use App\Models\Schedule;
 use App\Services\BracketViewerService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,11 +33,32 @@ class BracketController extends Controller
         $byeIds = [];
         $emptyIds = [];
         $champion = null;
+        $jadwalCount = 0;
+        $firstRound = null;
+        $manualPartai = collect();
+        $athletes = collect();
 
         if ($selected) {
             $athleteCount = $selected->athletes()->where('status', 'active')->count();
             $viewer = app(BracketViewerService::class);
             $hasBracket = $viewer->hasBracket($selected);
+
+            // The partai of the bracket come from the jadwal of the class, so
+            // the page also shows how many partai are still empty and which
+            // athletes can be paired by hand.
+            $jadwal = $selected->schedules()->where('type', 'daeryun')->get();
+            $jadwalCount = $jadwal->count();
+            $firstRound = $jadwal->countBy('round')->sortDesc()->keys()->first();
+
+            $manualPartai = $jadwal
+                ->filter(fn (Schedule $schedule) => $schedule->round === $firstRound && $schedule->match === null)
+                ->sortBy(['order_no', 'match_no', 'id'])
+                ->values();
+
+            $athletes = $selected->athletes()
+                ->where('status', 'active')
+                ->orderBy('name')
+                ->get(['id', 'name', 'participant_number']);
 
             if ($hasBracket) {
                 $rounds = $viewer->rounds($selected);
@@ -62,6 +86,10 @@ class BracketController extends Controller
             'byeIds' => $byeIds,
             'emptyIds' => $emptyIds,
             'champion' => $champion,
+            'jadwalCount' => $jadwalCount,
+            'firstRound' => $firstRound,
+            'manualPartai' => $manualPartai,
+            'athletes' => $athletes,
         ]);
     }
 
@@ -93,9 +121,13 @@ class BracketController extends Controller
             return back()->with('error', "Bracket gagal dibuat: peserta aktif pada kelas {$category->name} baru {$athleteCount} orang (minimal 2).");
         }
 
-        DB::transaction(function () use ($category) {
-            app(\App\Services\BracketService::class)->generate($category);
-        });
+        try {
+            DB::transaction(function () use ($category) {
+                app(\App\Services\BracketService::class)->generate($category);
+            });
+        } catch (BracketNeedsSchedule $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
 
         if (! BracketSlot::where('category_id', $category->id)->exists()) {
             return back()->with('error', "Bracket kelas {$category->name} gagal dibuat. Silakan periksa kembali data peserta.");
@@ -104,5 +136,65 @@ class BracketController extends Controller
         return redirect()
             ->route('admin.brackets.index', ['category' => $category->id])
             ->with('success', "Bracket kelas {$category->name} berhasil dibuat untuk {$athleteCount} peserta.");
+    }
+
+    /**
+     * Create a partai by hand: the admin picks which two athletes of the class
+     * meet in one partai of the jadwal.
+     */
+    public function manual(Request $request): RedirectResponse
+    {
+        $data = $request->validate(
+            [
+                'schedule_id' => ['required', 'integer', Rule::exists('schedules', 'id')],
+                'athlete_a_id' => ['required', 'integer', Rule::exists('athletes', 'id')],
+                'athlete_b_id' => ['required', 'integer', Rule::exists('athletes', 'id')],
+            ],
+            [
+                'schedule_id.required' => 'Partai wajib dipilih.',
+                'athlete_a_id.required' => 'Atlet pertama wajib dipilih.',
+                'athlete_b_id.required' => 'Atlet kedua wajib dipilih.',
+            ]
+        );
+
+        $schedule = Schedule::with('category')->find($data['schedule_id']);
+
+        if (! $schedule || $schedule->type !== 'daeryun') {
+            return back()->with('error', 'Partai manual hanya bisa dibuat untuk jadwal Daeryun.');
+        }
+
+        $category = $schedule->category;
+
+        if ($schedule->match()->exists()) {
+            return back()->with('error', "Partai {$schedule->match_no} sudah memiliki atlet.");
+        }
+
+        if ($data['athlete_a_id'] === $data['athlete_b_id']) {
+            return back()->with('error', 'Dua atlet yang dipilih tidak boleh sama.');
+        }
+
+        $athletes = Athlete::whereIn('id', [$data['athlete_a_id'], $data['athlete_b_id']])
+            ->where('category_id', $category->id)
+            ->where('status', 'active')
+            ->get()
+            ->keyBy('id');
+
+        if ($athletes->count() < 2) {
+            return back()->with('error', 'Kedua atlet harus aktif dan berasal dari kelas yang sama.');
+        }
+
+        $athleteA = $athletes[$data['athlete_a_id']];
+        $athleteB = $athletes[$data['athlete_b_id']];
+
+        try {
+            DB::transaction(function () use ($category, $schedule, $athleteA, $athleteB) {
+                app(\App\Services\BracketService::class)->assignManual($category, $schedule, $athleteA, $athleteB);
+            });
+        } catch (BracketNeedsSchedule $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return back()
+            ->with('success', "Partai {$schedule->match_no} dibuat: {$athleteA->name} vs {$athleteB->name}.");
     }
 }
