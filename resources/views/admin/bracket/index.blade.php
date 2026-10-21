@@ -32,6 +32,66 @@
             </div>
         </div>
 
+        @if ($selected && $manualPartai->isNotEmpty())
+            <div class="card shadow-sm border-0 mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2 text-primary"></i>Partai Manual
+                        <small class="text-body-secondary">
+                            (pilih sendiri siapa lawan siapa pada ronde {{ \App\Models\Schedule::roundText($firstRound) }})
+                        </small>
+                    </h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach ($manualPartai as $partai)
+                            <form action="{{ route('admin.brackets.manual') }}" method="POST" class="list-group-item">
+                                @csrf
+                                <input type="hidden" name="schedule_id" value="{{ $partai->id }}" />
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-12 col-md-2">
+                                        <span class="fw-semibold">{{ $partai->match_no }}</span>
+                                        <div class="small text-body-secondary">
+                                            {{ \App\Models\Schedule::roundText($partai->round) }}
+                                            @if ($partai->start_time)
+                                                &middot; {{ substr($partai->start_time, 0, 5) }}
+                                            @endif
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-4">
+                                        <select name="athlete_a_id" class="form-select form-select-sm" required>
+                                            <option value="">— Pilih atlet —</option>
+                                            @foreach ($athletes as $athlete)
+                                                <option value="{{ $athlete->id }}">
+                                                    {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-1 text-center fw-bold text-body-secondary">VS</div>
+                                    <div class="col-12 col-md-4">
+                                        <select name="athlete_b_id" class="form-select form-select-sm" required>
+                                            <option value="">— Pilih atlet —</option>
+                                            @foreach ($athletes as $athlete)
+                                                <option value="{{ $athlete->id }}">
+                                                    {{ $athlete->name }} ({{ $athlete->participant_number }})
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-1 text-md-end">
+                                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                                            <i class="bi bi-check-lg me-1"></i>Simpan
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        @endif
+
         @if (! $selected)
             <div class="card shadow-sm border-0">
                 <div class="card-body text-center text-body-secondary py-5">
@@ -44,7 +104,8 @@
                     <i class="bi bi-diagram-3 fs-1 text-body-secondary"></i>
                     <p class="mt-3 mb-1 fw-semibold">Belum ada bracket untuk kelas {{ $selected->name }}</p>
                     <p class="text-body-secondary small mb-3">
-                        Peserta aktif: {{ $athleteCount }} orang. Minimal 2 peserta untuk membuat bracket.
+                        Peserta aktif: {{ $athleteCount }} orang &middot; Jadwal partai: {{ $jadwalCount }}.<br />
+                        Bracket dibuat dari jadwal, jadi buat jadwal partai Daeryun terlebih dahulu di menu Jadwal.
                     </p>
                     @can('brackets.generate')
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -110,12 +171,14 @@
                         <p class="mb-2">
                             Bracket akan dibuat otomatis untuk kelas
                             <strong>{{ $selected?->name ?? '-' }}</strong>
-                            berdasarkan {{ $athleteCount }} peserta aktif.
+                            berdasarkan {{ $athleteCount }} peserta aktif dan
+                            {{ $jadwalCount }} jadwal partai yang sudah dibuat.
                         </p>
                         <div class="alert alert-warning small mb-0">
                             <i class="bi bi-exclamation-triangle me-1"></i>
-                            Bracket lama pada kelas ini akan dihapus dan dibuat ulang, termasuk partai yang sudah
-                            dihasilkannya.
+                            Partai lama pada kelas ini akan dihapus lalu dibuat ulang dari jadwal yang sudah ada
+                            (jam, arena dan tanggal pada jadwal tetap dipakai). Hasil pertandingan pada partai
+                            tersebut akan hilang.
                         </div>
                     </div>
                     <div class="modal-footer">
