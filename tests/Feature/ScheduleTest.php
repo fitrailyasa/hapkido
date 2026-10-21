@@ -76,6 +76,48 @@ class ScheduleTest extends TestCase
         $response->assertDontSee('PENDING-1');
     }
 
+    public function test_schedule_index_orders_by_day_then_round_from_penyisihan_to_final(): void
+    {
+        $user = $this->userWithPermissions(['schedules.view']);
+        $dayOne = '2026-10-20';
+        $dayTwo = '2026-10-21';
+
+        ScheduleFactory::new()->create([
+            'match_no' => 'D1-FINAL',
+            'match_date' => $dayOne,
+            'round' => 'final',
+            'order_no' => 1,
+        ]);
+        ScheduleFactory::new()->create([
+            'match_no' => 'D1-PENYISIHAN',
+            'match_date' => $dayOne,
+            'round' => 'penyisihan',
+            'order_no' => 1,
+        ]);
+        ScheduleFactory::new()->create([
+            'match_no' => 'D1-SEMI',
+            'match_date' => $dayOne,
+            'round' => 'semifinal',
+            'order_no' => 1,
+        ]);
+        ScheduleFactory::new()->create([
+            'match_no' => 'D2-PENYISIHAN',
+            'match_date' => $dayTwo,
+            'round' => 'penyisihan',
+            'order_no' => 1,
+        ]);
+
+        $response = $this->actingAs($user)->get('/admin/schedules');
+
+        $response->assertOk();
+        $response->assertSeeInOrder([
+            'D1-PENYISIHAN',
+            'D1-SEMI',
+            'D1-FINAL',
+            'D2-PENYISIHAN',
+        ]);
+    }
+
     public function test_schedule_index_shows_the_arena_of_the_class(): void
     {
         $user = $this->userWithPermissions(['schedules.view']);

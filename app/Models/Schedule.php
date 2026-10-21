@@ -118,6 +118,22 @@ class Schedule extends Model
         return self::ROUNDS[$round] ?? ucfirst(str_replace('_', ' ', $round));
     }
 
+    /**
+     * SQL CASE expression that sorts rounds penyisihan → … → final (then seni).
+     */
+    public static function roundSortSql(string $column = 'round'): string
+    {
+        $cases = [];
+        $rank = 1;
+
+        foreach (array_keys(self::ROUNDS) as $round) {
+            $cases[] = "WHEN {$column} = '{$round}' THEN {$rank}";
+            $rank++;
+        }
+
+        return '(CASE '.implode(' ', $cases)." ELSE {$rank} END)";
+    }
+
     public function athletes()
     {
         if ($this->isDaeryun()) {

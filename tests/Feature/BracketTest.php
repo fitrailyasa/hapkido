@@ -70,7 +70,13 @@ class BracketTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Partai Manual');
-        $response->assertSee('tanpa wajib isi jadwal');
+        $response->assertSee('Siapkan Partai Manual');
+        $this->assertSame(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
+
+        $this->actingAs($user)
+            ->post('/admin/brackets/prepare', ['category_id' => $category->id])
+            ->assertRedirect(route('admin.brackets.index', ['category' => $category->id]));
+
         $this->assertGreaterThan(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
     }
 
@@ -97,8 +103,9 @@ class BracketTest extends TestCase
         $response = $this->actingAs($user)->get("/admin/brackets?category={$category->id}");
 
         $response->assertOk();
-        $response->assertSee('Partai Manual');
-        $response->assertSee('sudah terisi atlet');
+        // Bracket already exists after manual assign — hide Partai Manual.
+        $response->assertDontSee('Partai Manual');
+        $response->assertDontSee('sudah terisi atlet');
     }
 
     public function test_bracket_cannot_be_generated_for_art_category(): void
@@ -649,7 +656,7 @@ class BracketTest extends TestCase
 
     public function test_bracket_can_be_removed_along_with_jadwal(): void
     {
-        $user = $this->userWithPermissions(['brackets.generate']);
+        $user = $this->userWithPermissions(['brackets.view', 'brackets.generate']);
         $category = CategoryFactory::new()->daeryun()->create();
         foreach (range(1, 4) as $i) {
             AthleteFactory::new()->create(['category_id' => $category->id, 'status' => 'active']);
@@ -675,6 +682,13 @@ class BracketTest extends TestCase
         $this->assertSame(0, BracketSlot::where('category_id', $category->id)->count());
         $this->assertSame(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
         $this->assertSame(0, Matchup::count());
+
+        // Index must not recreate jadwal stubs after Hapus Bracket.
+        $this->actingAs($user)
+            ->get(route('admin.brackets.index', ['category' => $category->id]))
+            ->assertOk();
+
+        $this->assertSame(0, Schedule::where('category_id', $category->id)->where('type', 'daeryun')->count());
     }
 
     public function test_manual_partai_can_be_created(): void

@@ -138,6 +138,7 @@ Route::middleware(['auth', 'active'])->prefix('admin')->name('admin.')->group(fu
     /* Bracket */
     Route::get('brackets', [BracketController::class, 'index'])->middleware('permission:brackets.view')->name('brackets.index');
     Route::post('brackets/generate', [BracketController::class, 'generate'])->middleware('permission:brackets.generate')->name('brackets.generate');
+    Route::post('brackets/prepare', [BracketController::class, 'prepare'])->middleware('permission:brackets.generate')->name('brackets.prepare');
     Route::post('brackets/manual', [BracketController::class, 'manual'])->middleware('permission:brackets.generate')->name('brackets.manual');
     Route::post('brackets/remove', [BracketController::class, 'destroy'])->middleware('permission:brackets.generate')->name('brackets.destroy');
 

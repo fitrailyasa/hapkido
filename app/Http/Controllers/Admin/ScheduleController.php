@@ -344,7 +344,10 @@ class ScheduleController extends Controller
                 'performances.athlete',
             ])
             ->orderBy('match_date')
-            ->orderBy('order_no');
+            ->orderByRaw(Schedule::roundSortSql())
+            ->orderBy('order_no')
+            ->orderBy('start_time')
+            ->orderBy('match_no');
 
         if ($filters['q'] !== '') {
             $term = '%'.$filters['q'].'%';

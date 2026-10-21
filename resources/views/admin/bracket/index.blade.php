@@ -32,7 +32,7 @@
             </div>
         </div>
 
-        @if ($selected && auth()->user()?->can('brackets.generate'))
+        @if ($selected && ! $hasBracket && auth()->user()?->can('brackets.generate'))
             <div class="card shadow-sm border-0 mb-3">
                 <div class="card-header">
                     <h6 class="mb-0">
@@ -46,6 +46,17 @@
                 @if ($athleteCount < 2)
                     <div class="card-body text-center text-body-secondary">
                         Minimal 2 peserta aktif di kelas ini untuk membuat partai.
+                    </div>
+                @elseif ($manualPartai->isEmpty() && $jadwalCount === 0)
+                    <div class="card-body text-center text-body-secondary">
+                        <p class="mb-3">Belum ada partai. Siapkan slot kosong untuk isi manual, atau generate otomatis.</p>
+                        <form action="{{ route('admin.brackets.prepare') }}" method="POST" class="d-inline">
+                            @csrf
+                            <input type="hidden" name="category_id" value="{{ $selected->id }}" />
+                            <button type="submit" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-list-check me-1"></i>Siapkan Partai Manual
+                            </button>
+                        </form>
                     </div>
                 @elseif ($manualPartai->isEmpty())
                     <div class="card-body text-center text-body-secondary">

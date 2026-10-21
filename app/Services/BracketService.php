@@ -1197,9 +1197,18 @@ class BracketService
             ->where('type', 'daeryun')
             ->pluck('id');
 
-        Matchup::whereIn('schedule_id', $scheduleIds)->delete();
+        if ($scheduleIds->isNotEmpty()) {
+            Arena::whereIn('current_schedule_id', $scheduleIds)
+                ->update(['current_schedule_id' => null]);
+
+            Matchup::whereIn('schedule_id', $scheduleIds)->delete();
+        }
+
         BracketSlot::where('category_id', $category->id)->delete();
-        Schedule::whereIn('id', $scheduleIds)->delete();
+
+        Schedule::where('category_id', $category->id)
+            ->where('type', 'daeryun')
+            ->delete();
     }
 
     /**

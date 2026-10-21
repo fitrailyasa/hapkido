@@ -46,9 +46,18 @@ class BracketController extends Controller
             $brackets = app(BracketService::class);
             $viewer = app(BracketViewerService::class);
 
-            // Bracket first: siapkan jadwal partai kosong dari kelas agar
-            // Partai Manual langsung bisa diisi tanpa menu Jadwal dulu.
-            if ($athleteCount >= 2 && auth()->user()?->can('brackets.generate')) {
+            // Top up entry jadwal only when bracket/jadwal already exists.
+            // Do not recreate stubs after Hapus Bracket wiped the class.
+            $hasSlots = BracketSlot::where('category_id', $selected->id)->exists();
+            $hasJadwal = Schedule::where('category_id', $selected->id)
+                ->where('type', 'daeryun')
+                ->exists();
+
+            if (
+                $athleteCount >= 2
+                && auth()->user()?->can('brackets.generate')
+                && ($hasSlots || $hasJadwal)
+            ) {
                 $brackets->ensureEntrySchedules($selected);
             }
 
@@ -198,6 +207,45 @@ class BracketController extends Controller
         return redirect()
             ->route('admin.brackets.index', ['category' => $category->id])
             ->with('success', "Bracket dan jadwal Daeryun kelas {$category->name} berhasil dihapus.");
+    }
+
+    /**
+     * Create empty entry jadwal so Partai Manual can be filled without
+     * generating the full bracket first.
+     */
+    public function prepare(Request $request): RedirectResponse
+    {
+        $data = $request->validate(
+            [
+                'category_id' => ['required', 'integer', Rule::exists('categories', 'id')],
+            ],
+            [
+                'category_id.required' => 'Kelas wajib dipilih.',
+                'category_id.exists' => 'Kelas tidak ditemukan.',
+            ]
+        );
+
+        $category = Category::find($data['category_id']);
+
+        if (! $category) {
+            return back()->with('error', 'Kelas tidak ditemukan.');
+        }
+
+        if ($category->type !== 'daeryun') {
+            return back()->with('error', 'Partai manual hanya untuk kelas Daeryun.');
+        }
+
+        try {
+            DB::transaction(function () use ($category) {
+                app(BracketService::class)->ensureEntrySchedules($category);
+            });
+        } catch (BracketNeedsSchedule $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        return redirect()
+            ->route('admin.brackets.index', ['category' => $category->id])
+            ->with('success', "Partai kosong kelas {$category->name} siap diisi.");
     }
 
     /**
